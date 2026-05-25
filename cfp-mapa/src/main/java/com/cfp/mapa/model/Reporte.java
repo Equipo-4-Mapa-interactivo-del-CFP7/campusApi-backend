@@ -1,10 +1,15 @@
 package com.cfp.mapa.model;
 
 import jakarta.persistence.*;
+import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reportes")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Reporte {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,70 +36,6 @@ public class Reporte {
     @Enumerated(EnumType.STRING)
     private EstadoReporte estado = EstadoReporte.PENDIENTE;
 
-    public enum TipoReporte {
-        ACCESO_BLOQUEADO, PROBLEMA_SENALETICA, BARRERA_FISICA, DIFICULTAD_ORIENTACION
-    }
-
-    public enum EstadoReporte {
-        PENDIENTE, EN_REVISION, RESUELTO
-    }
-
-    public Reporte() {}
-
-    public Long getId() {
-        return id;
-    }
-
-    public Espacio getEspacio() {
-        return espacio;
-    }
-
-    public Usuario getUsuario() {
-        return usuario;
-    }
-
-    public TipoReporte getTipo() {
-        return tipo;
-    }
-
-    public String getDescripcion() {
-        return descripcion;
-    }
-
-    public LocalDateTime getFechaCreacion() {
-        return fechaCreacion;
-    }
-
-    public EstadoReporte getEstado() {
-        return estado;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setEspacio(Espacio espacio) {
-        this.espacio = espacio;
-    }
-
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
-    }
-
-    public void setTipo(TipoReporte tipo) {
-        this.tipo = tipo;
-    }
-
-    public void setDescripcion(String descripcion) {
-        this.descripcion = descripcion;
-    }
-
-    public void setFechaCreacion(LocalDateTime fechaCreacion) {
-        this.fechaCreacion = fechaCreacion;
-    }
-
-    public void setEstado(EstadoReporte estado) {
-        this.estado = estado;
-    }
-
+    @Enumerated(EnumType.STRING)
+    private TipoReporte reporte;
 }

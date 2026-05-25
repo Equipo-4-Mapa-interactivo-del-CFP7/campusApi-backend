@@ -1,6 +1,7 @@
 package com.cfp.mapa.controller;
 
 import com.cfp.mapa.model.Espacio;
+import com.cfp.mapa.model.TipoEspacio;
 import com.cfp.mapa.service.EspacioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +34,7 @@ public class EspacioController {
     }
 
     @GetMapping("/tipo/{tipo}")
-    public ResponseEntity<List<Espacio>> listarPorTipo(@PathVariable Espacio.TipoEspacio tipo) {
+    public ResponseEntity<List<Espacio>> listarPorTipo(@PathVariable TipoEspacio tipo) {
         return ResponseEntity.ok(espacioService.listarPorTipo(tipo));
     }
 
