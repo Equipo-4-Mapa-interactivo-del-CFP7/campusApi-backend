@@ -1,5 +1,6 @@
 package com.cfp.mapa.repository;
 
+import com.cfp.mapa.model.EstadoReporte;
 import com.cfp.mapa.model.Reporte;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -9,5 +10,5 @@ import java.util.List;
 public interface ReporteRepository extends JpaRepository<Reporte, Long> {
     List<Reporte> findByEspacioId(Long espacioId);
     List<Reporte> findByUsuarioId(Long usuarioId);
-    List<Reporte> findByEstado(Reporte.EstadoReporte estado);
+    List<Reporte> findByEstado(EstadoReporte estado);
 }

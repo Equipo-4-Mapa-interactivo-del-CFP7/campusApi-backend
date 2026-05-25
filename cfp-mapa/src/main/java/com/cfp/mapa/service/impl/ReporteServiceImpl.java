@@ -1,6 +1,7 @@
 package com.cfp.mapa.service.impl;
 
 import com.cfp.mapa.exception.ResourceNotFoundException;
+import com.cfp.mapa.model.EstadoReporte;
 import com.cfp.mapa.model.Reporte;
 import com.cfp.mapa.repository.ReporteRepository;
 import com.cfp.mapa.service.ReporteService;
@@ -27,7 +28,7 @@ public class ReporteServiceImpl implements ReporteService {
     }
 
     @Override
-    public List<Reporte> listarPorEstado(Reporte.EstadoReporte estado) {
+    public List<Reporte> listarPorEstado(EstadoReporte estado) {
         return reporteRepository.findByEstado(estado);
     }
 
@@ -37,7 +38,7 @@ public class ReporteServiceImpl implements ReporteService {
     }
 
     @Override
-    public Reporte actualizarEstado(Long id, Reporte.EstadoReporte nuevoEstado) {
+    public Reporte actualizarEstado(Long id, EstadoReporte nuevoEstado) {
         Reporte reporte = reporteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reporte no encontrado con id: " + id));
         reporte.setEstado(nuevoEstado);

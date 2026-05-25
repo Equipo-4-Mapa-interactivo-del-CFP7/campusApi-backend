@@ -1,10 +1,15 @@
 package com.cfp.mapa.model;
 
 import jakarta.persistence.*;
+import lombok.*;
+
 import java.util.List;
 
 @Entity
 @Table(name = "recorridos")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Recorrido {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,47 +30,5 @@ public class Recorrido {
 
     @Column(nullable = false)
     private Boolean accesible = false;
-
-    public Recorrido() {}
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getNombre() {
-        return nombre;
-    }
-
-    public String getDescripcion() {
-        return descripcion;
-    }
-
-    public List<Long> getEspacioIds() {
-        return espacioIds;
-    }
-
-    public Boolean getAccesible() {
-        return accesible;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public void setDescripcion(String descripcion) {
-        this.descripcion = descripcion;
-    }
-
-    public void setEspacioIds(List<Long> espacioIds) {
-        this.espacioIds = espacioIds;
-    }
-
-    public void setAccesible(Boolean accesible) {
-        this.accesible = accesible;
-    }
 
 }

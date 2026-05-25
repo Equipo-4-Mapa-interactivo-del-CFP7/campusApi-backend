@@ -1,5 +1,6 @@
 package com.cfp.mapa.controller;
 
+import com.cfp.mapa.model.EstadoReporte;
 import com.cfp.mapa.model.Reporte;
 import com.cfp.mapa.service.ReporteService;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +29,7 @@ public class ReporteController {
     }
 
     @GetMapping("/estado/{estado}")
-    public ResponseEntity<List<Reporte>> listarPorEstado(@PathVariable Reporte.EstadoReporte estado) {
+    public ResponseEntity<List<Reporte>> listarPorEstado(@PathVariable EstadoReporte estado) {
         return ResponseEntity.ok(reporteService.listarPorEstado(estado));
     }
 
@@ -40,7 +41,7 @@ public class ReporteController {
     @PatchMapping("/{id}/estado")
     public ResponseEntity<Reporte> actualizarEstado(
             @PathVariable Long id,
-            @RequestParam Reporte.EstadoReporte nuevoEstado) {
+            @RequestParam EstadoReporte nuevoEstado) {
         return ResponseEntity.ok(reporteService.actualizarEstado(id, nuevoEstado));
     }
 }
