@@ -1,14 +1,12 @@
 package com.cfp.mapa.model;
 
-import jakarta.persistence.CollectionTable;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OrderColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -26,19 +24,14 @@ public class Recorrido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String nombre;
 
-    @Column(columnDefinition = "TEXT")
     private String descripcion;
 
-    @ElementCollection
-    @CollectionTable(name = "recorrido_espacios",
-            joinColumns = @JoinColumn(name = "recorrido_id"))
-    @OrderColumn(name = "orden")
-    @Column(name = "espacio_id")
-    private List<Long> espacioIds;
-
     @Column(nullable = false)
-    private Boolean accesible = false;
+    private Boolean accesible;
+
+    @OneToMany(mappedBy = "recorrido", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TramoRecorrido> tramos;
 }

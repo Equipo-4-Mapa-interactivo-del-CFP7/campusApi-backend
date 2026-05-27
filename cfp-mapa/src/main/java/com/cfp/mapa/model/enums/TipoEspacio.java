@@ -1,10 +1,17 @@
 package com.cfp.mapa.model.enums;
 
 public enum TipoEspacio {
-
     AULA,
     OFICINA,
-    BANIO,
-    ACCESO,
-    ESPACIO_COMUN
+    SECRETARIA,
+
+    BANIO_MASCULINO,
+    BANIO_FEMENINO,
+    BANIO_ACCESIBLE,
+    BANIO_MIXTO,
+
+    ENTRADA_PRINCIPAL,
+    ACCESO_SECUNDARIO,
+    PUNTO_DE_PASO,
+    ASCENSOR
 }
