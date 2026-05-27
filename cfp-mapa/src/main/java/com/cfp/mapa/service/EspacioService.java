@@ -3,7 +3,6 @@ package com.cfp.mapa.service;
 import com.cfp.mapa.model.Espacio;
 import org.springframework.stereotype.Service;
 import com.cfp.mapa.model.TipoEspacio;
-
 import java.util.List;
 
 @Service
