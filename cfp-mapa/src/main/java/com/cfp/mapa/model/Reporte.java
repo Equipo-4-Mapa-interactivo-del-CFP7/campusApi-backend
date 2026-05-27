@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Data
 @NoArgsConstructor
@@ -34,22 +35,26 @@ public class Reporte {
     private Espacio espacio;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id")
-    private Usuario usuario;
+    @JoinColumn(name = "atendido_por_id")
+    private Usuario atendidoPor;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TipoReporte tipo;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
     private String descripcion;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private LocalDateTime fechaCreacion = LocalDateTime.now();
+    private EstadoReporte estado;
 
-    @Enumerated(EnumType.STRING)
-    private EstadoReporte estado = EstadoReporte.PENDIENTE;
+    @Column(name = "fecha_atencion")
+    private LocalDateTime fechaAtencion;
 
-    @Enumerated(EnumType.STRING)
-    private TipoReporte reporte;
+    @Column(name = "minutos_estimados")
+    private Integer minutosEstimados;
+
+    @CreationTimestamp
+    @Column(name = "fecha_creacion", nullable = false,  updatable = false)
+    private LocalDateTime fechaCreacion;
 }

@@ -39,13 +39,13 @@ public class Usuario {
     @Column(nullable = false, length = 100)
     private String nombre;
 
-    @CreationTimestamp
-    @Column(name = "fecha_creacion", nullable = false,  updatable = false)
-    private LocalDateTime fechaCreacion;
-
     @Column(nullable = false)
     boolean activo;
 
     @Column(nullable = false)
     boolean cambiarPassword;
+
+    @CreationTimestamp
+    @Column(name = "fecha_creacion", nullable = false,  updatable = false)
+    private LocalDateTime fechaCreacion;
 }
