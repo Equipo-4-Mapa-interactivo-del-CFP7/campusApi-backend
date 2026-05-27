@@ -1,7 +1,7 @@
 package com.cfp.mapa.service.impl;
 
 import com.cfp.mapa.exception.ResourceNotFoundException;
-import com.cfp.mapa.model.EstadoReporte;
+import com.cfp.mapa.model.enums.EstadoReporte;
 import com.cfp.mapa.model.Reporte;
 import com.cfp.mapa.repository.ReporteRepository;
 import com.cfp.mapa.service.ReporteService;

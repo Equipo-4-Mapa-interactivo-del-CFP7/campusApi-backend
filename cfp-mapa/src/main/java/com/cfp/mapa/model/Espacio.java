@@ -1,5 +1,6 @@
 package com.cfp.mapa.model;
 
+import com.cfp.mapa.model.enums.TipoEspacio;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;

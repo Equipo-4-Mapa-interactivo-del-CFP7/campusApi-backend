@@ -1,6 +1,6 @@
 package com.cfp.mapa.controller;
 
-import com.cfp.mapa.model.EstadoReporte;
+import com.cfp.mapa.model.enums.EstadoReporte;
 import com.cfp.mapa.model.Reporte;
 import com.cfp.mapa.service.ReporteService;
 import org.springframework.http.ResponseEntity;

@@ -1,6 +1,6 @@
 package com.cfp.mapa.service;
 
-import com.cfp.mapa.model.EstadoReporte;
+import com.cfp.mapa.model.enums.EstadoReporte;
 import com.cfp.mapa.model.Reporte;
 import java.util.List;
 

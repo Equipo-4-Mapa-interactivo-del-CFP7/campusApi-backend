@@ -1,5 +1,7 @@
 package com.cfp.mapa.model;
 
+import com.cfp.mapa.model.enums.EstadoReporte;
+import com.cfp.mapa.model.enums.TipoReporte;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

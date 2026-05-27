@@ -5,7 +5,7 @@ import com.cfp.mapa.model.Espacio;
 import com.cfp.mapa.repository.EspacioRepository;
 import com.cfp.mapa.service.EspacioService;
 import org.springframework.stereotype.Service;
-import com.cfp.mapa.model.TipoEspacio;
+import com.cfp.mapa.model.enums.TipoEspacio;
 import java.util.List;
 
 @Service

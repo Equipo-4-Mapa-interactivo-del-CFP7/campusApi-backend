@@ -1,7 +1,7 @@
 package com.cfp.mapa.controller;
 
 import com.cfp.mapa.model.Espacio;
-import com.cfp.mapa.model.TipoEspacio;
+import com.cfp.mapa.model.enums.TipoEspacio;
 import com.cfp.mapa.service.EspacioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
