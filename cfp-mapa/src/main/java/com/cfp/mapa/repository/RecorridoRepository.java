@@ -7,5 +7,5 @@ import java.util.List;
 
 @Repository
 public interface RecorridoRepository extends JpaRepository<Recorrido, Long> {
-    List<Recorrido> findByAccesibleTrue();
+//    List<Recorrido> findByAccesibleTrue();
 }

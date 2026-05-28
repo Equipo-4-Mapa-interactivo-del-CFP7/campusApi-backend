@@ -7,12 +7,12 @@ import java.util.List;
 
 @Service
 public interface EspacioService {
-    List<Espacio> listarTodos();
-    Espacio obtenerPorId(Long id);
-    List<Espacio> buscarPorNombre(String nombre);
-    List<Espacio> listarPorTipo(TipoEspacio tipo);
-    List<Espacio> listarAccesibles();
-    Espacio crear(Espacio espacio);
-    Espacio actualizar(Long id, Espacio espacio);
-    void eliminar(Long id);
+//    List<Espacio> listarTodos();
+//    Espacio obtenerPorId(Long id);
+//    List<Espacio> buscarPorNombre(String nombre);
+//    List<Espacio> listarPorTipo(TipoEspacio tipo);
+//    List<Espacio> listarAccesibles();
+//    Espacio crear(Espacio espacio);
+//    Espacio actualizar(Long id, Espacio espacio);
+//    void eliminar(Long id);
 }

@@ -8,7 +8,7 @@ import java.util.List;
 
 @Repository
 public interface ReporteRepository extends JpaRepository<Reporte, Long> {
-    List<Reporte> findByEspacioId(Long espacioId);
-    List<Reporte> findByUsuarioId(Long usuarioId);
-    List<Reporte> findByEstado(EstadoReporte estado);
+//    List<Reporte> findByEspacioId(Long espacioId);
+//    List<Reporte> findByUsuarioId(Long usuarioId);
+//    List<Reporte> findByEstado(EstadoReporte estado);
 }

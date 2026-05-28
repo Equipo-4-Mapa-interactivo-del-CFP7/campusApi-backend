@@ -8,8 +8,8 @@ import java.util.List;
 
 @Repository
 public interface EspacioRepository extends JpaRepository<Espacio, Long> {
-    List<Espacio> findByActivoTrue();
-    List<Espacio> findByTipoAndActivoTrue(TipoEspacio tipo);
-    List<Espacio> findByNombreContainingIgnoreCaseAndActivoTrue(String nombre);
-    List<Espacio> findByAccesibleTrueAndActivoTrue();
+//    List<Espacio> findByActivoTrue();
+//    List<Espacio> findByTipoAndActivoTrue(TipoEspacio tipo);
+//    List<Espacio> findByNombreContainingIgnoreCaseAndActivoTrue(String nombre);
+//    List<Espacio> findByAccesibleTrueAndActivoTrue();
 }
