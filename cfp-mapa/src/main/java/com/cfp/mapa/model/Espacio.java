@@ -1,44 +1,56 @@
 package com.cfp.mapa.model;
 
-import jakarta.persistence.*;
-import lombok.*;
-
+import com.cfp.mapa.model.enums.TipoEspacio;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Entity
-@Table(name = "espacios")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "espacios")
 public class Espacio {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String nombre;
 
-    @Column(columnDefinition = "TEXT")
     private String descripcion;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 30)
     private TipoEspacio tipo;
 
-    private String piso;
-    private Double coordenadaX;
-    private Double coordenadaY;
-    private Double coordenadaZ;
-    private Boolean accesible;
+    @Column(nullable = false)
+    private Integer piso;
 
-    @ElementCollection
-    @CollectionTable(name = "espacio_fotos", joinColumns = @JoinColumn(name = "espacio_id"))
-    @Column(name = "url_foto")
-    private List<String> fotos;
+    @Column(nullable = false)
+    private Double coordenadaX;
+
+    @Column(nullable = false)
+    private Double coordenadaY;
+
+    @Column(nullable = false)
+    private Boolean accesible;
 
     @Column(nullable = false)
     private Boolean activo = true;
 
-    @OneToMany(mappedBy = "espacio", cascade = CascadeType.ALL)
-    private List<Reporte> reportes;
+    @OneToMany(mappedBy = "espacio", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Imagen> imagenes;
 }

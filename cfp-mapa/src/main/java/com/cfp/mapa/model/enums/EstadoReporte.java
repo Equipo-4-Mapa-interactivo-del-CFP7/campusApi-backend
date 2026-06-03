@@ -1,4 +1,4 @@
-package com.cfp.mapa.model;
+package com.cfp.mapa.model.enums;
 
 public enum EstadoReporte {
     PENDIENTE,
