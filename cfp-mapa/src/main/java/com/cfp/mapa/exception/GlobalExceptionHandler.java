@@ -19,23 +19,23 @@ public class GlobalExceptionHandler {
             "Credenciales incorrectas (DNI o contraseña inválidos)");
     }
 
-//    @ExceptionHandler(ResourceNotFoundException.class)
-//    public ResponseEntity<Map<String, Object>> handleNotFound(ResourceNotFoundException ex) {
-//        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-//                "timestamp", LocalDateTime.now().toString(),
-//                "status", 404,
-//                "error", ex.getMessage()
-//        ));
-//    }
+    @ExceptionHandler(DniDuplicadoException.class)
+    public ResponseEntity<ErrorResponse> handleDniDuplicadoException(DniDuplicadoException ex) {
 
-//    @ExceptionHandler(Exception.class)
-//    public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
-//        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-//                "timestamp", LocalDateTime.now().toString(),
-//                "status", 500,
-//                "error", "Error interno del servidor"
-//        ));
-//    }
+        return buildErrorResponse(
+            HttpStatus.CONFLICT,
+            ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception ex) {
+
+        return buildErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "Error interno en el servidor"
+        );
+    }
 
     private ResponseEntity<ErrorResponse> buildErrorResponse(
         HttpStatus status, String message)

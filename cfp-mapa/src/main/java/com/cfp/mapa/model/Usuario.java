@@ -11,11 +11,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
-@Data
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -26,7 +30,7 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 20)
+    @Column(nullable = false, unique = true, length = 15)
     private String dni;
 
     @Column(nullable = false, length = 60)
@@ -38,6 +42,9 @@ public class Usuario {
 
     @Column(nullable = false, length = 100)
     private String nombre;
+
+    @Column(nullable = false, length = 100)
+    private String apellido;
 
     @Column(nullable = false)
     boolean activo;

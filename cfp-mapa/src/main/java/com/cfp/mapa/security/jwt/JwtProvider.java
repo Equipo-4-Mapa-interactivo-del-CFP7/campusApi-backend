@@ -1,6 +1,8 @@
 package com.cfp.mapa.security.jwt;
 
+import com.cfp.mapa.dto.usuario.UsuarioAutenticadoDTO;
 import com.cfp.mapa.security.user.UsuarioDetails;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
@@ -74,61 +76,38 @@ public class JwtProvider {
     return false;
   }
 
-  public String getDniDelToken(String token) {
-
-    try {
-      return Jwts.parser()
-          .verifyWith(secretKey)
-          .build()
-          .parseSignedClaims(token)
-          .getPayload()
-          .getSubject();
-    } catch (Exception e) {
-      logJwtError(e);
-    }
-
-    return null;
-  }
-
-  public Long getIdDelToken(String token) {
-
-    try {
-      return Jwts.parser()
-          .verifyWith(secretKey)
-          .build()
-          .parseSignedClaims(token)
-          .getPayload()
-          .get("id", Long.class);
-    } catch (Exception e) {
-      logJwtError(e);
-    }
-
-    return null;
-  }
-
-  public List<GrantedAuthority> getRolesDelToken(String token) {
+  // Extraer ID + DNI + Roles
+  public UsuarioAutenticadoDTO obtenerUsuarioDesdeToken(String token) {
 
     try {
 
-      List<?> rolesRaw = Jwts.parser()
+      Claims claims = Jwts.parser()
           .verifyWith(secretKey)
           .build()
           .parseSignedClaims(token)
-          .getPayload()
-          .get("roles", List.class);
+          .getPayload();
 
-      if (rolesRaw == null) {
-        return List.of();
+      // Extraer ID
+      Long idUsuario = claims.get("id", Long.class);
+
+      // Extraer DNI
+      String dniUsuario = claims.getSubject();
+
+      // Extraer roles
+      List<?> rolesRaw = claims.get("roles", List.class);
+      List<GrantedAuthority> authorities = List.of();
+
+      if (rolesRaw != null) {
+        authorities = rolesRaw.stream()
+            .map(role -> new SimpleGrantedAuthority(role.toString()))
+            .collect(Collectors.toList());
       }
 
-      return rolesRaw.stream()
-          .map(role -> new SimpleGrantedAuthority(role.toString()))
-          .collect(Collectors.toList());
-    }  catch (Exception e) {
+      return new UsuarioAutenticadoDTO(idUsuario, dniUsuario, authorities);
+    } catch (Exception e) {
       logJwtError(e);
+      return null;
     }
-
-    return List.of();
   }
 
   private void logJwtError(Exception e) {
