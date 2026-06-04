@@ -52,6 +52,8 @@ public class SecurityConfig {
 
             .requestMatchers("/api/auth/**").permitAll()
 
+            // TODO: agregar las autorizaciones para las URL
+
             // TODO: eliminar swagger en produccion
             .requestMatchers(
                 "/v3/api-docs/**",

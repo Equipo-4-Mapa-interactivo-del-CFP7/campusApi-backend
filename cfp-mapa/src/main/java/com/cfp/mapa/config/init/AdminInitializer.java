@@ -31,5 +31,19 @@ public class AdminInitializer implements CommandLineRunner {
 
       usuarioRepository.save(admin);
     }
+
+    if (!usuarioRepository.existsByDni("456")) {
+      Usuario personal = Usuario.builder()
+          .dni("456")
+          .nombre("Personal")
+          .apellido("Institucional")
+          .password(passwordEncoder.encode("user123"))
+          .rol(Rol.PERSONAL)
+          .activo(true)
+          .cambiarPassword(false)
+          .build();
+
+      usuarioRepository.save(personal);
+    }
   }
 }
