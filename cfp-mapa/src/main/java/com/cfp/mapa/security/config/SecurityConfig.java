@@ -52,6 +52,13 @@ public class SecurityConfig {
 
             .requestMatchers("/api/auth/**").permitAll()
 
+            // TODO: eliminar swagger en produccion
+            .requestMatchers(
+                "/v3/api-docs/**",
+                "/swagger-ui/**",
+                "/swagger-ui.html"
+            ).permitAll()
+
             .anyRequest().authenticated()
         )
 

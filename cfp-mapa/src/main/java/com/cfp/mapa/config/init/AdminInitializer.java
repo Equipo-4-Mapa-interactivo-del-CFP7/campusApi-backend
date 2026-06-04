@@ -18,7 +18,7 @@ public class AdminInitializer implements CommandLineRunner {
 
   @Override
   public void run(String... args) throws Exception {
-    if (!usuarioRepository.existsByDni("1")) {
+    if (!usuarioRepository.existsByDni("123")) {
       Usuario admin = Usuario.builder()
           .dni("123")
           .nombre("Administrador")

@@ -11,4 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
   private final UsuarioService usuarioService;
+
+  // TODO: implementar unicamente login
 }
