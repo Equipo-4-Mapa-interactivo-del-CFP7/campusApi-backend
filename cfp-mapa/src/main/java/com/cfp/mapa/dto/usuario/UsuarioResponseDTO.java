@@ -5,7 +5,8 @@ public record UsuarioResponseDTO(
     Long id,
     String dni,
     String nombre,
-    String apellido
+    String apellido,
+    Boolean activo
 )
 {
 

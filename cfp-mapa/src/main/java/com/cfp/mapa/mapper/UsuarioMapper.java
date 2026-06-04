@@ -30,7 +30,8 @@ public class UsuarioMapper {
         usuario.getId(),
         usuario.getDni(),
         usuario.getNombre(),
-        usuario.getApellido()
+        usuario.getApellido(),
+        usuario.isActivo()
     );
   }
 }
