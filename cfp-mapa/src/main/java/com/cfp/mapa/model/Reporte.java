@@ -1,13 +1,36 @@
 package com.cfp.mapa.model;
 
+<<<<<<< Updated upstream
 import jakarta.persistence.*;
 import lombok.*;
+=======
+import com.cfp.mapa.model.enums.EstadoReporte;
+import com.cfp.mapa.model.enums.TipoReporte;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+>>>>>>> Stashed changes
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reportes")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Reporte {
