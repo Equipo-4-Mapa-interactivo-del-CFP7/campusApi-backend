@@ -17,12 +17,14 @@ public class UsuarioDetails implements UserDetails {
   private final String password;
   @Getter
   private final Collection<? extends GrantedAuthority> authorities;
+  private final boolean activo;
 
   public UsuarioDetails(Usuario usuario) {
 
     this.id = usuario.getId();
     this.dni = usuario.getDni();
     this.password = usuario.getPassword();
+    this.activo = usuario.isActivo();
 
     if (usuario.getRol() != null) {
 
@@ -54,6 +56,6 @@ public class UsuarioDetails implements UserDetails {
 
   @Override
   public boolean isEnabled() {
-    return true;
+    return activo;
   }
 }
