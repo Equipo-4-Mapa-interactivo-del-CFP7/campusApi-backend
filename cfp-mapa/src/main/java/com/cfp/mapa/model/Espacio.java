@@ -51,7 +51,7 @@ public class Espacio {
     private Boolean accesible;
 
     @Column(nullable = false)
-    private Boolean activo = true;
+    private Boolean activo;
 
     @OneToMany(mappedBy = "espacio", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Imagen> imagenes;

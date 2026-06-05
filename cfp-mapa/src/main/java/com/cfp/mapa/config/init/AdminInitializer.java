@@ -37,7 +37,7 @@ public class AdminInitializer implements CommandLineRunner {
           .dni("456")
           .nombre("Personal")
           .apellido("Institucional")
-          .password(passwordEncoder.encode("user123"))
+          .password(passwordEncoder.encode("personal456"))
           .rol(Rol.PERSONAL)
           .activo(true)
           .cambiarPassword(false)
