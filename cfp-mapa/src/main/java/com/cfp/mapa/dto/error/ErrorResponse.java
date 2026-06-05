@@ -12,6 +12,6 @@ public record ErrorResponse (
 ) {
 
   public ErrorResponse (HttpStatus status, String message) {
-    this (status.value(), status.getReasonPhrase(),  message, LocalDateTime.now());
+    this (status.value(), status.getReasonPhrase(), message, LocalDateTime.now());
   }
 }

@@ -6,11 +6,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -34,23 +32,20 @@ public class JwtFilter extends OncePerRequestFilter {
 
       String token = obtenerTokenDeRequest(request);
 
-      if (StringUtils.hasText(token) && tokenProvider.validarToken(token)) {
+      if (StringUtils.hasText(token)) {
 
-        Long idUsuario = tokenProvider.getIdDelToken(token);
-        String dniUsuario = tokenProvider.getDniDelToken(token);
-        List<GrantedAuthority> authorities = tokenProvider.getRolesDelToken(token);
+        UsuarioAutenticadoDTO usuarioPrincipal = tokenProvider.obtenerUsuarioDesdeToken(token);
 
-        UsuarioAutenticadoDTO usuarioPrincipal = new UsuarioAutenticadoDTO(
-            idUsuario, dniUsuario, authorities
-        );
+        if (usuarioPrincipal != null) {
 
-        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-            usuarioPrincipal,
-            null,
-            authorities
-        );
+          UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+              usuarioPrincipal,
+              null,
+              usuarioPrincipal.authorities()
+          );
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+          SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
       }
     } catch (Exception e) {
       log.error("No se pudo establecer la autenticación del usuario en el filtro: {}", e.getMessage());
@@ -63,7 +58,7 @@ public class JwtFilter extends OncePerRequestFilter {
   protected boolean shouldNotFilter(HttpServletRequest request) {
 
     String path = request.getServletPath();
-    return path.startsWith("/auth/");
+    return path.startsWith("/api/auth/login");
   }
 
   private String obtenerTokenDeRequest(HttpServletRequest request) {
