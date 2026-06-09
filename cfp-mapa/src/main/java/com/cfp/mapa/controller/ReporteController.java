@@ -12,6 +12,8 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class ReporteController {
 
+  // TODO: crear reporte especial
+
 //    private final ReporteService reporteService;
 //
 //    public ReporteController(ReporteService reporteService) {

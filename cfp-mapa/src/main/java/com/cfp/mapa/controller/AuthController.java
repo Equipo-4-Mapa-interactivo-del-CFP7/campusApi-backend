@@ -2,6 +2,7 @@ package com.cfp.mapa.controller;
 
 import com.cfp.mapa.dto.jwt.JwtAuthResponseDTO;
 import com.cfp.mapa.dto.usuario.UsuarioLoginDTO;
+import com.cfp.mapa.repository.ReporteRepository;
 import com.cfp.mapa.security.jwt.JwtProvider;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
