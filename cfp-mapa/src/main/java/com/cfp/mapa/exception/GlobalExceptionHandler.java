@@ -54,4 +54,18 @@ public class GlobalExceptionHandler {
             .status(status)
             .body(response);
     }
+
+    //------------------------
+    //------ Espacios --------
+    //------------------------
+
+    @ExceptionHandler(EspacioNotFoundException.class)
+    public ResponseEntity<String> handleEspacioNotFound(
+            EspacioNotFoundException ex
+    ) {
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ex.getMessage());
+    }
 }

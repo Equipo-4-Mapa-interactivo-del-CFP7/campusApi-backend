@@ -1,61 +1,107 @@
 package com.cfp.mapa.controller;
 
-import com.cfp.mapa.model.Espacio;
+import com.cfp.mapa.dto.espacio.EspacioDetalleDTO;
+import com.cfp.mapa.dto.espacio.EspacioMapaDTO;
+import com.cfp.mapa.dto.espacio.EspacioResponseDTO;
 import com.cfp.mapa.model.enums.TipoEspacio;
 import com.cfp.mapa.service.EspacioService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/espacios")
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class EspacioController {
 
-//    private final EspacioService espacioService;
-//
-//    public EspacioController(EspacioService espacioService) {
-//        this.espacioService = espacioService;
-//    }
-//
-//    @GetMapping
-//    public ResponseEntity<List<Espacio>> listarTodos() {
-//        return ResponseEntity.ok(espacioService.listarTodos());
-//    }
-//
-//    @GetMapping("/{id}")
-//    public ResponseEntity<Espacio> obtenerPorId(@PathVariable Long id) {
-//        return ResponseEntity.ok(espacioService.obtenerPorId(id));
-//    }
-//
-//    @GetMapping("/buscar")
-//    public ResponseEntity<List<Espacio>> buscar(@RequestParam String nombre) {
-//        return ResponseEntity.ok(espacioService.buscarPorNombre(nombre));
-//    }
-//
-//    @GetMapping("/tipo/{tipo}")
-//    public ResponseEntity<List<Espacio>> listarPorTipo(@PathVariable TipoEspacio tipo) {
-//        return ResponseEntity.ok(espacioService.listarPorTipo(tipo));
-//    }
-//
-//    @GetMapping("/accesibles")
-//    public ResponseEntity<List<Espacio>> listarAccesibles() {
-//        return ResponseEntity.ok(espacioService.listarAccesibles());
-//    }
-//
-//    @PostMapping
-//    public ResponseEntity<Espacio> crear(@RequestBody Espacio espacio) {
-//        return ResponseEntity.ok(espacioService.crear(espacio));
-//    }
-//
-//    @PutMapping("/{id}")
-//    public ResponseEntity<Espacio> actualizar(@PathVariable Long id, @RequestBody Espacio espacio) {
-//        return ResponseEntity.ok(espacioService.actualizar(id, espacio));
-//    }
-//
-//    @DeleteMapping("/{id}")
-//    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-//        espacioService.eliminar(id);
-//        return ResponseEntity.noContent().build();
-//    }
+    private final EspacioService espacioService;
+
+    // =========================
+    // ADMIN
+    // =========================
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<EspacioResponseDTO>> listarEspacios(
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) String descripcion,
+            @RequestParam(required = false) TipoEspacio tipo,
+            @RequestParam(required = false) Boolean accesible,
+            @RequestParam(required = false) Boolean activo,
+            @PageableDefault(page = 0, size = 10) Pageable pageable
+    ) {
+        Page<EspacioResponseDTO> espacios = espacioService.listarEspacios(
+                nombre, descripcion, tipo, accesible, activo, pageable
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(espacios);
+
+    }
+
+    // =========================
+    // TODO: tengo que terminar todo esto.
+    // =========================
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<EspacioResponseDTO> crearEspacio(){
+
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<EspacioResponseDTO> actualizarEspacio(){
+
+    }
+
+    @PatchMapping("/{id}/activar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> activarEspacio(){
+
+    }
+
+    @PatchMapping("/{id}/desactivar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> desactivarEspacio(){
+
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> eliminarEspacio(){
+
+    }
+
+    // =========================
+    // PERSONAL
+    // =========================
+
+    @GetMapping("/mapa")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PERSONAL')")
+    public ResponseEntity<List<EspacioMapaDTO>> obtenerMapa(){
+
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PERSONAL')")
+    public ResponseEntity<EspacioDetalleDTO> obtenerPorId(){
+
+    }
+
+    @GetMapping("/buscar")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PERSONAL')")
+    public ResponseEntity<List<EspacioResponseDTO>> buscarEspacios(){
+
+    }
+
 }
