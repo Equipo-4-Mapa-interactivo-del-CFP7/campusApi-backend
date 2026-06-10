@@ -49,8 +49,8 @@ public class Usuario {
     @Column(nullable = false)
     boolean activo;
 
-    @Column(nullable = false)
-    boolean cambiarPassword;
+    @Enumerated(EnumType.STRING)
+    private Rol rolOriginal;
 
     @CreationTimestamp
     @Column(name = "fecha_creacion", nullable = false,  updatable = false)

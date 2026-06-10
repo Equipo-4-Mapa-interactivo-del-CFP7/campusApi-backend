@@ -26,7 +26,7 @@ public class AdminInitializer implements CommandLineRunner {
           .password(passwordEncoder.encode("admin123"))
           .rol(Rol.ADMIN)
           .activo(true)
-          .cambiarPassword(false)
+          .rolOriginal(null)
           .build();
 
       usuarioRepository.save(admin);
@@ -40,7 +40,7 @@ public class AdminInitializer implements CommandLineRunner {
           .password(passwordEncoder.encode("personal456"))
           .rol(Rol.PERSONAL)
           .activo(true)
-          .cambiarPassword(false)
+          .rolOriginal(null)
           .build();
 
       usuarioRepository.save(personal);

@@ -34,6 +34,24 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(DniNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleDniNotFoundException(DniNotFoundException ex) {
+
+        return buildErrorResponse(
+            HttpStatus.NOT_FOUND,
+            ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(EspacioNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleEspacioNotFound(EspacioNotFoundException ex) {
+
+        return buildErrorResponse(
+            HttpStatus.NOT_FOUND,
+            ex.getMessage()
+        );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception ex) {
 
@@ -53,19 +71,5 @@ public class GlobalExceptionHandler {
         return ResponseEntity
             .status(status)
             .body(response);
-    }
-
-    //------------------------
-    //------ Espacios --------
-    //------------------------
-
-    @ExceptionHandler(EspacioNotFoundException.class)
-    public ResponseEntity<String> handleEspacioNotFound(
-            EspacioNotFoundException ex
-    ) {
-
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ex.getMessage());
     }
 }

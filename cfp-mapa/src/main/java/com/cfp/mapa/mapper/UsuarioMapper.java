@@ -15,11 +15,11 @@ public class UsuarioMapper {
     return Usuario.builder()
         .dni(request.dni())
         .password(encodedPassword)
-        .rol(Rol.PERSONAL)
+        .rol(Rol.CHANGE_PASSWORD)
         .nombre(request.nombre())
         .apellido(request.apellido())
         .activo(true)
-        .cambiarPassword(true)
+        .rolOriginal(Rol.PERSONAL)
         .build();
   }
 

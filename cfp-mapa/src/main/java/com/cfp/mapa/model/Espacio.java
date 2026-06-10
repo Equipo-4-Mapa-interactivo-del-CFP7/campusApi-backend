@@ -39,9 +39,6 @@ public class Espacio {
     private TipoEspacio tipo;
 
     @Column(nullable = false)
-    private Integer piso;
-
-    @Column(nullable = false)
     private Double coordenadaX;
 
     @Column(nullable = false)

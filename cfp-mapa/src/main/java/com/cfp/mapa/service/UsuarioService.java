@@ -16,4 +16,6 @@ public interface UsuarioService {
       Boolean activo,
       Pageable pageable
   );
+
+  UsuarioResponseDTO restablecerPasswordPorAdmin(String dni);
 }

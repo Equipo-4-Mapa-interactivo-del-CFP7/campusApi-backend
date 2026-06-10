@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -20,6 +21,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtFilter extends OncePerRequestFilter {
 
   private final JwtProvider tokenProvider;
+  private final StringRedisTemplate redisTemplate;
 
   @Override
   protected void doFilterInternal(
@@ -38,13 +40,21 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (usuarioPrincipal != null) {
 
-          UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-              usuarioPrincipal,
-              null,
-              usuarioPrincipal.authorities()
-          );
+          // Verificacion con redis en la lista negra
+          String key = "blacklist:" + usuarioPrincipal.dni();
+          Boolean isBlacklisted = redisTemplate.hasKey(key);
 
-          SecurityContextHolder.getContext().setAuthentication(authentication);
+          if (Boolean.TRUE.equals(isBlacklisted)) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token revocado por el administrador.");
+          } else {
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                usuarioPrincipal,
+                null,
+                usuarioPrincipal.authorities()
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+          }
         }
       }
     } catch (Exception e) {

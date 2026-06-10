@@ -52,56 +52,56 @@ public class EspacioController {
     // TODO: tengo que terminar todo esto.
     // =========================
 
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<EspacioResponseDTO> crearEspacio(){
-
-    }
-
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<EspacioResponseDTO> actualizarEspacio(){
-
-    }
-
-    @PatchMapping("/{id}/activar")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> activarEspacio(){
-
-    }
-
-    @PatchMapping("/{id}/desactivar")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> desactivarEspacio(){
-
-    }
-
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> eliminarEspacio(){
-
-    }
+//    @PostMapping
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResponseEntity<EspacioResponseDTO> crearEspacio(){
+//
+//    }
+//
+//    @PutMapping("/{id}")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResponseEntity<EspacioResponseDTO> actualizarEspacio(){
+//
+//    }
+//
+//    @PatchMapping("/{id}/activar")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResponseEntity<?> activarEspacio(){
+//
+//    }
+//
+//    @PatchMapping("/{id}/desactivar")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResponseEntity<?> desactivarEspacio(){
+//
+//    }
+//
+//    @DeleteMapping("/{id}")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResponseEntity<?> eliminarEspacio(){
+//
+//    }
 
     // =========================
     // PERSONAL
     // =========================
 
-    @GetMapping("/mapa")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PERSONAL')")
-    public ResponseEntity<List<EspacioMapaDTO>> obtenerMapa(){
-
-    }
-
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PERSONAL')")
-    public ResponseEntity<EspacioDetalleDTO> obtenerPorId(){
-
-    }
-
-    @GetMapping("/buscar")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PERSONAL')")
-    public ResponseEntity<List<EspacioResponseDTO>> buscarEspacios(){
-
-    }
+//    @GetMapping("/mapa")
+//    @PreAuthorize("hasAnyRole('ADMIN', 'PERSONAL')")
+//    public ResponseEntity<List<EspacioMapaDTO>> obtenerMapa(){
+//
+//    }
+//
+//    @GetMapping("/{id}")
+//    @PreAuthorize("hasAnyRole('ADMIN', 'PERSONAL')")
+//    public ResponseEntity<EspacioDetalleDTO> obtenerPorId(){
+//
+//    }
+//
+//    @GetMapping("/buscar")
+//    @PreAuthorize("hasAnyRole('ADMIN', 'PERSONAL')")
+//    public ResponseEntity<List<EspacioResponseDTO>> buscarEspacios(){
+//
+//    }
 
 }
