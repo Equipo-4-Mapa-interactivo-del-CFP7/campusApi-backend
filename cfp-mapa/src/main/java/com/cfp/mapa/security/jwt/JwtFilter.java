@@ -40,12 +40,21 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (usuarioPrincipal != null) {
 
-          // Verificacion con redis en la lista negra
-          String key = "blacklist:" + usuarioPrincipal.dni();
-          Boolean isBlacklisted = redisTemplate.hasKey(key);
+          boolean isBlacklisted = false;
 
-          if (Boolean.TRUE.equals(isBlacklisted)) {
+          try {
+            // Verificacion con redis en la lista negra
+            String key = "blacklist:" + usuarioPrincipal.dni();
+            Boolean result = redisTemplate.hasKey(key);
+            isBlacklisted = Boolean.TRUE.equals(result);
+          } catch (Exception e) {
+            // Si Redis falla, lo logueamos pero no rompemos el login del usuario
+            log.error("Error al consultar la lista negra en Redis (se asume token válido): {}", e.getMessage());
+          }
+
+          if (isBlacklisted) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token revocado por el administrador.");
+            return;
           } else {
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 usuarioPrincipal,

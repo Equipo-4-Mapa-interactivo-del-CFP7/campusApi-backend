@@ -1,13 +1,16 @@
 # --- carpetas de compilación (NUNCA SUBIR) ---
-/target/
+target/
+**/target/
 !.mvn/wrapper/maven-wrapper.jar
 
 # --- configuraciones locales de IntelliJ IDEA ---
 .idea/
+**/ .idea/
 *.iws
 *.iml
 *.ipr
 out/
+**/out/
 
 # --- archivos temporales y de sistema ---
 ### Linux ###
@@ -43,3 +46,4 @@ Log.txt
 # --- archivos de logs locales ---
 *.log
 logs/
+**/logs/

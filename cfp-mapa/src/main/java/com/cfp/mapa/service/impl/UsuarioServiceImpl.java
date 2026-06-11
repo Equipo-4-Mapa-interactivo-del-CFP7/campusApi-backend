@@ -1,7 +1,6 @@
 package com.cfp.mapa.service.impl;
 
 import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
-import com.cfp.mapa.dto.usuario.UsuarioLoginDTO;
 import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
 import com.cfp.mapa.exception.DniDuplicadoException;
 import com.cfp.mapa.exception.DniNotFoundException;
