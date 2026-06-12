@@ -239,7 +239,7 @@ les cambia el rol para obligarlos a cambiarla.*
 ---
 # Reportes
 
-## Reportar incidencia (solo para USUARIOS REGISTRADOS)
+## Reportar incidencia (para usuarios sin registrar)
 POST /api/reportes/reportar
 
 Permite que únicamente usuarios registrados en la base de datos reporten incidencias en los espacios
