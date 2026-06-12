@@ -4,6 +4,7 @@ import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
 import com.cfp.mapa.exception.DniDuplicadoException;
 import com.cfp.mapa.exception.DniNotFoundException;
+import com.cfp.mapa.exception.PasswordIncorrectaException;
 import com.cfp.mapa.mapper.UsuarioMapper;
 import com.cfp.mapa.model.Usuario;
 import com.cfp.mapa.model.enums.Rol;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,11 +86,50 @@ public class UsuarioServiceImpl implements UsuarioService {
     return usuarioMapper.usuarioToResponse(usuarioGuardado);
   }
 
-  // TODO: deshabilitar usuario -> cambiarEstadoActivoPorAdmin
+  @Transactional
+  @Override
+  public UsuarioResponseDTO cambiarEstadoActivoPorAdmin(String dni) {
 
-  // TODO: cambiar password
+    Usuario usuario = usuarioRepository.findByDni(dni).orElseThrow(
+        () -> new DniNotFoundException(dni)
+    );
+
+    usuario.setActivo(!usuario.isActivo());
+    Usuario usuarioGuardado = usuarioRepository.save(usuario);
+
+    String key = "blacklist:" + dni;
+
+    if (!usuario.isActivo()) {
+      redisTemplate.opsForValue().set(key, "deactivated", Duration.ofMillis(jwtExpirationMs));
+    } else {
+      redisTemplate.delete(key);
+    }
+
+    return usuarioMapper.usuarioToResponse(usuarioGuardado);
+  }
+
+  @Transactional
+  @Override
+  public void cambiarPassword(String dni, String oldPassword, String newPassword) {
+
+    Usuario usuario = usuarioRepository.findByDni(dni).orElseThrow(
+        () -> new DniNotFoundException(dni)
+    );
+
+    if (!passwordEncoder.matches(oldPassword, usuario.getPassword())) {
+      throw new PasswordIncorrectaException();
+    }
+
+    usuario.setPassword(passwordEncoder.encode(newPassword));
+    usuarioRepository.save(usuario);
+
+    String key = "blacklist:" + dni;
+    redisTemplate.opsForValue().set(key, "password_changed", Duration.ofMillis(jwtExpirationMs));
+  }
 
   // TODO: cambiar rol
+
+  // TODO: ver mi perfil
 
   // ---------- FUNCIONES PRIVADAS
   private String dniToPasswordEncoded(String dni) {

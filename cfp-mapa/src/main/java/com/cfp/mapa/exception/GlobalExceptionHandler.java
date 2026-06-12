@@ -43,6 +43,15 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(PasswordIncorrectaException.class)
+    public ResponseEntity<ErrorResponse> handlePasswordIncorrectaException(PasswordIncorrectaException ex) {
+
+        return buildErrorResponse(
+            HttpStatus.BAD_REQUEST,
+            ex.getMessage()
+        );
+    }
+
     @ExceptionHandler(EspacioNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleEspacioNotFound(EspacioNotFoundException ex) {
 

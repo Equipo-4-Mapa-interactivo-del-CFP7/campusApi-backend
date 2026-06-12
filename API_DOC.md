@@ -234,3 +234,65 @@ les cambia el rol para obligarlos a cambiarla.*
 `404 NOT FOUND` Si no existe un usuario con el DNI solicitado.
 </td></tr></table>
 </details> 
+
+## Cambiar estado de la cuenta (solo para ADMIN)
+
+`PUT /api/usuarios/{dni}/cambiar-activo`
+
+*Permite que únicamente usuarios con el rol ADMIN puedan cambiar el flag `activo` de una cuenta.*
+
+#### Encabezados (Headers)
+
+* `Authorization`: `Bearer <token_de_admin>`
+
+#### Path variable
+
+* `dni`
+
+<details>
+<summary><b>Respuesta del servidor</b></summary>
+<table><tr><td>
+
+`200 OK` + JSON respuesta de usuario.
+
+`404 NOT FOUND` Si no existe un usuario con el DNI solicitado.
+</td></tr></table>
+</details> 
+
+## Cambiar contraseña
+
+`PUT /api/usuarios/me/password`
+
+*Permite que únicamente un usuario logueado pueda cambiar su propia contrasesña.*
+
+#### Encabezados (Headers)
+
+* `Authorization`: `Bearer <token_de_usuario_logueado>`
+
+<details>
+<summary><b>Cuerpo de la petición</b></summary>
+<table><tr><td>
+
+`oldPassword` String, requerido, entre 8 y 60 caracteres.
+
+`newPassword` String, requerido, entre 8 y 60 caracteres.
+
+```JSON
+{
+  "oldPassword": "passwordVieja",
+  "newPassword": "passwordNueva"
+}
+```
+</td></tr></table>
+</details> 
+
+<details>
+<summary><b>Respuesta del servidor</b></summary>
+<table><tr><td>
+
+`200 OK`
+
+`400 BAD_REQUEST` + JSON error, si `oldPassword` no coincide con la contraseña actual.
+
+</td></tr></table>
+</details>

@@ -18,4 +18,8 @@ public interface UsuarioService {
   );
 
   UsuarioResponseDTO restablecerPasswordPorAdmin(String dni);
+
+  UsuarioResponseDTO cambiarEstadoActivoPorAdmin(String dni);
+
+  void cambiarPassword(String dni, String oldPassword, String newPassword);
 }
