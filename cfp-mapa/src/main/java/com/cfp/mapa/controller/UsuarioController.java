@@ -111,4 +111,16 @@ public class UsuarioController {
         .status(HttpStatus.OK)
         .body(response);
   }
+
+  @GetMapping("/me")
+  public ResponseEntity<UsuarioResponseDTO> obtenerMiPerfil (
+      @AuthenticationPrincipal UsuarioAutenticadoDTO usuario
+  ) {
+
+    UsuarioResponseDTO response = usuarioService.obtenerMiPerfil(usuario.dni());
+
+    return ResponseEntity
+        .status(HttpStatus.OK)
+        .body(response);
+  }
 }

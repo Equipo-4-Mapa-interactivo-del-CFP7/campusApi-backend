@@ -326,3 +326,25 @@ va intercambiando entre ADMIN y PERSONAL.*
 
 </td></tr></table>
 </details>
+
+## Obtener mi propio perfil
+
+`GET /api/usuarios/me`
+
+*Permite que únicamente un usuario logueado pueda ver su propio perfil.*
+
+#### Encabezados (Headers)
+
+* `Authorization`: `Bearer <token_de_usuario_logueado>`
+
+<details>
+<summary><b>Respuesta del servidor</b></summary>
+<table><tr><td>
+
+`200 OK` + JSON respuesta de usuario.
+
+`404 NOT FOUND` (Raro que ocurra) Ocurre si el usuario fue eliminado de la base de datos mientras
+su token JWT aún seguía activo.
+
+</td></tr></table>
+</details>

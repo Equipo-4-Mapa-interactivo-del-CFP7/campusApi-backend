@@ -24,4 +24,6 @@ public interface UsuarioService {
   void cambiarPassword(String dni, String oldPassword, String newPassword);
 
   UsuarioResponseDTO cambiarRolPorAdmin(String dni);
+
+  UsuarioResponseDTO obtenerMiPerfil(String dni);
 }

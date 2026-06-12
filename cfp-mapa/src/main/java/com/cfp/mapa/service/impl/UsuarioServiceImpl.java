@@ -147,7 +147,18 @@ public class UsuarioServiceImpl implements UsuarioService {
     return usuarioMapper.usuarioToResponse(usuarioGuardado);
   }
 
-  // TODO: ver mi perfil
+  @Transactional(readOnly = true)
+  @Override
+  public UsuarioResponseDTO obtenerMiPerfil(String dni) {
+
+    Usuario usuario = usuarioRepository.findByDni(dni).orElseThrow(
+        () -> new DniNotFoundException(dni)
+    );
+
+    return usuarioMapper.usuarioToResponse(usuario);
+  }
+
+  // TODO: que el admin pueda revisar cualquier perfil
 
   // ---------- FUNCIONES PRIVADAS
   private String dniToPasswordEncoded(String dni) {
