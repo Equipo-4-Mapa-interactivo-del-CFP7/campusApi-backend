@@ -29,6 +29,7 @@ public class UsuarioMapper {
     return new UsuarioResponseDTO(
         usuario.getId(),
         usuario.getDni(),
+        usuario.getRol(),
         usuario.getNombre(),
         usuario.getApellido(),
         usuario.isActivo()

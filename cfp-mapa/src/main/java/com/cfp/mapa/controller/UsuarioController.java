@@ -98,4 +98,17 @@ public class UsuarioController {
         .status(HttpStatus.OK)
         .build();
   }
+
+  @PutMapping("/{dni}/cambiar-rol")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<UsuarioResponseDTO> cambiarRolPorAdmin (
+      @PathVariable String dni
+  ) {
+
+    UsuarioResponseDTO response = usuarioService.cambiarRolPorAdmin(dni);
+
+    return ResponseEntity
+        .status(HttpStatus.OK)
+        .body(response);
+  }
 }

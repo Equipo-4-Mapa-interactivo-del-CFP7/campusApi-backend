@@ -127,7 +127,25 @@ public class UsuarioServiceImpl implements UsuarioService {
     redisTemplate.opsForValue().set(key, "password_changed", Duration.ofMillis(jwtExpirationMs));
   }
 
-  // TODO: cambiar rol
+  @Transactional
+  @Override
+  public UsuarioResponseDTO cambiarRolPorAdmin(String dni) {
+
+    Usuario usuario = usuarioRepository.findByDni(dni).orElseThrow(
+        () -> new DniNotFoundException(dni)
+    );
+
+    usuario.setRol(
+        usuario.getRol() == Rol.ADMIN ? Rol.PERSONAL : Rol.ADMIN
+    );
+
+    Usuario usuarioGuardado = usuarioRepository.save(usuario);
+
+    String key = "blacklist:" + dni;
+    redisTemplate.opsForValue().set(key, "rol_changed", Duration.ofMillis(jwtExpirationMs));
+
+    return usuarioMapper.usuarioToResponse(usuarioGuardado);
+  }
 
   // TODO: ver mi perfil
 

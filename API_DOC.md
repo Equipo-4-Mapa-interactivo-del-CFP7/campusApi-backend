@@ -79,6 +79,7 @@
 {
   "id": Long,
   "dni": String,
+  "rol": String,
   "nombre": String,
   "apellido": String,
   "activo": Boolean
@@ -92,6 +93,7 @@
 {
   "id": 1,
   "dni": "123456",
+  "rol": "ADMIN",
   "nombre": "nombre",
   "apellido": "apellido",
   "activo": true
@@ -168,16 +170,18 @@ Cada usuario tendrá el formato del JSON de respuesta de usuario.
     {
       "id": 1,
       "dni": "123456",
-      "nombre": "NombreUsuario",
-      "apellido": "ApellidoUsuario",
+      "rol": "ADMIN",
+      "nombre": "Nombre1",
+      "apellido": "Apellido1",
       "activo": true
     },
     {
       "id": 2,
-      "dni": "789012",
-      "nombre": "OtroNombre",
-      "apellido": "OtroApellido",
-      "activo": false
+      "dni": "456789",
+      "rol": "PERSONAL",
+      "nombre": "Nombre2",
+      "apellido": "Apellido2",
+      "activo": true
     }
   ],
   "empty": false,
@@ -223,7 +227,7 @@ les cambia el rol para obligarlos a cambiarla.*
 
 #### Path variable
 
-* `dni`
+* `dni` del usuario al que se le va a restablecer la contraseña.
 
 <details>
 <summary><b>Respuesta del servidor</b></summary>
@@ -247,7 +251,7 @@ les cambia el rol para obligarlos a cambiarla.*
 
 #### Path variable
 
-* `dni`
+* `dni` del usuario al que se le va a cambiar el flag `activo`.
 
 <details>
 <summary><b>Respuesta del servidor</b></summary>
@@ -293,6 +297,32 @@ les cambia el rol para obligarlos a cambiarla.*
 `200 OK`
 
 `400 BAD_REQUEST` + JSON error, si `oldPassword` no coincide con la contraseña actual.
+
+</td></tr></table>
+</details>
+
+## Cambiar rol (solo para ADMIN)
+
+`PUT /api/usuarios/{dni}/cambiar-rol`
+
+*Permite que únicamente los usuarios con el rol ADMIN puedan cambiar el rol de otro usuario, los
+va intercambiando entre ADMIN y PERSONAL.*
+
+#### Encabezados (Headers)
+
+* `Authorization`: `Bearer <token_de_admin>`
+
+#### Path variable
+
+* `dni` del usuario al que al que se le va a cambiar el rol.
+
+<details>
+<summary><b>Respuesta del servidor</b></summary>
+<table><tr><td>
+
+`200 OK` + JSON respuesta de usuario.
+
+`404 NOT FOUND` Si no existe un usuario con el DNI solicitado.
 
 </td></tr></table>
 </details>
