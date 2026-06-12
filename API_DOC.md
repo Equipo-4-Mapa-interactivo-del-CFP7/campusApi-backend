@@ -234,3 +234,51 @@ les cambia el rol para obligarlos a cambiarla.*
 `404 NOT FOUND` Si no existe un usuario con el DNI solicitado.
 </td></tr></table>
 </details> 
+
+
+---
+# Reportes
+
+## Reportar incidencia (solo para USUARIOS REGISTRADOS)
+POST /api/reportes/reportar
+
+Permite que únicamente usuarios registrados en la base de datos reporten incidencias en los espacios
+
+#### Encabezados (Headers)
+* Authorization: Bearer <token_de_usuario>
+
+<details>
+<summary><b>Cuerpo de la petición</b></summary>
+<table><tr><td>
+
+tipoReporte TipoReporte, requerido, Categoría del problema reportado:
+ACCESO_BLOQUEADO
+BARRERA_FISICA
+PROBLEMA_SENALETICA
+DIFICULTAD_ORIENTACION.
+
+descripcion String, requerido, entre 1 y 500 caracteres.
+
+espacioId Long, requerido, ID del Espacio donde ocurrió la incidencia. El servidor valida que exista.
+
+foto MultipartFile, opcional. Imagen adjunta. Se guarda y se crea una Imagen asociada al Reporte.
+
+JSON
+{
+"tipoReporte": "ACCESO_BLOQUEADO",
+"descripcion": "Acceso bloqueado en el segundo piso",
+"espacioId": "2",
+}
+
+</td></tr></table>
+</details> 
+
+<details>
+<summary><b>Respuesta del servidor</b></summary>
+<table><tr><td>
+
+201 CREATED
+
+404 NOT FOUND + JSON error, si no se encontró el Espacio.
+</td></tr></table>
+</details>
