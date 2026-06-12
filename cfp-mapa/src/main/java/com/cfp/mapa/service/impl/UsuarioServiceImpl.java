@@ -158,7 +158,16 @@ public class UsuarioServiceImpl implements UsuarioService {
     return usuarioMapper.usuarioToResponse(usuario);
   }
 
-  // TODO: que el admin pueda revisar cualquier perfil
+  @Transactional(readOnly = true)
+  @Override
+  public UsuarioResponseDTO obtenerPerfilPorAdmin(String dni) {
+
+    Usuario usuario = usuarioRepository.findByDni(dni).orElseThrow(
+        () -> new DniNotFoundException(dni)
+    );
+
+    return usuarioMapper.usuarioToResponse(usuario);
+  }
 
   // ---------- FUNCIONES PRIVADAS
   private String dniToPasswordEncoded(String dni) {

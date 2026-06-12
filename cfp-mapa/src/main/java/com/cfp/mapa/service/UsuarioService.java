@@ -26,4 +26,6 @@ public interface UsuarioService {
   UsuarioResponseDTO cambiarRolPorAdmin(String dni);
 
   UsuarioResponseDTO obtenerMiPerfil(String dni);
+
+  UsuarioResponseDTO obtenerPerfilPorAdmin(String dni);
 }

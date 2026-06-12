@@ -123,4 +123,17 @@ public class UsuarioController {
         .status(HttpStatus.OK)
         .body(response);
   }
+
+  @GetMapping("/{dni}")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<UsuarioResponseDTO> obtenerPerfilPorAdmin (
+      @PathVariable String dni
+  ) {
+
+    UsuarioResponseDTO response = usuarioService.obtenerPerfilPorAdmin(dni);
+
+    return ResponseEntity
+        .status(HttpStatus.OK)
+        .body(response);
+  }
 }

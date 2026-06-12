@@ -348,3 +348,29 @@ su token JWT aún seguía activo.
 
 </td></tr></table>
 </details>
+
+## Obtener cualquier perfil (solo para ADMIN)
+
+`GET /api/usuarios/{dni}`
+
+*Permite que únicamente un usuario con el rol ADMIN pueda obtener información de cualquier perfil
+de usuario a través de su DNI.*
+
+#### Encabezados (Headers)
+
+* `Authorization`: `Bearer <token_de_admin>`
+
+#### Path variable
+
+* `dni` del usuario del que se va a obtener la información.
+
+<details>
+<summary><b>Respuesta del servidor</b></summary>
+<table><tr><td>
+
+`200 OK` + JSON respuesta de usuario.
+
+`404 NOT FOUND` Si no existe un usuario con el DNI solicitado.
+
+</td></tr></table>
+</details>
