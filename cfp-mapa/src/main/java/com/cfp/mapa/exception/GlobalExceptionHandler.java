@@ -63,6 +63,15 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleReporteNotFoundException(ResourceNotFoundException ex) {
+
+        return buildErrorResponse(
+                HttpStatus.NOT_FOUND,
+                ex.getMessage()
+        );
+    }
+
     private ResponseEntity<ErrorResponse> buildErrorResponse(
         HttpStatus status, String message)
     {
