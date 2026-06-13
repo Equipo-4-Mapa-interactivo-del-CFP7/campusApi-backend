@@ -14,22 +14,22 @@ public class ReporteMapper {
         return new ReporteResponseDTO(
                 reporte.getId(),
                 reporte.getDescripcion(),
-                reporte.getTipo().name(),
-                reporte.getEstado().name()
+                reporte.getEstado(),
+                reporte.getTipo(),
+                reporte.getUrlImagen()
         );
     }
 
     // ReporteCreateRequestDTO -> Reporte
-    public Reporte createToReporte(ReporteCreateRequestDTO request, Long new_id) {
+    public Reporte createToReporte(ReporteCreateRequestDTO request) {
         return Reporte.builder()
-                .id(new_id)
+                .tipo(request.tipoReporte())
                 .descripcion(request.descripcion())
                 .estado(EstadoReporte.PENDIENTE)
-                .tipo(strToTipoReporte(request.tipoReporte()))
                 .build();
     }
 
-    private EstadoReporte strToEstadoReporte(String estado) {
+    public EstadoReporte strToEstadoReporte(String estado) {
         estado.toUpperCase();
         if (estado == "PENDIENTE")
             return EstadoReporte.PENDIENTE;
@@ -40,7 +40,7 @@ public class ReporteMapper {
         return null;
     }
 
-    private TipoReporte strToTipoReporte(String tipo) {
+    public TipoReporte strToTipoReporte(String tipo) {
         tipo.toUpperCase();
         if (tipo == "ACCESO_BLOQUEADO")
             return TipoReporte.ACCESO_BLOQUEADO;

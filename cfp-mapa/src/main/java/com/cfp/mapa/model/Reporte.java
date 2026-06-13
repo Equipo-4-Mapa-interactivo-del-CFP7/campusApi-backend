@@ -63,4 +63,8 @@ public class Reporte {
     @CreationTimestamp
     @Column(name = "fecha_creacion", nullable = false,  updatable = false)
     private LocalDateTime fechaCreacion;
+
+    @Column(name = "url_imagen")
+    private String urlImagen;
+
 }

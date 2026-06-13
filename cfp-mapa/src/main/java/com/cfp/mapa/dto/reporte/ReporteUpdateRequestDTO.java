@@ -1,4 +1,15 @@
 package com.cfp.mapa.dto.reporte;
 
-public record ReporteUpdateRequestDTO() {
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+
+public record ReporteUpdateRequestDTO(
+
+        @NotBlank
+        String estado,
+
+        @Min(1)
+        Integer minutosEstimados
+
+) {
 }
