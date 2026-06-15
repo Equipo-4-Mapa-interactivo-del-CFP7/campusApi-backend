@@ -32,42 +32,28 @@ public class EspacioServiceImpl implements EspacioService {
             Boolean activo,
             Pageable pageable
     ) {
-
-        Page<Espacio> espaciosPage = espacioRepository.buscarEspacios(
-                nombre, descripcion, tipo, accesible, activo, pageable
-        );
-
+        Page<Espacio> espaciosPage = espacioRepository.buscarEspacios(nombre, descripcion, tipo, accesible, activo, pageable);
         return espaciosPage.map(espacioMapper::espacioToResponse);
     }
 
     @Transactional(readOnly = true)
     @Override
     public EspacioDetalleDTO obtenerEspacioPorId(Long id) {
-
-        Espacio espacio = espacioRepository.findById(id)
-                .orElseThrow(() -> new EspacioNotFoundException(id));
-
+        Espacio espacio = espacioRepository.findById(id).orElseThrow(() -> new EspacioNotFoundException(id));
         return espacioMapper.espacioToDetalleDTO(espacio);
     }
 
     @Transactional
     @Override
     public void desactivarEspacio(Long id) {
-
-        Espacio espacio = espacioRepository.findById(id)
-                .orElseThrow(() -> new EspacioNotFoundException(id));
-
+        Espacio espacio = espacioRepository.findById(id).orElseThrow(() -> new EspacioNotFoundException(id));
         espacio.setActivo(false);
-
         espacioRepository.save(espacio);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<EspacioMapaDTO> obtenerMapa(
-            TipoEspacio tipo
-    ) {
-
+    public List<EspacioMapaDTO> obtenerMapa(TipoEspacio tipo) {
         List<Espacio> espacios;
 
         if (tipo != null) {
@@ -83,88 +69,28 @@ public class EspacioServiceImpl implements EspacioService {
 
     @Transactional
     @Override
-    public EspacioResponseDTO crearEspacio(EspacioRequestDTO dto) {
-        return null;
-    }
+    public EspacioResponseDTO actualizarEspacio(Long id, EspacioUpdateDTO dto) {
 
-    @Transactional
-    @Override
-    public EspacioResponseDTO actualizarEspacio(
-            Long id,
-            EspacioUpdateDTO dto
-    ) {
-        return null;
+        Espacio espacio = espacioRepository.findById(id).orElseThrow(() -> new EspacioNotFoundException(id));
+        espacioMapper.updateToEspacio(dto, espacio);
+        Espacio espacioActualizado = espacioRepository.save(espacio);
+        return espacioMapper.espacioToResponse(espacioActualizado);
     }
 
     @Transactional
     @Override
     public void activarEspacio(Long id) {
-
+        Espacio espacio = espacioRepository.findById(id).orElseThrow(() -> new EspacioNotFoundException(id));
+        espacio.setActivo(true);
+        espacioRepository.save(espacio);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     @Override
-    public void eliminarEspacio(Long id) {
-
+    public List<EspacioMapaDTO> buscarEspacios(String nombre) {
+        List<Espacio> espacios = espacioRepository.findByNombreContainingIgnoreCaseAndActivoTrue(nombre);
+        return espacios.stream()
+                .map(espacioMapper::espacioToMapaDTO)
+                .toList();
     }
-
-
-
-//    private final EspacioRepository espacioRepository;
-//
-//    public EspacioServiceImpl(EspacioRepository espacioRepository) {
-//        this.espacioRepository = espacioRepository;
-//    }
-//
-//    @Override
-//    public List<Espacio> listarTodos() {
-//        return espacioRepository.findByActivoTrue();
-//    }
-//
-//    @Override
-//    public Espacio obtenerPorId(Long id) {
-//        return espacioRepository.findById(id)
-//                .orElseThrow(() -> new ResourceNotFoundException("Espacio no encontrado con id: " + id));
-//    }
-//
-//    @Override
-//    public List<Espacio> buscarPorNombre(String nombre) {
-//        return espacioRepository.findByNombreContainingIgnoreCaseAndActivoTrue(nombre);
-//    }
-//
-//    @Override
-//    public List<Espacio> listarPorTipo(TipoEspacio tipo) {
-//        return espacioRepository.findByTipoAndActivoTrue(tipo);
-//    }
-//
-//    @Override
-//    public List<Espacio> listarAccesibles() {
-//        return espacioRepository.findByAccesibleTrueAndActivoTrue();
-//    }
-//
-//    @Override
-//    public Espacio crear(Espacio espacio) {
-//        return espacioRepository.save(espacio);
-//    }
-//
-//    @Override
-//    public Espacio actualizar(Long id, Espacio datos) {
-//        Espacio espacio = obtenerPorId(id);
-//        espacio.setNombre(datos.getNombre());
-//        espacio.setDescripcion(datos.getDescripcion());
-//        espacio.setTipo(datos.getTipo());
-//        espacio.setPiso(datos.getPiso());
-//        espacio.setCoordenadaX(datos.getCoordenadaX());
-//        espacio.setCoordenadaY(datos.getCoordenadaY());
-//        espacio.setAccesible(datos.getAccesible());
-//        espacio.setFotos(datos.getFotos());
-//        return espacioRepository.save(espacio);
-//    }
-//
-//    @Override
-//    public void eliminar(Long id) {
-//        Espacio espacio = obtenerPorId(id);
-//        espacio.setActivo(false);
-//        espacioRepository.save(espacio);
-//    }
 }

@@ -1,9 +1,6 @@
 package com.cfp.mapa.mapper;
 
-import com.cfp.mapa.dto.espacio.EspacioDetalleDTO;
-import com.cfp.mapa.dto.espacio.EspacioMapaDTO;
-import com.cfp.mapa.dto.espacio.EspacioRequestDTO;
-import com.cfp.mapa.dto.espacio.EspacioResponseDTO;
+import com.cfp.mapa.dto.espacio.*;
 import com.cfp.mapa.model.Espacio;
 import org.springframework.stereotype.Component;
 
@@ -47,9 +44,7 @@ public class EspacioMapper {
         );
     }
 
-    public Espacio requestToEspacio(EspacioRequestDTO dto) {
-
-        Espacio espacio = new Espacio();
+    public void updateToEspacio(EspacioUpdateDTO dto, Espacio espacio) {
 
         espacio.setNombre(dto.nombre());
         espacio.setDescripcion(dto.descripcion());
@@ -57,7 +52,5 @@ public class EspacioMapper {
         espacio.setCoordenadaX(dto.coordenadaX());
         espacio.setCoordenadaY(dto.coordenadaY());
         espacio.setAccesible(dto.accesible());
-
-        return espacio;
     }
 }
