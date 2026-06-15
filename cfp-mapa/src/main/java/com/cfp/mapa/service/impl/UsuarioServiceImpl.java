@@ -12,6 +12,7 @@ import com.cfp.mapa.repository.UsuarioRepository;
 import com.cfp.mapa.service.UsuarioService;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class UsuarioServiceImpl implements UsuarioService {
@@ -80,8 +82,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     Usuario usuarioGuardado = usuarioRepository.save(usuario);
 
-    String key = "blacklist:" + dni;
-    redisTemplate.opsForValue().set(key, "revoked", Duration.ofMillis(jwtExpirationMs));
+    tokenBlacklistAsyncSafe(dni, "revoked");
 
     return usuarioMapper.usuarioToResponse(usuarioGuardado);
   }
@@ -97,12 +98,10 @@ public class UsuarioServiceImpl implements UsuarioService {
     usuario.setActivo(!usuario.isActivo());
     Usuario usuarioGuardado = usuarioRepository.save(usuario);
 
-    String key = "blacklist:" + dni;
-
     if (!usuario.isActivo()) {
-      redisTemplate.opsForValue().set(key, "deactivated", Duration.ofMillis(jwtExpirationMs));
+      tokenBlacklistAsyncSafe(dni, "deactivated");
     } else {
-      redisTemplate.delete(key);
+      tokenBlacklistRemoveSafe(dni);
     }
 
     return usuarioMapper.usuarioToResponse(usuarioGuardado);
@@ -120,11 +119,15 @@ public class UsuarioServiceImpl implements UsuarioService {
       throw new PasswordIncorrectaException();
     }
 
+    if (usuario.getRol() == Rol.CHANGE_PASSWORD) {
+      usuario.setRol(usuario.getRolOriginal());
+      usuario.setRolOriginal(null);
+    }
+
     usuario.setPassword(passwordEncoder.encode(newPassword));
     usuarioRepository.save(usuario);
 
-    String key = "blacklist:" + dni;
-    redisTemplate.opsForValue().set(key, "password_changed", Duration.ofMillis(jwtExpirationMs));
+    tokenBlacklistAsyncSafe(dni, "password_changed");
   }
 
   @Transactional
@@ -141,8 +144,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     Usuario usuarioGuardado = usuarioRepository.save(usuario);
 
-    String key = "blacklist:" + dni;
-    redisTemplate.opsForValue().set(key, "rol_changed", Duration.ofMillis(jwtExpirationMs));
+    tokenBlacklistAsyncSafe(dni, "rol_changed");
 
     return usuarioMapper.usuarioToResponse(usuarioGuardado);
   }
@@ -171,6 +173,24 @@ public class UsuarioServiceImpl implements UsuarioService {
 
   // ---------- FUNCIONES PRIVADAS
   private String dniToPasswordEncoded(String dni) {
-    return passwordEncoder.encode(dni);
+    return passwordEncoder.encode("cfp" + dni);
+  }
+
+  private void tokenBlacklistAsyncSafe(String dni, String reason) {
+    try {
+      String key = "blacklist:" + dni;
+      redisTemplate.opsForValue().set(key, reason, Duration.ofMillis(jwtExpirationMs));
+    } catch (Exception e) {
+      log.error("Error al registrar en Redis [{}] para el DNI {}: {}", reason, dni, e.getMessage());
+    }
+  }
+
+  private void tokenBlacklistRemoveSafe(String dni) {
+    try {
+      String key = "blacklist:" + dni;
+      redisTemplate.delete(key);
+    } catch (Exception e) {
+      log.error("Error al eliminar de Redis la lista negra para el DNI {}: {}", dni, e.getMessage());
+    }
   }
 }

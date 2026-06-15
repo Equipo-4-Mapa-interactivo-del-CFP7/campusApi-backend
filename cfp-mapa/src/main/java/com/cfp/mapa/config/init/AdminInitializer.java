@@ -18,9 +18,9 @@ public class AdminInitializer implements CommandLineRunner {
 
   @Override
   public void run(String... args) throws Exception {
-    if (!usuarioRepository.existsByDni("123")) {
+    if (!usuarioRepository.existsByDni("123456")) {
       Usuario admin = Usuario.builder()
-          .dni("123")
+          .dni("123456")
           .nombre("Administrador")
           .apellido("Del Sistema")
           .password(passwordEncoder.encode("admin123"))
@@ -32,9 +32,9 @@ public class AdminInitializer implements CommandLineRunner {
       usuarioRepository.save(admin);
     }
 
-    if (!usuarioRepository.existsByDni("456")) {
+    if (!usuarioRepository.existsByDni("456789")) {
       Usuario personal = Usuario.builder()
-          .dni("456")
+          .dni("456789")
           .nombre("Personal")
           .apellido("Institucional")
           .password(passwordEncoder.encode("personal456"))

@@ -1,7 +1,8 @@
-# Endpoints de la API
+# 🗂️ Endpoints de la API
 
-<details>
-<summary><b>Los JSON de error están estandarizados con este formato</b></summary>
+#### Formato general de errores
+
+Los JSON de error están estandarizados con este formato:
 
 ```JSON
 {
@@ -11,7 +12,6 @@
   "timestamp": String ("2026-06-10T15:46:08.0424397")
 }
 ```
-</details>
 
 <details>
 <summary><b>Ejemplo</b></summary>
@@ -27,14 +27,15 @@
 </details>
 
 ---
-## Iniciar sesión
+
+# 🔐 Iniciar sesión
+
 `POST /api/auth/login`
 
-*permite a los usuarios autenticarse en el sistema mediante su DNI y contraseña.*
-
+Permite a los usuarios autenticarse en el sistema mediante su DNI y contraseña.
 
 <details>
-<summary><b>Cuerpo de la petición</b></summary>
+<summary><b>📦 Cuerpo de la petición</b></summary>
 <table><tr><td>
 
 `dni` String, requerido, entre 6 y 15 caracteres.
@@ -51,10 +52,10 @@
 </details> 
 
 <details>
-<summary><b>Respuesta del servidor</b></summary>
+<summary><b>🔄 Respuesta del servidor</b></summary>
 <table><tr><td>
 
-`200 OK`
+🟢 `200 OK`
 
 `accessToken` String, contiene el token del usuario.
 
@@ -66,14 +67,23 @@
   "tokenType": "Bearer"
 }
 ```
-`401 UNAUTHORIZED` + JSON error.
+
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+si el cuerpo de la petición no cumple las restricciones.
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+si el `dni` o la `password` ingresada es incorrecta.
 </td></tr></table>
 </details> 
 
 ---
-# Control de Usuarios
+# 👥 Control de Usuarios
 
-<details><summary>El JSON de respuesta de usuario sigue este patrón</summary>
+#### Formato de respuesta de usuarios 
+
+El JSON de respuesta de usuario sigue este patrón:
 
 ```JSON
 {
@@ -85,7 +95,6 @@
   "activo": Boolean
 }
 ```
-</details>
 
 <details><summary>Ejemplo</summary>
 
@@ -101,16 +110,19 @@
 ```
 </details>
 
-## Registrar usuario (solo para ADMIN)
+## 🟢 Registrar usuario [solo para ADMIN]
+
 `POST /api/usuarios/registrar`
 
-*Permite que únicamente los usuario con rol ADMIN puedan crear usuarios.*
+Permite que únicamente usuarios con rol `ADMIN` pueda registrar un usuario nuevo en el sistema.
+A este usuario se le asignará la contraseña `cfp + dni` (ejemplo: `cfp123456`) y el rol temporal
+`CHANGE_PASSWORD` hasta que cambie su contraseña, entonces su rol pasará a ser `PERSONAL`.
 
-#### Encabezados (Headers)
+🔑 Encabezados (Headers)
 * `Authorization`: `Bearer <token_de_admin>`
 
 <details>
-<summary><b>Cuerpo de la petición</b></summary>
+<summary><b>📦 Cuerpo de la petición</b></summary>
 <table><tr><td>
 
 `dni` String, requerido, entre 6 y 15 caracteres.
@@ -126,29 +138,47 @@
   "apellido": "apellido"
 }
 ```
+
 </td></tr></table>
 </details> 
 
 <details>
-<summary><b>Respuesta del servidor</b></summary>
+<summary><b>🔄 Respuesta del servidor</b></summary>
 <table><tr><td>
 
-`201 CREATED` + JSON respuesta de usuario.
+🟢 `201 CREATED` + 
+[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios-)
+con la información del usuario creado.
 
-`409 CONFLICT` + JSON error, si ya existe un usuario con el mismo DNI.
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+si el cuerpo de la petición no cumple las restricciones.
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+si el token es inválido.
+
+🔴 `409 CONFLICT` +
+[JSON error](#formato-general-de-errores)
+si ya existe un usuario con el mismo DNI.
+
 </td></tr></table>
 </details> 
 
-## Listar usuarios con filtros y paginación (solo para ADMIN)
+## 🟢 Listar usuarios con filtros y paginación [solo para ADMIN]
+
 `GET /api/usuarios`
 
-*Permite buscar usuarios de forma paginada filtrando opcionalmente por DNI, nombre, apellido o estado activo.*
+Permite que únicamente usuarios con rol `ADMIN` pueda ver la lista completa de usuarios
+registrados. Además podrá filtrarlos por: `dni`, `nombre`, `apellido`, `activo`. También se utiliza
+la paginación para mostrarlo, por lo que puede definir cuántos (`size`) usuarios ver por página 
+(`page`).
 
-#### Encabezados (Headers)
+🔑 Encabezados (Headers)
 * `Authorization`: `Bearer <token_de_admin>`
 
-#### Parámetros de Consulta (Query Parameters)
-Todos los filtros son opcionales. Se añaden a la URL (ej. `?nombre=Juan&size=5`).
+🔎 Parámetros de Consulta (Query Parameters). Todos los filtros son opcionales.
+Se añaden a la URL (ej. `?nombre=Juan&size=5`).
 * `dni` String.
 * `nombre` String.
 * `apellido` String.
@@ -157,12 +187,13 @@ Todos los filtros son opcionales. Se añaden a la URL (ej. `?nombre=Juan&size=5`
 * `size` int - Cantidad de registros por página (Por defecto: 10).
 
 <details>
-<summary><b>Respuesta del servidor</b></summary>
+<summary><b>🔄 Respuesta del servidor</b></summary>
 <table><tr><td>
 
-`200 OK` + JSON de estructura de página de Spring. 
+🟢 `200 OK` + JSON de estructura de página de Spring. 
 
-Cada usuario tendrá el formato del JSON de respuesta de usuario.
+Cada usuario tendrá el formato del
+[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios-).
 
 ```JSON
 {
@@ -211,70 +242,105 @@ Cada usuario tendrá el formato del JSON de respuesta de usuario.
   "totalPages": 1
 }
 ```
-</td></tr></table>
-</details> 
 
-## Restablecer contraseña (solo para ADMIN)
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+si los tipos de datos enviados en los parámetros son incompatibles (ejemplo: `?activo=hola`).
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+si el token es inválido.
+
+</td></tr></table>
+</details>
+
+## 🟢 Restablecer contraseña [solo para ADMIN]
 
 `PUT /api/usuarios/{dni}/restablecer`
 
-*Permite que únicamente usuarios con el rol ADMIN puedan restablecer la contraseña de otro usuario y
-les cambia el rol para obligarlos a cambiarla.*
+Permite que únicamente usuarios con el rol `ADMIN` puedan restablecer la contraseña de otro usuario.
+La contraseña pasa a ser `cfp + dni` (ejemplo: `cfp123456`) y su rol cambia temporalmente a 
+`CHANGE_PASSWORD` hasta que cambie su contraseña.
 
-#### Encabezados (Headers)
+🔑 Encabezados (Headers)
 
 * `Authorization`: `Bearer <token_de_admin>`
 
-#### Path variable
+🔎 Path variable
 
-* `dni` del usuario al que se le va a restablecer la contraseña.
+* `dni` String, requerido, entre 6 y 15 caracteres. <br>
+DNI del usuario al que se le va a restablecer la contraseña.
 
 <details>
-<summary><b>Respuesta del servidor</b></summary>
+<summary><b>🔄 Respuesta del servidor</b></summary>
 <table><tr><td>
 
-`200 OK` + JSON respuesta de usuario.
+🟢 `200 OK` +
+[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios-)
+con la información del usuario al que se le cambió la contraseña.
 
-`404 NOT FOUND` Si no existe un usuario con el DNI solicitado.
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+si el path variable no cumple con las restricciones.
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+si el token es inválido.
+
+🔴 `404 NOT FOUND` Si no existe un usuario con el DNI solicitado.
+
 </td></tr></table>
-</details> 
+</details>
 
-## Cambiar estado de la cuenta (solo para ADMIN)
+## 🟢 Cambiar estado de la cuenta [solo para ADMIN]
 
 `PUT /api/usuarios/{dni}/cambiar-activo`
 
-*Permite que únicamente usuarios con el rol ADMIN puedan cambiar el flag `activo` de una cuenta.*
+Permite que únicamente usuarios con el rol `ADMIN` puedan cambiar el flag `activo` de una cuenta.
 
-#### Encabezados (Headers)
+🔑 Encabezados (Headers)
 
 * `Authorization`: `Bearer <token_de_admin>`
 
-#### Path variable
+🔎 Path variable
 
-* `dni` del usuario al que se le va a cambiar el flag `activo`.
+* `dni` String, requerido, entre 6 y 15 caracteres. <br>
+DNI del usuario al que se le va a cambiar el flag `activo`.
 
 <details>
-<summary><b>Respuesta del servidor</b></summary>
+<summary><b>🔄 Respuesta del servidor</b></summary>
 <table><tr><td>
 
-`200 OK` + JSON respuesta de usuario.
+🟢 `200 OK` +
+[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios-)
+del usuario al que se le cambió el flag `activo`.
 
-`404 NOT FOUND` Si no existe un usuario con el DNI solicitado.
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+si el path variable no cumple con las restricciones.
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+si el token es inválido.
+
+🔴 `404 NOT FOUND` Si no existe un usuario con el DNI solicitado.
+
 </td></tr></table>
 </details> 
 
-## Cambiar contraseña
+## 🟢 Cambiar contraseña
 
 `PUT /api/usuarios/me/password`
 
-*Permite que únicamente un usuario logueado pueda cambiar su propia contrasesña.*
+Permite que únicamente un usuario logueado pueda cambiar su propia contraseña. Si el usuario tenía
+el rol `CHANGE_PASSWORD` entonces recuperará su rol normal.
 
-#### Encabezados (Headers)
+🔑 Encabezados (Headers)
 
 * `Authorization`: `Bearer <token_de_usuario_logueado>`
 
 <details>
-<summary><b>Cuerpo de la petición</b></summary>
+<summary><b>📦 Cuerpo de la petición</b></summary>
 <table><tr><td>
 
 `oldPassword` String, requerido, entre 8 y 60 caracteres.
@@ -287,90 +353,133 @@ les cambia el rol para obligarlos a cambiarla.*
   "newPassword": "passwordNueva"
 }
 ```
+
 </td></tr></table>
 </details> 
 
 <details>
-<summary><b>Respuesta del servidor</b></summary>
+<summary><b>🔄 Respuesta del servidor</b></summary>
 <table><tr><td>
 
-`200 OK`
+🟢 `200 OK` (sin body)
 
-`400 BAD_REQUEST` + JSON error, si `oldPassword` no coincide con la contraseña actual.
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+si el cuerpo de la petición no cumple las restricciones.
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+si `oldPassword` no coincide con la contraseña actual.
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+si el token es inválido.
 
 </td></tr></table>
 </details>
 
-## Cambiar rol (solo para ADMIN)
+## 🟢 Cambiar rol [solo para ADMIN]
 
 `PUT /api/usuarios/{dni}/cambiar-rol`
 
-*Permite que únicamente los usuarios con el rol ADMIN puedan cambiar el rol de otro usuario, los
-va intercambiando entre ADMIN y PERSONAL.*
+Permite que únicamente los usuarios con el rol `ADMIN` puedan cambiar el rol de otro usuario. Los
+va intercambiando entre los roles `ADMIN` y `PERSONAL`.
 
-#### Encabezados (Headers)
+🔑 Encabezados (Headers)
 
 * `Authorization`: `Bearer <token_de_admin>`
 
-#### Path variable
+🔎 Path variable
 
-* `dni` del usuario al que al que se le va a cambiar el rol.
+* `dni` String, requerido, entre 6 y 15 caracteres. <br>
+DNI del usuario al que se le va a cambiar el rol.
 
 <details>
-<summary><b>Respuesta del servidor</b></summary>
+<summary><b>🔄 Respuesta del servidor</b></summary>
 <table><tr><td>
 
-`200 OK` + JSON respuesta de usuario.
+🟢 `200 OK` +
+[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios-)
+del usuario al que se le cambió el rol.
 
-`404 NOT FOUND` Si no existe un usuario con el DNI solicitado.
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+si el path variable no cumple con las restricciones.
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+si el token es inválido.
+
+🔴 `404 NOT FOUND` Si no existe un usuario con el DNI solicitado.
 
 </td></tr></table>
 </details>
 
-## Obtener mi propio perfil
+## 🟢 Obtener mi propio perfil
 
 `GET /api/usuarios/me`
 
-*Permite que únicamente un usuario logueado pueda ver su propio perfil.*
+Permite que únicamente un usuario logueado pueda ver su propio perfil.
 
-#### Encabezados (Headers)
+🔑 Encabezados (Headers)
 
 * `Authorization`: `Bearer <token_de_usuario_logueado>`
 
 <details>
-<summary><b>Respuesta del servidor</b></summary>
+<summary><b>🔄 Respuesta del servidor</b></summary>
 <table><tr><td>
 
-`200 OK` + JSON respuesta de usuario.
+🟢 `200 OK` +
+[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios-)
+del usuario logueado.
 
-`404 NOT FOUND` (Raro que ocurra) Ocurre si el usuario fue eliminado de la base de datos mientras
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+si el token es inválido.
+
+🔴 `404 NOT FOUND` +
+[JSON error](#formato-general-de-errores)
+(Raro que ocurra) Ocurre si el usuario fue eliminado de la base de datos mientras
 su token JWT aún seguía activo.
 
 </td></tr></table>
 </details>
 
-## Obtener cualquier perfil (solo para ADMIN)
+## 🟢 Obtener cualquier perfil [solo para ADMIN]
 
 `GET /api/usuarios/{dni}`
 
-*Permite que únicamente un usuario con el rol ADMIN pueda obtener información de cualquier perfil
-de usuario a través de su DNI.*
+Permite que únicamente usuarios con el rol `ADMIN` puedan obtener información de cualquier perfil
+de usuarios a través de su DNI.
 
-#### Encabezados (Headers)
+🔑 Encabezados (Headers)
 
 * `Authorization`: `Bearer <token_de_admin>`
 
-#### Path variable
+🔎 Path variable
 
-* `dni` del usuario del que se va a obtener la información.
+* `dni` String, requerido, entre 6 y 15 caracteres. <br>
+DNI del usuario del cual se quiere obtener el perfil.
 
 <details>
-<summary><b>Respuesta del servidor</b></summary>
+<summary><b>🔄 Respuesta del servidor</b></summary>
 <table><tr><td>
 
-`200 OK` + JSON respuesta de usuario.
+🟢 `200 OK` +
+[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios-)
+del usuario solicitado.
 
-`404 NOT FOUND` Si no existe un usuario con el DNI solicitado.
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+si el path variable no cumple con las restricciones.
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+si el token es inválido.
+
+🔴 `404 NOT FOUND` +
+[JSON error](#formato-general-de-errores)
+si no existe un usuario con el DNI solicitado.
 
 </td></tr></table>
 </details>

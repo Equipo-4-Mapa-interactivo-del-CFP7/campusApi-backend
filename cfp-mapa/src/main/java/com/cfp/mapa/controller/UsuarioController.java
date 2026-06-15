@@ -6,6 +6,7 @@ import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
 import com.cfp.mapa.service.UsuarioService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -65,7 +66,9 @@ public class UsuarioController {
   @PutMapping("/{dni}/restablecer")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<UsuarioResponseDTO> restablecerPasswordPorAdmin(
-      @PathVariable String dni) {
+      @PathVariable
+      @Size(min = 6, max = 15)
+      String dni) {
 
     UsuarioResponseDTO response = usuarioService.restablecerPasswordPorAdmin(dni);
 
@@ -77,7 +80,9 @@ public class UsuarioController {
   @PutMapping("/{dni}/cambiar-activo")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<UsuarioResponseDTO> cambiarEstadoActivoPorAdmin (
-      @PathVariable String dni
+      @PathVariable
+      @Size(min = 6, max = 15)
+      String dni
   ) {
 
     UsuarioResponseDTO response = usuarioService.cambiarEstadoActivoPorAdmin(dni);
@@ -90,7 +95,7 @@ public class UsuarioController {
   @PutMapping("/me/password")
   public ResponseEntity<Void> cambiarPassword(
       @AuthenticationPrincipal UsuarioAutenticadoDTO usuario,
-      @RequestBody UsuarioChangePasswordDTO request) {
+      @Valid @RequestBody UsuarioChangePasswordDTO request) {
 
     usuarioService.cambiarPassword(usuario.dni(), request.oldPassword(), request.newPassword());
 
@@ -102,7 +107,9 @@ public class UsuarioController {
   @PutMapping("/{dni}/cambiar-rol")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<UsuarioResponseDTO> cambiarRolPorAdmin (
-      @PathVariable String dni
+      @PathVariable
+      @Size(min = 6, max = 15)
+      String dni
   ) {
 
     UsuarioResponseDTO response = usuarioService.cambiarRolPorAdmin(dni);
@@ -127,7 +134,9 @@ public class UsuarioController {
   @GetMapping("/{dni}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<UsuarioResponseDTO> obtenerPerfilPorAdmin (
-      @PathVariable String dni
+      @PathVariable
+      @Size(min = 6, max = 15)
+      String dni
   ) {
 
     UsuarioResponseDTO response = usuarioService.obtenerPerfilPorAdmin(dni);

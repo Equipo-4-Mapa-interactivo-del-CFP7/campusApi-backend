@@ -7,8 +7,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @Slf4j
 @RestControllerAdvice
@@ -47,7 +50,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handlePasswordIncorrectaException(PasswordIncorrectaException ex) {
 
         return buildErrorResponse(
-            HttpStatus.BAD_REQUEST,
+            HttpStatus.UNAUTHORIZED,
             ex.getMessage()
         );
     }
@@ -58,6 +61,40 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(
             HttpStatus.NOT_FOUND,
             ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
+        MethodArgumentNotValidException ex
+    ) {
+
+        return buildErrorResponse(
+            HttpStatus.BAD_REQUEST,
+            "Los datos enviados no cumplen con las restricciones de validación"
+        );
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ErrorResponse> handleHandlerMethodValidationException(
+        HandlerMethodValidationException ex
+    ) {
+
+        return buildErrorResponse(
+            HttpStatus.BAD_REQUEST,
+            "Error de validación en los parámetros de la petición"
+        );
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(
+        MethodArgumentTypeMismatchException ex
+    ) {
+
+        return buildErrorResponse(
+            HttpStatus.BAD_REQUEST,
+            String.format("El parámetro '%s' debe ser de tipo '%s'",
+                ex.getName(), ex.getRequiredType().getSimpleName())
         );
     }
 

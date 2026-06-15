@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Size;
 
 public record UsuarioLoginDTO(
 
-    @Size(max = 15)
+    @Size(min = 6, max = 15)
     @NotBlank
     String dni,
 
