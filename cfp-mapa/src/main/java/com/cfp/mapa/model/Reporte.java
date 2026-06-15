@@ -16,12 +16,16 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Getter
 @Setter
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -59,4 +63,8 @@ public class Reporte {
     @CreationTimestamp
     @Column(name = "fecha_creacion", nullable = false,  updatable = false)
     private LocalDateTime fechaCreacion;
+
+    @Column(name = "url_imagen")
+    private String urlImagen;
+
 }

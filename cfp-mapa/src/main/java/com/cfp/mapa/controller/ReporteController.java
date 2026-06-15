@@ -1,49 +1,40 @@
 package com.cfp.mapa.controller;
 
-import com.cfp.mapa.model.enums.EstadoReporte;
 import com.cfp.mapa.model.Reporte;
 import com.cfp.mapa.service.ReporteService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import java.util.List;
+import com.cfp.mapa.dto.reporte.ReporteCreateRequestDTO;
+import com.cfp.mapa.dto.reporte.ReporteResponseDTO;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/reportes")
-@CrossOrigin(origins = "*")
 public class ReporteController {
 
-  // TODO: crear reporte especial
+    private final ReporteService reporteService;
 
-//    private final ReporteService reporteService;
-//
-//    public ReporteController(ReporteService reporteService) {
-//        this.reporteService = reporteService;
-//    }
-//
-//    @GetMapping
-//    public ResponseEntity<List<Reporte>> listarTodos() {
-//        return ResponseEntity.ok(reporteService.listarTodos());
-//    }
-//
-//    @GetMapping("/espacio/{espacioId}")
-//    public ResponseEntity<List<Reporte>> listarPorEspacio(@PathVariable Long espacioId) {
-//        return ResponseEntity.ok(reporteService.listarPorEspacio(espacioId));
-//    }
-//
-//    @GetMapping("/estado/{estado}")
-//    public ResponseEntity<List<Reporte>> listarPorEstado(@PathVariable EstadoReporte estado) {
-//        return ResponseEntity.ok(reporteService.listarPorEstado(estado));
-//    }
-//
-//    @PostMapping
-//    public ResponseEntity<Reporte> crear(@RequestBody Reporte reporte) {
-//        return ResponseEntity.ok(reporteService.crear(reporte));
-//    }
-//
-//    @PatchMapping("/{id}/estado")
-//    public ResponseEntity<Reporte> actualizarEstado(
-//            @PathVariable Long id,
-//            @RequestParam EstadoReporte nuevoEstado) {
-//        return ResponseEntity.ok(reporteService.actualizarEstado(id, nuevoEstado));
-//    }
+    @PostMapping("/reportar")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ReporteResponseDTO> reportarIncidencia(
+            @Valid @RequestPart("reporte") ReporteCreateRequestDTO request,
+            @RequestPart(value = "foto", required = false) MultipartFile foto
+    ) {
+
+        ReporteResponseDTO response = reporteService.crearReporte(request, foto);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
+    }
+
 }
+
