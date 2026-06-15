@@ -81,7 +81,7 @@ si el `dni` o la `password` ingresada es incorrecta.
 ---
 # 👥 Control de Usuarios
 
-#### Formato de respuesta de usuarios 
+#### Formato de respuesta de usuarios
 
 El JSON de respuesta de usuario sigue este patrón:
 
@@ -147,7 +147,7 @@ A este usuario se le asignará la contraseña `cfp + dni` (ejemplo: `cfp123456`)
 <table><tr><td>
 
 🟢 `201 CREATED` + 
-[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios-)
+[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios)
 con la información del usuario creado.
 
 🔴 `400 BAD REQUEST` +
@@ -193,7 +193,7 @@ Se añaden a la URL (ej. `?nombre=Juan&size=5`).
 🟢 `200 OK` + JSON de estructura de página de Spring. 
 
 Cada usuario tendrá el formato del
-[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios-).
+[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios).
 
 ```JSON
 {
@@ -276,7 +276,7 @@ DNI del usuario al que se le va a restablecer la contraseña.
 <table><tr><td>
 
 🟢 `200 OK` +
-[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios-)
+[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios)
 con la información del usuario al que se le cambió la contraseña.
 
 🔴 `400 BAD REQUEST` +
@@ -312,7 +312,7 @@ DNI del usuario al que se le va a cambiar el flag `activo`.
 <table><tr><td>
 
 🟢 `200 OK` +
-[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios-)
+[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios)
 del usuario al que se le cambió el flag `activo`.
 
 🔴 `400 BAD REQUEST` +
@@ -399,7 +399,7 @@ DNI del usuario al que se le va a cambiar el rol.
 <table><tr><td>
 
 🟢 `200 OK` +
-[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios-)
+[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios)
 del usuario al que se le cambió el rol.
 
 🔴 `400 BAD REQUEST` +
@@ -430,7 +430,7 @@ Permite que únicamente un usuario logueado pueda ver su propio perfil.
 <table><tr><td>
 
 🟢 `200 OK` +
-[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios-)
+[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios)
 del usuario logueado.
 
 🔴 `401 UNAUTHORIZED` +
@@ -466,7 +466,7 @@ DNI del usuario del cual se quiere obtener el perfil.
 <table><tr><td>
 
 🟢 `200 OK` +
-[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios-)
+[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios)
 del usuario solicitado.
 
 🔴 `400 BAD REQUEST` +
