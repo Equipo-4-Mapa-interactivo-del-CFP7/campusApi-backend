@@ -46,4 +46,7 @@ public class Conexion {
 
   @Column(nullable = false)
   private Boolean accesible;
+
+  @Column(nullable = false)
+  private Boolean activa = true;
 }
