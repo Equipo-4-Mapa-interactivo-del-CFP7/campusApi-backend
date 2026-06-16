@@ -22,18 +22,11 @@ public interface EspacioService {
             Pageable pageable
     );
 
-    EspacioResponseDTO crearEspacio(EspacioRequestDTO dto);
-
-    EspacioResponseDTO actualizarEspacio(
-            Long id,
-            EspacioUpdateDTO dto
-    );
+    EspacioResponseDTO actualizarEspacio(Long id, EspacioUpdateDTO dto);
 
     void activarEspacio(Long id);
 
     void desactivarEspacio(Long id);
-
-    void eliminarEspacio(Long id);
 
     // =========================
     // PERSONAL
@@ -41,7 +34,7 @@ public interface EspacioService {
 
     EspacioDetalleDTO obtenerEspacioPorId(Long id);
 
-    List<EspacioMapaDTO> obtenerMapa(
-            TipoEspacio tipo
-    );
+    List<EspacioMapaDTO> obtenerMapa(TipoEspacio tipo);
+
+    List<EspacioMapaDTO> buscarEspacios(String nombre);
 }

@@ -5,7 +5,9 @@ import com.cfp.mapa.dto.reporte.ReporteResponseDTO;
 import com.cfp.mapa.model.Reporte;
 import com.cfp.mapa.model.enums.EstadoReporte;
 import com.cfp.mapa.model.enums.TipoReporte;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ReporteMapper {
 
     // Reporte -> ReporteResponseDTO

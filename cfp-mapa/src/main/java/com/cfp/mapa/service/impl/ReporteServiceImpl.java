@@ -4,49 +4,51 @@ import com.cfp.mapa.dto.reporte.ReporteCreateRequestDTO;
 import com.cfp.mapa.dto.reporte.ReporteResponseDTO;
 import com.cfp.mapa.dto.reporte.ReporteUpdateRequestDTO;
 import com.cfp.mapa.exception.ResourceNotFoundException;
+import com.cfp.mapa.model.Espacio;
 import com.cfp.mapa.model.enums.EstadoReporte;
 import com.cfp.mapa.model.enums.TipoReporte;
 import com.cfp.mapa.model.Reporte;
 import com.cfp.mapa.mapper.ReporteMapper;
+import com.cfp.mapa.repository.EspacioRepository;
 import com.cfp.mapa.repository.ReporteRepository;
 import com.cfp.mapa.service.ReporteService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
 
+@RequiredArgsConstructor
 @Service
 public class ReporteServiceImpl implements ReporteService {
 
     private final ReporteRepository reporteRepository;
     private final ReporteMapper reporteMapper;
+    private final EspacioRepository espacioRepository;
 
-    public ReporteServiceImpl(ReporteRepository reporteRepository, ReporteMapper reporteMapper) {
-        this.reporteRepository = reporteRepository;
-        this.reporteMapper = reporteMapper;
-    }
-
-//    @Override
-//    public List<Reporte> listarTodos() {
-//        return reporteRepository.findAll();
-//    }
-//
-//    @Override
-//    public List<Reporte> listarPorEspacio(Long espacioId) {
-//        return reporteRepository.findByEspacioId(espacioId);
-//    }
-//
-//    @Override
-//    public List<Reporte> listarPorEstado(EstadoReporte estado) {
-//        return reporteRepository.findByEstado(estado);
-//    }
-//
+    @Transactional
     @Override
     public ReporteResponseDTO crearReporte(ReporteCreateRequestDTO request, MultipartFile foto) {
-        Reporte reporteGuardado = reporteMapper.createToReporte(request);
-        reporteRepository.save(reporteGuardado);
+
+        Espacio espacio = espacioRepository.findById(request.espacioId()).orElseThrow(
+            () -> new ResourceNotFoundException(
+                "Espacio no encontrado con id: " + request.espacioId())
+        );
+
+        Reporte reporte = reporteMapper.createToReporte(request);
+        reporte.setEspacio(espacio);
+
+        if (foto != null && !foto.isEmpty()) {
+            // TODO: subir la foto y obtener unicamente el link
+            // String url = uploadService.subir(foto);
+            // reporte.setUrlImagen(url);
+        } else {
+            reporte.setUrlImagen(null);
+        }
+
+        Reporte reporteGuardado = reporteRepository.save(reporte);
+
         return reporteMapper.ReporteToResponse(reporteGuardado);
     }
 

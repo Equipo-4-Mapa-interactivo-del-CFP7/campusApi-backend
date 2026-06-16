@@ -1,8 +1,6 @@
 package com.cfp.mapa.controller;
 
-import com.cfp.mapa.dto.espacio.EspacioDetalleDTO;
-import com.cfp.mapa.dto.espacio.EspacioMapaDTO;
-import com.cfp.mapa.dto.espacio.EspacioResponseDTO;
+import com.cfp.mapa.dto.espacio.*;
 import com.cfp.mapa.model.enums.TipoEspacio;
 import com.cfp.mapa.service.EspacioService;
 import lombok.RequiredArgsConstructor;
@@ -48,60 +46,53 @@ public class EspacioController {
 
     }
 
-    // =========================
-    // TODO: tengo que terminar todo esto.
-    // =========================
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<EspacioResponseDTO> actualizarEspacio(@PathVariable Long id, @RequestBody EspacioUpdateDTO dto) {
+        EspacioResponseDTO espacioActualizado = espacioService.actualizarEspacio(id, dto);
+        return ResponseEntity.ok(espacioActualizado);
+    }
 
-//    @PostMapping
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public ResponseEntity<EspacioResponseDTO> crearEspacio(){
-//
-//    }
-//
-//    @PutMapping("/{id}")
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public ResponseEntity<EspacioResponseDTO> actualizarEspacio(){
-//
-//    }
-//
-//    @PatchMapping("/{id}/activar")
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public ResponseEntity<?> activarEspacio(){
-//
-//    }
-//
-//    @PatchMapping("/{id}/desactivar")
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public ResponseEntity<?> desactivarEspacio(){
-//
-//    }
-//
-//    @DeleteMapping("/{id}")
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public ResponseEntity<?> eliminarEspacio(){
-//
-//    }
+    @PatchMapping("/{id}/activar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> activarEspacio(@PathVariable Long id) {
+        espacioService.activarEspacio(id);
+        return ResponseEntity.ok("Espacio activado correctamente");
+
+    }
+
+    @PatchMapping("/{id}/desactivar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> desactivarEspacio(@PathVariable Long id) {
+        espacioService.desactivarEspacio(id);
+        return ResponseEntity.ok("Espacio desactivado correctamente");
+
+    }
 
     // =========================
     // PERSONAL
     // =========================
 
-//    @GetMapping("/mapa")
-//    @PreAuthorize("hasAnyRole('ADMIN', 'PERSONAL')")
-//    public ResponseEntity<List<EspacioMapaDTO>> obtenerMapa(){
-//
-//    }
-//
-//    @GetMapping("/{id}")
-//    @PreAuthorize("hasAnyRole('ADMIN', 'PERSONAL')")
-//    public ResponseEntity<EspacioDetalleDTO> obtenerPorId(){
-//
-//    }
-//
-//    @GetMapping("/buscar")
-//    @PreAuthorize("hasAnyRole('ADMIN', 'PERSONAL')")
-//    public ResponseEntity<List<EspacioResponseDTO>> buscarEspacios(){
-//
-//    }
+    @GetMapping("/mapa")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PERSONAL')")
+    public ResponseEntity<List<EspacioMapaDTO>> obtenerMapa(@RequestParam(required = false) TipoEspacio tipo) {
+        List<EspacioMapaDTO> espacios = espacioService.obtenerMapa(tipo);
+        return ResponseEntity.ok(espacios);
+
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PERSONAL')")
+    public ResponseEntity<EspacioDetalleDTO> obtenerPorId(@PathVariable Long id) {
+        EspacioDetalleDTO espacio = espacioService.obtenerEspacioPorId(id);
+        return ResponseEntity.ok(espacio);
+    }
+
+    @GetMapping("/buscar")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PERSONAL')")
+    public ResponseEntity<List<EspacioMapaDTO>> buscarEspacios(@RequestParam String nombre) {
+        List<EspacioMapaDTO> espacios = espacioService.buscarEspacios(nombre);
+        return ResponseEntity.ok(espacios);
+    }
 
 }

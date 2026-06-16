@@ -1,6 +1,5 @@
 package com.cfp.mapa.controller;
 
-import com.cfp.mapa.model.Reporte;
 import com.cfp.mapa.service.ReporteService;
 import org.springframework.http.ResponseEntity;
 import com.cfp.mapa.dto.reporte.ReporteCreateRequestDTO;
@@ -23,7 +22,6 @@ public class ReporteController {
     private final ReporteService reporteService;
 
     @PostMapping("/reportar")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReporteResponseDTO> reportarIncidencia(
             @Valid @RequestPart("reporte") ReporteCreateRequestDTO request,
             @RequestPart(value = "foto", required = false) MultipartFile foto
