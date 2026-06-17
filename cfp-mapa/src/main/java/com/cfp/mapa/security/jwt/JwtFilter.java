@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -21,7 +20,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtFilter extends OncePerRequestFilter {
 
   private final JwtProvider tokenProvider;
-  private final StringRedisTemplate redisTemplate;
 
   @Override
   protected void doFilterInternal(
@@ -31,39 +29,19 @@ public class JwtFilter extends OncePerRequestFilter {
       throws ServletException, IOException {
 
     try {
-
       String token = obtenerTokenDeRequest(request);
 
-      if (StringUtils.hasText(token)) {
-
+      if (StringUtils.hasText(token) && tokenProvider.validarToken(token)) {
         UsuarioAutenticadoDTO usuarioPrincipal = tokenProvider.obtenerUsuarioDesdeToken(token);
 
         if (usuarioPrincipal != null) {
+          UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+              usuarioPrincipal,
+              null,
+              usuarioPrincipal.authorities()
+          );
 
-          boolean isBlacklisted = false;
-
-          try {
-            // Verificacion con redis en la lista negra
-            String key = "blacklist:" + usuarioPrincipal.dni();
-            Boolean result = redisTemplate.hasKey(key);
-            isBlacklisted = Boolean.TRUE.equals(result);
-          } catch (Exception e) {
-            // Si Redis falla, lo logueamos pero no rompemos el login del usuario
-            log.error("Error al consultar la lista negra en Redis (se asume token válido): {}", e.getMessage());
-          }
-
-          if (isBlacklisted) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token revocado por el administrador.");
-            return;
-          } else {
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                usuarioPrincipal,
-                null,
-                usuarioPrincipal.authorities()
-            );
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-          }
+          SecurityContextHolder.getContext().setAuthentication(authentication);
         }
       }
     } catch (Exception e) {

@@ -6,6 +6,7 @@ import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
 import com.cfp.mapa.service.UsuarioService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -64,10 +65,10 @@ public class UsuarioController {
   }
 
   @PutMapping("/{dni}/restablecer")
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
   public ResponseEntity<UsuarioResponseDTO> restablecerPasswordPorAdmin(
       @PathVariable
-      @Size(min = 6, max = 15)
+      @Pattern(regexp = "^[0-9]{8}$", message = "El DNI debe contener exactamente 8 dígitos")
       String dni) {
 
     UsuarioResponseDTO response = usuarioService.restablecerPasswordPorAdmin(dni);

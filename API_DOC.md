@@ -2,6 +2,9 @@
 
 #### Formato general de errores
 
+El `errorCode` será siempre siempre `null` a menos que se intente utilizar un endpoint con un token
+alterado, en cuyo caso tendrá valor `SESSION_INVALIDATED`.
+
 Los JSON de error están estandarizados con este formato:
 
 ```JSON
@@ -9,6 +12,7 @@ Los JSON de error están estandarizados con este formato:
   "status": int,
   "error": String,
   "message": String,
+  "errorCode": String,
   "timestamp": String ("2026-06-10T15:46:08.0424397")
 }
 ```
@@ -21,6 +25,7 @@ Los JSON de error están estandarizados con este formato:
   "status": 401,
   "error": "Unauthorized",
   "message": "Credenciales incorrectas (DNI o contraseña inválidos)",
+  "errorCode": null,
   "timestamp": "2026-06-10T15:46:08.0424397"
 }
 ```
@@ -38,13 +43,13 @@ Permite a los usuarios autenticarse en el sistema mediante su DNI y contraseña.
 <summary><b>📦 Cuerpo de la petición</b></summary>
 <table><tr><td>
 
-`dni` String, requerido, entre 6 y 15 caracteres.
+`dni` String, requerido, Exactamente 8 caracteres numéricos.
 
 `password` String, requerido, entre 8 y 60 caracteres.
 
 ```JSON
 {
-  "dni": "123456",
+  "dni": "12345678",
   "password": "admin123"
 }
 ```
@@ -101,7 +106,7 @@ El JSON de respuesta de usuario sigue este patrón:
 ```JSON
 {
   "id": 1,
-  "dni": "123456",
+  "dni": "12345678",
   "rol": "ADMIN",
   "nombre": "nombre",
   "apellido": "apellido",
@@ -110,13 +115,13 @@ El JSON de respuesta de usuario sigue este patrón:
 ```
 </details>
 
-## 🟢 Registrar usuario [solo para ADMIN]
+## 🟢 Registrar usuario [solo para OWNER o ADMIN]
 
 `POST /api/usuarios/registrar`
 
-Permite que únicamente usuarios con rol `ADMIN` pueda registrar un usuario nuevo en el sistema.
-A este usuario se le asignará la contraseña `cfp + dni` (ejemplo: `cfp123456`) y el rol temporal
-`CHANGE_PASSWORD` hasta que cambie su contraseña, entonces su rol pasará a ser `PERSONAL`.
+Permite que usuarios con el rol `OWNER` o `ADMIN` puedan registrar un usuario nuevo en el sistema.
+A este usuario se le asignará su propio `dni` como contraseña y tendrá el rol `CHANGE_PASSWORD`
+hasta que cambie su propia contraseña para obtener su rol real que es `PERSONAL` por defecto.
 
 🔑 Encabezados (Headers)
 * `Authorization`: `Bearer <token_de_admin>`
@@ -125,15 +130,15 @@ A este usuario se le asignará la contraseña `cfp + dni` (ejemplo: `cfp123456`)
 <summary><b>📦 Cuerpo de la petición</b></summary>
 <table><tr><td>
 
-`dni` String, requerido, entre 6 y 15 caracteres.
+`dni` String, requerido, Exactamente 8 caracteres numéricos.
 
-`nombre` String, requerido, entre 1 y 100 caracteres.
+`nombre` String, requerido, 2 a 50 caracteres (solo letras, espacios, `-` y `'`).
 
-`apellido` String, requerido, entre 1 y 100 caracteres.
+`apellido` String, requerido, 2 a 50 caracteres (solo letras, espacios, `-` y `'`).
 
 ```JSON
 {
-  "dni": "123456",
+  "dni": "12345678",
   "nombre": "nombre",
   "apellido": "apellido"
 }
@@ -200,7 +205,7 @@ Cada usuario tendrá el formato del
   "content": [
     {
       "id": 1,
-      "dni": "123456",
+      "dni": "12345678",
       "rol": "ADMIN",
       "nombre": "Nombre1",
       "apellido": "Apellido1",
@@ -208,7 +213,7 @@ Cada usuario tendrá el formato del
     },
     {
       "id": 2,
-      "dni": "456789",
+      "dni": "23456789",
       "rol": "PERSONAL",
       "nombre": "Nombre2",
       "apellido": "Apellido2",
@@ -254,21 +259,23 @@ si el token es inválido.
 </td></tr></table>
 </details>
 
-## 🟢 Restablecer contraseña [solo para ADMIN]
+## 🟢 Restablecer contraseña [solo para OWNER o ADMIN]
 
 `PUT /api/usuarios/{dni}/restablecer`
 
-Permite que únicamente usuarios con el rol `ADMIN` puedan restablecer la contraseña de otro usuario.
-La contraseña pasa a ser `cfp + dni` (ejemplo: `cfp123456`) y su rol cambia temporalmente a 
-`CHANGE_PASSWORD` hasta que cambie su contraseña.
+Permite restablecer la contraseña de otro usuario a su propio `dni` y le asigna el rol
+`CHANGE_PASSWORD` hasta que cambie su propia contraseña.
+- Un usuario con rol `OWNER` puede restablecer la contraseña de `ADMIN` y `PERSONAL`.
+- Un usuario con rol `ADMIN` solo puede restablecer la contraseña de un usuario `PERSONAL`.
+- Ningún rol puede restablecer la contraseña del rol `OWNER`.
 
 🔑 Encabezados (Headers)
 
-* `Authorization`: `Bearer <token_de_admin>`
+* `Authorization`: `Bearer <token_de_owner/admin>`
 
 🔎 Path variable
 
-* `dni` String, requerido, entre 6 y 15 caracteres. <br>
+* `dni` String, requerido, Exactamente 8 caracteres numéricos. <br>
 DNI del usuario al que se le va a restablecer la contraseña.
 
 <details>
@@ -287,7 +294,14 @@ si el path variable no cumple con las restricciones.
 [JSON error](#formato-general-de-errores)
 si el token es inválido.
 
-🔴 `404 NOT FOUND` Si no existe un usuario con el DNI solicitado.
+🔴 `403 FORBIDDEN` +
+[JSON error](#formato-general-de-errores)
+si los permisos del token no coinciden con la base de datos o si se intentó modificar al usuario
+con rol `OWNER`.
+
+🔴 `404 NOT FOUND` +
+[JSON error](#formato-general-de-errores)
+si no existe un usuario con el DNI solicitado.
 
 </td></tr></table>
 </details>
@@ -304,7 +318,7 @@ Permite que únicamente usuarios con el rol `ADMIN` puedan cambiar el flag `acti
 
 🔎 Path variable
 
-* `dni` String, requerido, entre 6 y 15 caracteres. <br>
+* `dni` String, requerido, Exactamente 8 caracteres numéricos. <br>
 DNI del usuario al que se le va a cambiar el flag `activo`.
 
 <details>
@@ -391,7 +405,7 @@ va intercambiando entre los roles `ADMIN` y `PERSONAL`.
 
 🔎 Path variable
 
-* `dni` String, requerido, entre 6 y 15 caracteres. <br>
+* `dni` String, requerido, Exactamente 8 caracteres numéricos. <br>
 DNI del usuario al que se le va a cambiar el rol.
 
 <details>
@@ -458,7 +472,7 @@ de usuarios a través de su DNI.
 
 🔎 Path variable
 
-* `dni` String, requerido, entre 6 y 15 caracteres. <br>
+* `dni` String, requerido, Exactamente 8 caracteres numéricos. <br>
 DNI del usuario del cual se quiere obtener el perfil.
 
 <details>

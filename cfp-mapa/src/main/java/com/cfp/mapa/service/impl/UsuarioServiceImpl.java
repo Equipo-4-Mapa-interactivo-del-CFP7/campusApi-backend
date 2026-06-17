@@ -1,7 +1,9 @@
 package com.cfp.mapa.service.impl;
 
+import com.cfp.mapa.dto.usuario.UsuarioAutenticadoDTO;
 import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
+import com.cfp.mapa.exception.AccionNoPermitidaException;
 import com.cfp.mapa.exception.DniDuplicadoException;
 import com.cfp.mapa.exception.DniNotFoundException;
 import com.cfp.mapa.exception.PasswordIncorrectaException;
@@ -9,15 +11,14 @@ import com.cfp.mapa.mapper.UsuarioMapper;
 import com.cfp.mapa.model.Usuario;
 import com.cfp.mapa.model.enums.Rol;
 import com.cfp.mapa.repository.UsuarioRepository;
+import com.cfp.mapa.security.SecurityUtils;
 import com.cfp.mapa.service.UsuarioService;
-import java.time.Duration;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,10 +31,7 @@ public class UsuarioServiceImpl implements UsuarioService {
   private final UsuarioRepository usuarioRepository;
   private final UsuarioMapper usuarioMapper;
   private final PasswordEncoder passwordEncoder;
-  private final StringRedisTemplate redisTemplate;
-
-  @Value("${app.jwt.expiration-ms}")
-  private Long jwtExpirationMs;
+  private final SecurityUtils securityUtils;
 
   @Transactional
   @Override
@@ -76,15 +74,39 @@ public class UsuarioServiceImpl implements UsuarioService {
         () -> new DniNotFoundException(dni)
     );
 
-    usuario.setRolOriginal(usuario.getRol());
-    usuario.setRol(Rol.CHANGE_PASSWORD);
-    usuario.setPassword(dniToPasswordEncoded(usuario.getDni()));
+    // Nadie puede restablecer la password de OWNER
+    if (usuario.getRol().equals(Rol.OWNER)) {
+      throw new AccionNoPermitidaException(
+          "No se puede restablecer la contraseña del dueño del sistema."
+      );
+    }
 
-    Usuario usuarioGuardado = usuarioRepository.save(usuario);
+    // OWNER puede restablecer a ADMIN
+    if (usuario.getRol().equals(Rol.ADMIN)) {
+      validarUsuarioActivoYRoles(Rol.OWNER);
+    }
 
-    tokenBlacklistAsyncSafe(dni, "revoked");
+    // OWNER y ADMIN pueden restablecer a PERSONAL
+    if (usuario.getRol().equals(Rol.PERSONAL)) {
+      validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
+    }
 
-    return usuarioMapper.usuarioToResponse(usuarioGuardado);
+    // Si el rol no es CHANGE_PASSWORD se restablece la password
+    if (!usuario.getRol().equals(Rol.CHANGE_PASSWORD)) {
+
+      usuario.setRolOriginal(usuario.getRol());
+      usuario.setRol(Rol.CHANGE_PASSWORD);
+      usuario.setPassword(dniToPasswordEncoded(usuario.getDni()));
+
+      Usuario usuarioGuardado = usuarioRepository.save(usuario);
+
+      return usuarioMapper.usuarioToResponse(usuarioGuardado);
+    }
+
+    // Si el rol es CHANGE_PASSWORD no se realiza ningun cambio
+    validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
+
+    return usuarioMapper.usuarioToResponse(usuario);
   }
 
   @Transactional
@@ -98,11 +120,12 @@ public class UsuarioServiceImpl implements UsuarioService {
     usuario.setActivo(!usuario.isActivo());
     Usuario usuarioGuardado = usuarioRepository.save(usuario);
 
-    if (!usuario.isActivo()) {
-      tokenBlacklistAsyncSafe(dni, "deactivated");
-    } else {
-      tokenBlacklistRemoveSafe(dni);
-    }
+//    TODO
+//    if (!usuario.isActivo()) {
+//      tokenBlacklistAsyncSafe(dni, "deactivated");
+//    } else {
+//      tokenBlacklistRemoveSafe(dni);
+//    }
 
     return usuarioMapper.usuarioToResponse(usuarioGuardado);
   }
@@ -126,8 +149,8 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     usuario.setPassword(passwordEncoder.encode(newPassword));
     usuarioRepository.save(usuario);
-
-    tokenBlacklistAsyncSafe(dni, "password_changed");
+//    TODO
+//    tokenBlacklistAsyncSafe(dni, "password_changed");
   }
 
   @Transactional
@@ -144,7 +167,8 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     Usuario usuarioGuardado = usuarioRepository.save(usuario);
 
-    tokenBlacklistAsyncSafe(dni, "rol_changed");
+//    TODO
+//    tokenBlacklistAsyncSafe(dni, "rol_changed");
 
     return usuarioMapper.usuarioToResponse(usuarioGuardado);
   }
@@ -171,26 +195,38 @@ public class UsuarioServiceImpl implements UsuarioService {
     return usuarioMapper.usuarioToResponse(usuario);
   }
 
-  // ---------- FUNCIONES PRIVADAS
+  // ======================================
+  // FUNCIONES PRIVADAS
+  // ======================================
+
   private String dniToPasswordEncoded(String dni) {
-    return passwordEncoder.encode("cfp" + dni);
+    return passwordEncoder.encode(dni);
   }
 
-  private void tokenBlacklistAsyncSafe(String dni, String reason) {
-    try {
-      String key = "blacklist:" + dni;
-      redisTemplate.opsForValue().set(key, reason, Duration.ofMillis(jwtExpirationMs));
-    } catch (Exception e) {
-      log.error("Error al registrar en Redis [{}] para el DNI {}: {}", reason, dni, e.getMessage());
+  private void validarUsuarioActivoYRoles(Rol... rolesPermitidos) {
+
+    UsuarioAutenticadoDTO usuarioLogueado = securityUtils.getUsuarioLogueado();
+
+    List<Rol> listaRolesPermitidos = List.of(rolesPermitidos);
+
+    boolean tienePermiso = usuarioLogueado.authorities().stream()
+        .map(GrantedAuthority::getAuthority)
+        .anyMatch(auth ->
+            listaRolesPermitidos.stream()
+            .anyMatch(rol ->
+                rol.name().equals(auth) || ("ROLE_" + rol.name()).equals(auth)));
+
+    if (!tienePermiso) {
+      throw new AccionNoPermitidaException(
+          "No tienes los permisos requeridos para realizar esta acción."
+      );
+    }
+
+    if (!usuarioRepository.existsByIdAndActivoTrueAndRolIn(usuarioLogueado.id(), listaRolesPermitidos)) {
+      throw new AccionNoPermitidaException(
+          "Su sesión ya no es válida. Sus permisos han cambiado o su cuenta fue desactivada."
+      );
     }
   }
 
-  private void tokenBlacklistRemoveSafe(String dni) {
-    try {
-      String key = "blacklist:" + dni;
-      redisTemplate.delete(key);
-    } catch (Exception e) {
-      log.error("Error al eliminar de Redis la lista negra para el DNI {}: {}", dni, e.getMessage());
-    }
-  }
 }

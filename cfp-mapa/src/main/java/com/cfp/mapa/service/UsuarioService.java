@@ -17,6 +17,7 @@ public interface UsuarioService {
       Pageable pageable
   );
 
+  /// Restablece la contraseña de un usuario a su DNI como clave temporal.
   UsuarioResponseDTO restablecerPasswordPorAdmin(String dni);
 
   UsuarioResponseDTO cambiarEstadoActivoPorAdmin(String dni);

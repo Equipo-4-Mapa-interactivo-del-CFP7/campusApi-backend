@@ -1,6 +1,8 @@
 package com.cfp.mapa.repository;
 
 import com.cfp.mapa.model.Usuario;
+import com.cfp.mapa.model.enums.Rol;
+import java.util.Collection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -28,4 +30,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
       @Param("activo") Boolean activo,
       Pageable pageable
   );
+
+  boolean existsByIdAndActivoTrueAndRolIn(Long id, Collection<Rol> roles);
 }

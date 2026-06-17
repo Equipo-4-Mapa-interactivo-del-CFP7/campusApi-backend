@@ -3,14 +3,14 @@ package com.cfp.mapa.dto.usuario;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public record UsuarioChangePasswordDTO (
+public record UsuarioChangePasswordDTO(
 
-    @Size(min = 8, max = 60)
-    @NotBlank
+    @NotBlank(message = "La contraseña actual es obligatoria")
+    @Size(min = 8, max = 60, message = "La contraseña debe tener al menos 8 caracteres")
     String oldPassword,
 
-    @Size(min = 8, max = 60)
-    @NotBlank
+    @NotBlank(message = "La contraseña nueva es obligatoria")
+    @Size(min = 8, max = 60, message = "La contraseña debe tener al menos 8 caracteres")
     String newPassword
 ) {
 

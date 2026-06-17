@@ -2,10 +2,12 @@ package com.cfp.mapa.exception;
 
 import com.cfp.mapa.dto.error.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -69,9 +71,17 @@ public class GlobalExceptionHandler {
         MethodArgumentNotValidException ex
     ) {
 
+        String mensajeError = ex.getBindingResult()
+            .getFieldErrors()
+            .stream()
+            .map(DefaultMessageSourceResolvable::getDefaultMessage)
+            .filter(msg -> msg != null && !msg.isBlank())
+            .findFirst()
+            .orElse("Error de validación en los datos enviados");
+
         return buildErrorResponse(
             HttpStatus.BAD_REQUEST,
-            "Los datos enviados no cumplen con las restricciones de validación"
+            mensajeError
         );
     }
 
@@ -86,6 +96,31 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(NombreInvalidoException.class)
+    public ResponseEntity<ErrorResponse> handleNombreInvalidoException(NombreInvalidoException ex) {
+
+        return buildErrorResponse(
+            HttpStatus.BAD_REQUEST,
+            ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(AccionNoPermitidaException.class)
+    public ResponseEntity<ErrorResponse> handleAccionNoPermitidaException(
+        AccionNoPermitidaException ex
+    ) {
+
+        ErrorResponse response = new ErrorResponse(
+            HttpStatus.FORBIDDEN,
+            ex.getMessage(),
+            "SESSION_INVALIDATED"
+        );
+
+        return ResponseEntity
+            .status(HttpStatus.FORBIDDEN)
+            .body(response);
+    }
+
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(
         MethodArgumentTypeMismatchException ex
@@ -95,6 +130,17 @@ public class GlobalExceptionHandler {
             HttpStatus.BAD_REQUEST,
             String.format("El parámetro '%s' debe ser de tipo '%s'",
                 ex.getName(), ex.getRequiredType().getSimpleName())
+        );
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public  ResponseEntity<ErrorResponse> handleAuthorizationDeniedException(
+        AuthorizationDeniedException ex
+    ) {
+
+        return buildErrorResponse(
+            HttpStatus.FORBIDDEN,
+            "No tienes los permisos necesarios para acceder a este recurso."
         );
     }
 
@@ -117,6 +163,10 @@ public class GlobalExceptionHandler {
                 ex.getMessage()
         );
     }
+
+    // ======================================
+    // FUNCIONES PRIVADAS
+    // ======================================
 
     private ResponseEntity<ErrorResponse> buildErrorResponse(
         HttpStatus status, String message)
