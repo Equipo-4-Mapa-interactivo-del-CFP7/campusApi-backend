@@ -7,7 +7,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface UsuarioService {
 
-  UsuarioResponseDTO crearUsuarioPorAdmin(UsuarioCreateRequestDTO request);
+  UsuarioResponseDTO crearUsuario(UsuarioCreateRequestDTO request);
 
   Page<UsuarioResponseDTO> listarUsuariosConFiltro(
       String dni,
@@ -18,7 +18,7 @@ public interface UsuarioService {
   );
 
   /// Restablece la contraseña de un usuario a su DNI como clave temporal.
-  UsuarioResponseDTO restablecerPasswordPorAdmin(String dni);
+  UsuarioResponseDTO restablecerPassword(String dni);
 
   UsuarioResponseDTO cambiarEstadoActivoPorAdmin(String dni);
 

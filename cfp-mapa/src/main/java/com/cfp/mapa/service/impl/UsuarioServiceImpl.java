@@ -35,7 +35,9 @@ public class UsuarioServiceImpl implements UsuarioService {
 
   @Transactional
   @Override
-  public UsuarioResponseDTO crearUsuarioPorAdmin(UsuarioCreateRequestDTO request) {
+  public UsuarioResponseDTO crearUsuario(UsuarioCreateRequestDTO request) {
+
+    validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
 
     if (usuarioRepository.existsByDni(request.dni())) {
       throw new DniDuplicadoException(request.dni());
@@ -68,7 +70,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
   @Transactional
   @Override
-  public UsuarioResponseDTO restablecerPasswordPorAdmin(String dni) {
+  public UsuarioResponseDTO restablecerPassword(String dni) {
 
     Usuario usuario = usuarioRepository.findByDni(dni).orElseThrow(
         () -> new DniNotFoundException(dni)
@@ -209,20 +211,9 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     List<Rol> listaRolesPermitidos = List.of(rolesPermitidos);
 
-    boolean tienePermiso = usuarioLogueado.authorities().stream()
-        .map(GrantedAuthority::getAuthority)
-        .anyMatch(auth ->
-            listaRolesPermitidos.stream()
-            .anyMatch(rol ->
-                rol.name().equals(auth) || ("ROLE_" + rol.name()).equals(auth)));
+    if (!usuarioRepository.existsByIdAndActivoTrueAndRolIn(
+        usuarioLogueado.id(), listaRolesPermitidos)) {
 
-    if (!tienePermiso) {
-      throw new AccionNoPermitidaException(
-          "No tienes los permisos requeridos para realizar esta acción."
-      );
-    }
-
-    if (!usuarioRepository.existsByIdAndActivoTrueAndRolIn(usuarioLogueado.id(), listaRolesPermitidos)) {
       throw new AccionNoPermitidaException(
           "Su sesión ya no es válida. Sus permisos han cambiado o su cuenta fue desactivada."
       );

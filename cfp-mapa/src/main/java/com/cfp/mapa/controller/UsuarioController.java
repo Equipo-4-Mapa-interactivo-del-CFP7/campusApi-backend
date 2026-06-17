@@ -33,12 +33,12 @@ public class UsuarioController {
   private final UsuarioService usuarioService;
 
   @PostMapping("/registrar")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<UsuarioResponseDTO> crearUsuarioPorAdmin(
+  @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+  public ResponseEntity<UsuarioResponseDTO> crearUsuario(
       @Valid @RequestBody UsuarioCreateRequestDTO request
   ) {
 
-    UsuarioResponseDTO response = usuarioService.crearUsuarioPorAdmin(request);
+    UsuarioResponseDTO response = usuarioService.crearUsuario(request);
 
     return ResponseEntity
         .status(HttpStatus.CREATED)
@@ -66,12 +66,12 @@ public class UsuarioController {
 
   @PutMapping("/{dni}/restablecer")
   @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
-  public ResponseEntity<UsuarioResponseDTO> restablecerPasswordPorAdmin(
+  public ResponseEntity<UsuarioResponseDTO> restablecerPassword(
       @PathVariable
       @Pattern(regexp = "^[0-9]{8}$", message = "El DNI debe contener exactamente 8 dígitos")
       String dni) {
 
-    UsuarioResponseDTO response = usuarioService.restablecerPasswordPorAdmin(dni);
+    UsuarioResponseDTO response = usuarioService.restablecerPassword(dni);
 
     return ResponseEntity
         .status(HttpStatus.OK)
