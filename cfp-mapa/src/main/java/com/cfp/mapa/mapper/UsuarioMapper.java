@@ -38,6 +38,7 @@ public class UsuarioMapper {
         .nombre(nombreNormalizado)
         .apellido(apellidoNormalizado)
         .activo(true)
+        .eliminado(false)
         .rolOriginal(Rol.PERSONAL)
         .build();
   }
