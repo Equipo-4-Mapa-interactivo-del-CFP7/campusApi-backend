@@ -18,9 +18,9 @@ public interface UsuarioService {
   );
 
   /// Restablece la contraseña de un usuario a su DNI como clave temporal.
-  UsuarioResponseDTO restablecerPassword(String dni);
+  UsuarioResponseDTO restablecerPassword(Long id);
 
-  UsuarioResponseDTO cambiarEstadoActivoPorAdmin(String dni);
+  UsuarioResponseDTO cambiarEstadoActivo(Long id);
 
   void cambiarPassword(String dni, String oldPassword, String newPassword);
 

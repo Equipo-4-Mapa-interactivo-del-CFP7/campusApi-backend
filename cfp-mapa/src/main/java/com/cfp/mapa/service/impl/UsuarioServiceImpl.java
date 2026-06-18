@@ -9,6 +9,7 @@ import com.cfp.mapa.exception.DniDuplicadoException;
 import com.cfp.mapa.exception.DniNotFoundException;
 import com.cfp.mapa.exception.PasswordIncorrectaException;
 import com.cfp.mapa.exception.RolInvalidoException;
+import com.cfp.mapa.exception.UsuarioNotFoundException;
 import com.cfp.mapa.mapper.UsuarioMapper;
 import com.cfp.mapa.model.Usuario;
 import com.cfp.mapa.model.enums.Rol;
@@ -98,28 +99,16 @@ public class UsuarioServiceImpl implements UsuarioService {
 
   @Transactional
   @Override
-  public UsuarioResponseDTO restablecerPassword(String dni) {
+  public UsuarioResponseDTO restablecerPassword(Long id) {
 
-    Usuario usuario = usuarioRepository.findByDni(dni).orElseThrow(
-        () -> new DniNotFoundException(dni)
+    Usuario usuario = usuarioRepository.findById(id).orElseThrow(
+        () -> new UsuarioNotFoundException(id)
     );
 
-    // Nadie puede restablecer la password de OWNER
-    if (usuario.getRol().equals(Rol.OWNER)) {
-      throw new AccionNoPermitidaException(
-          "No se puede restablecer la contraseña del dueño del sistema."
-      );
-    }
-
-    // OWNER puede restablecer a ADMIN
-    if (usuario.getRol().equals(Rol.ADMIN)) {
-      validarUsuarioActivoYRoles(Rol.OWNER);
-    }
-
-    // OWNER y ADMIN pueden restablecer a PERSONAL
-    if (usuario.getRol().equals(Rol.PERSONAL)) {
-      validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
-    }
+    validarJerarquias(
+        usuario.getRol(),
+        "No se puede restablecer la contraseña del dueño del sistema."
+    );
 
     // Si el rol no es CHANGE_PASSWORD se restablece la password
     if (!usuario.getRol().equals(Rol.CHANGE_PASSWORD)) {
@@ -141,21 +130,24 @@ public class UsuarioServiceImpl implements UsuarioService {
 
   @Transactional
   @Override
-  public UsuarioResponseDTO cambiarEstadoActivoPorAdmin(String dni) {
+  public UsuarioResponseDTO cambiarEstadoActivo(Long id) {
 
-    Usuario usuario = usuarioRepository.findByDni(dni).orElseThrow(
-        () -> new DniNotFoundException(dni)
+    Usuario usuario = usuarioRepository.findById(id).orElseThrow(
+        () -> new UsuarioNotFoundException(id)
     );
+
+    validarJerarquias(
+        usuario.getRol(),
+        "No se puede cambiar el estado del dueño del sistema"
+    );
+
+    // OWNER y ADMIN pueden modificar a alguien que deba cambiar su clave
+    if (usuario.getRol().equals(Rol.CHANGE_PASSWORD)) {
+      validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
+    }
 
     usuario.setActivo(!usuario.isActivo());
     Usuario usuarioGuardado = usuarioRepository.save(usuario);
-
-//    TODO
-//    if (!usuario.isActivo()) {
-//      tokenBlacklistAsyncSafe(dni, "deactivated");
-//    } else {
-//      tokenBlacklistRemoveSafe(dni);
-//    }
 
     return usuarioMapper.usuarioToResponse(usuarioGuardado);
   }
@@ -248,7 +240,26 @@ public class UsuarioServiceImpl implements UsuarioService {
           "Su sesión ya no es válida. Sus permisos han cambiado o su cuenta fue desactivada."
       );
     }
+  }
 
+  private void validarJerarquias(Rol rolAfectado, String mensajeCasoOwner) {
+
+    // Nadie puede modificar a OWNER
+    if (rolAfectado.equals(Rol.OWNER)) {
+      throw new AccionInvalidaException(
+          mensajeCasoOwner
+      );
+    }
+
+    // OWNER puede modificar a ADMIN
+    if (rolAfectado.equals(Rol.ADMIN)) {
+      validarUsuarioActivoYRoles(Rol.OWNER);
+    }
+
+    // OWNER y ADMIN pueden modificar a PERSONAL
+    if (rolAfectado.equals(Rol.PERSONAL)) {
+      validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
+    }
   }
 
 }

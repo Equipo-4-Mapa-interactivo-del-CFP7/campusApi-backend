@@ -5,6 +5,7 @@ import com.cfp.mapa.dto.usuario.UsuarioChangePasswordDTO;
 import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
 import com.cfp.mapa.service.UsuarioService;
+import com.cfp.mapa.validation.ValidDni;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -64,29 +65,25 @@ public class UsuarioController {
         .body(usuarios);
   }
 
-  @PutMapping("/{dni}/restablecer")
+  @PutMapping("/{id}/restablecer")
   @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
   public ResponseEntity<UsuarioResponseDTO> restablecerPassword(
-      @PathVariable
-      @Pattern(regexp = "^[0-9]{8}$", message = "El DNI debe contener exactamente 8 dígitos")
-      String dni) {
+      @PathVariable Long id) {
 
-    UsuarioResponseDTO response = usuarioService.restablecerPassword(dni);
+    UsuarioResponseDTO response = usuarioService.restablecerPassword(id);
 
     return ResponseEntity
         .status(HttpStatus.OK)
         .body(response);
   }
 
-  @PutMapping("/{dni}/cambiar-activo")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<UsuarioResponseDTO> cambiarEstadoActivoPorAdmin (
-      @PathVariable
-      @Size(min = 6, max = 15)
-      String dni
+  @PutMapping("/{id}/cambiar-activo")
+  @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+  public ResponseEntity<UsuarioResponseDTO> cambiarEstadoActivo (
+      @PathVariable Long id
   ) {
 
-    UsuarioResponseDTO response = usuarioService.cambiarEstadoActivoPorAdmin(dni);
+    UsuarioResponseDTO response = usuarioService.cambiarEstadoActivo(id);
 
     return ResponseEntity
         .status(HttpStatus.OK)

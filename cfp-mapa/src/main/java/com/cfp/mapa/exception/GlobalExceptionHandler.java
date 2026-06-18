@@ -139,6 +139,15 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(UsuarioNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUsuarioNotFoundException(UsuarioNotFoundException ex) {
+
+        return buildErrorResponse(
+            HttpStatus.NOT_FOUND,
+            ex.getMessage()
+        );
+    }
+
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(
         MethodArgumentTypeMismatchException ex
