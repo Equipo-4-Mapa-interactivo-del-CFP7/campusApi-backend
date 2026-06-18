@@ -46,7 +46,7 @@ public class UsuarioController {
   }
 
   @GetMapping
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
   public ResponseEntity<Page<UsuarioResponseDTO>> listarUsuariosConFiltro (
       @RequestParam(required = false) String dni,
       @RequestParam(required = false) String nombre,

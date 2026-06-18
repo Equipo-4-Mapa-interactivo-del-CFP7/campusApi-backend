@@ -78,8 +78,19 @@ public class UsuarioServiceImpl implements UsuarioService {
       Pageable pageable
   ) {
 
+    validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
+
+    String dniParam = (dni != null && !dni.isBlank()) ?
+        "%" + dni.trim() + "%" : null;
+
+    String nombreParam = (nombre != null && !nombre.isBlank()) ?
+        "%" + nombre.toLowerCase().trim() + "%" : null;
+
+    String apellidoParam = (apellido != null && !apellido.isBlank()) ?
+        "%" + apellido.toLowerCase().trim() + "%" : null;
+
     Page<Usuario> usuariosPage = usuarioRepository.buscarUsuariosDinamico(
-        dni, nombre, apellido, activo, pageable
+        dniParam, nombreParam, apellidoParam, activo, pageable
     );
 
     return usuariosPage.map(usuarioMapper::usuarioToResponse);

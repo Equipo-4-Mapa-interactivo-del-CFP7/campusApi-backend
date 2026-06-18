@@ -18,9 +18,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
   boolean existsByDni(String dni);
 
   @Query("SELECT u FROM Usuario u WHERE " +
-      "(:dni IS NULL OR u.dni LIKE %:dni%) AND " +
-      "(:nombre IS NULL OR LOWER(u.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
-      "(:apellido IS NULL OR LOWER(u.apellido) LIKE LOWER(CONCAT('%', :apellido, '%'))) AND " +
+      "u.eliminado = false AND " +
+      "(:dni IS NULL OR u.dni LIKE :dni) AND " +
+      "(:nombre IS NULL OR u.nombre LIKE :nombre) AND " +
+      "(:apellido IS NULL OR u.apellido LIKE :apellido) AND " +
       "(:activo IS NULL OR u.activo = :activo)"
   )
   Page<Usuario> buscarUsuariosDinamico(
