@@ -121,6 +121,24 @@ public class GlobalExceptionHandler {
             .body(response);
     }
 
+    @ExceptionHandler(AccionInvalidaException.class)
+    public ResponseEntity<ErrorResponse> handleAccionInvalidaException(AccionInvalidaException ex) {
+
+        return buildErrorResponse(
+            HttpStatus.FORBIDDEN,
+            ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(RolInvalidoException.class)
+    public ResponseEntity<ErrorResponse> handleRolInvalidoException(RolInvalidoException ex) {
+
+        return buildErrorResponse(
+            HttpStatus.BAD_REQUEST,
+            ex.getMessage()
+        );
+    }
+
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(
         MethodArgumentTypeMismatchException ex

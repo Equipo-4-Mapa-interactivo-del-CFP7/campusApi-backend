@@ -31,5 +31,5 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
       Pageable pageable
   );
 
-  boolean existsByIdAndActivoTrueAndRolIn(Long id, Collection<Rol> roles);
+  boolean existsByIdAndActivoTrueAndEliminadoFalseAndRolIn(Long id, Collection<Rol> roles);
 }

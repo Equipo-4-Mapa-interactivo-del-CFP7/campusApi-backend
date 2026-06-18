@@ -3,10 +3,12 @@ package com.cfp.mapa.service.impl;
 import com.cfp.mapa.dto.usuario.UsuarioAutenticadoDTO;
 import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
+import com.cfp.mapa.exception.AccionInvalidaException;
 import com.cfp.mapa.exception.AccionNoPermitidaException;
 import com.cfp.mapa.exception.DniDuplicadoException;
 import com.cfp.mapa.exception.DniNotFoundException;
 import com.cfp.mapa.exception.PasswordIncorrectaException;
+import com.cfp.mapa.exception.RolInvalidoException;
 import com.cfp.mapa.mapper.UsuarioMapper;
 import com.cfp.mapa.model.Usuario;
 import com.cfp.mapa.model.enums.Rol;
@@ -38,6 +40,21 @@ public class UsuarioServiceImpl implements UsuarioService {
   public UsuarioResponseDTO crearUsuario(UsuarioCreateRequestDTO request) {
 
     validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
+
+    String rolRequest = request.rol().toUpperCase().trim();
+
+    // No se pueden crear usuarios con rol OWNER / CHANGE_PASSWORD
+    if (rolRequest.equals(Rol.OWNER.name()) || rolRequest.equals(Rol.CHANGE_PASSWORD.name())) {
+      throw new RolInvalidoException("El rol proporcionado no es válido");
+    }
+
+    // ADMIN puede crear PERSONAL unicamente
+    if (securityUtils.getUsuarioLogueado().getRol() == Rol.ADMIN &&
+        rolRequest.equals(Rol.ADMIN.name())) {
+
+      throw new AccionInvalidaException(String.format("Un %s solo puede crear %s",
+          Rol.ADMIN.name(), Rol.PERSONAL.name()));
+    }
 
     if (usuarioRepository.existsByDni(request.dni())) {
       throw new DniDuplicadoException(request.dni());
@@ -202,7 +219,9 @@ public class UsuarioServiceImpl implements UsuarioService {
   // ======================================
 
   private String dniToPasswordEncoded(String dni) {
-    return passwordEncoder.encode(dni);
+
+    // Se genera una password que es el prefijo "cfp" y el dni
+    return passwordEncoder.encode("cfp" + dni);
   }
 
   private void validarUsuarioActivoYRoles(Rol... rolesPermitidos) {
@@ -211,13 +230,14 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     List<Rol> listaRolesPermitidos = List.of(rolesPermitidos);
 
-    if (!usuarioRepository.existsByIdAndActivoTrueAndRolIn(
+    if (!usuarioRepository.existsByIdAndActivoTrueAndEliminadoFalseAndRolIn(
         usuarioLogueado.id(), listaRolesPermitidos)) {
 
       throw new AccionNoPermitidaException(
           "Su sesión ya no es válida. Sus permisos han cambiado o su cuenta fue desactivada."
       );
     }
+
   }
 
 }

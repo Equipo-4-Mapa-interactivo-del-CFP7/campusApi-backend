@@ -16,20 +16,7 @@ public class UsuarioMapper {
     String nombreNormalizado = normalizarNombre(request.nombre());
     String apellidoNormalizado = normalizarNombre(request.apellido());
 
-    boolean nombreValido = nombreNormalizado.matches(".*[a-zA-ZáéíóúÁÉÍÓÚñÑ].*");
-    boolean apellidoValido = apellidoNormalizado.matches(".*[a-zA-ZáéíóúÁÉÍÓÚñÑ].*");
-
-    if (!nombreValido && !apellidoValido) {
-      throw new NombreInvalidoException("El nombre y el apellido deben contener letras válidas");
-    }
-
-    if (!nombreValido) {
-      throw new NombreInvalidoException("El nombre debe contener letras válidas");
-    }
-
-    if (!apellidoValido) {
-      throw new NombreInvalidoException("El apellido debe contener letras válidas");
-    }
+    Rol rol = Rol.valueOf(request.rol().toUpperCase());
 
     return Usuario.builder()
         .dni(request.dni())
@@ -39,7 +26,7 @@ public class UsuarioMapper {
         .apellido(apellidoNormalizado)
         .activo(true)
         .eliminado(false)
-        .rolOriginal(Rol.PERSONAL)
+        .rolOriginal(rol)
         .build();
   }
 
