@@ -12,7 +12,6 @@ public class UsuarioDetails implements UserDetails {
 
   @Getter
   private final Long id;
-  private final String dni;
   @Getter
   private final String password;
   @Getter
@@ -22,7 +21,6 @@ public class UsuarioDetails implements UserDetails {
   public UsuarioDetails(Usuario usuario) {
 
     this.id = usuario.getId();
-    this.dni = usuario.getDni();
     this.password = usuario.getPassword();
     this.activo = usuario.isActivo();
 
@@ -38,7 +36,7 @@ public class UsuarioDetails implements UserDetails {
 
   @Override
   public String getUsername() {
-    return dni;
+    return String.valueOf(id);
   }
 
   @Override

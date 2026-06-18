@@ -6,7 +6,6 @@ import org.springframework.security.core.GrantedAuthority;
 public record UsuarioAutenticadoDTO(
 
     Long id,
-    String dni,
     Collection<? extends GrantedAuthority> authorities
 ) {
 

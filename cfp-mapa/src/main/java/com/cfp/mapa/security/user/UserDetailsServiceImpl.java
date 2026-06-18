@@ -15,10 +15,20 @@ public class UserDetailsServiceImpl implements UserDetailsService {
   private final UsuarioRepository usuarioRepository;
 
   @Override
-  public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+  public UserDetails loadUserByUsername(String identificador) throws UsernameNotFoundException {
 
-    Usuario usuario = usuarioRepository.findByDni(username)
-        .orElseThrow(() -> new UsernameNotFoundException("Credenciales incorrectas"));
+    Usuario usuario;
+
+    try {
+      Long usuarioId = Long.parseLong(identificador);
+
+      usuario = usuarioRepository.findById(usuarioId)
+          .orElseThrow(() -> new UsernameNotFoundException("Credenciales incorrectas"));
+
+    } catch (NumberFormatException e) {
+      usuario = usuarioRepository.findByDni(identificador)
+          .orElseThrow(() -> new UsernameNotFoundException("Credenciales incorrectas"));
+    }
 
     return new UsuarioDetails(usuario);
   }
