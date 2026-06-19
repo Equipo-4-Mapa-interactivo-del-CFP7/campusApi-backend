@@ -26,7 +26,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
 @RequiredArgsConstructor
 @Service
 public class UsuarioServiceImpl implements UsuarioService {
@@ -178,14 +177,15 @@ public class UsuarioServiceImpl implements UsuarioService {
   @Override
   public UsuarioResponseDTO cambiarRol(Long id, String newRol) {
 
+    validarUsuarioActivoYRoles(Rol.OWNER);
+
     Usuario usuario = usuarioRepository.findById(id).orElseThrow(
         () -> new UsuarioNotFoundException(id)
     );
 
-    validarJerarquias(
-        usuario.getRol(),
-        "No se puede cambiar el rol del dueño del sistema"
-    );
+    if (usuario.getRol().equals(Rol.OWNER)) {
+      throw new AccionInvalidaException("No se puede cambiar el rol del dueño del sistema");
+    }
 
     if (usuario.getRol().equals(Rol.CHANGE_PASSWORD)) {
       throw new AccionInvalidaException("No se puede puede cambiar el rol 'CHANGE_PASSWORD'");

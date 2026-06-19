@@ -92,6 +92,7 @@ public class UsuarioController {
   }
 
   @PutMapping("/me/password")
+  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<Void> cambiarPassword(
       @AuthenticationPrincipal UsuarioAutenticadoDTO usuario,
       @Valid @RequestBody UsuarioChangePasswordDTO request) {
@@ -104,7 +105,7 @@ public class UsuarioController {
   }
 
   @PutMapping("/{id}/cambiar-rol")
-  @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+  @PreAuthorize("hasRole('OWNER')")
   public ResponseEntity<UsuarioResponseDTO> cambiarRol (
       @PathVariable Long id,
       @Valid @RequestBody UsuarioNewRolRequestDTO request
