@@ -4,6 +4,7 @@ import com.cfp.mapa.dto.auditoria.AuditoriaResponseDTO;
 import com.cfp.mapa.mapper.AuditoriaMapper;
 import com.cfp.mapa.model.AuditoriaUsuario;
 import com.cfp.mapa.model.Usuario;
+import com.cfp.mapa.model.enums.TipoAccionAuditoria;
 import com.cfp.mapa.repository.AuditoriaRepository;
 import com.cfp.mapa.service.AuditoriaService;
 import lombok.RequiredArgsConstructor;
@@ -36,8 +37,8 @@ public class AuditoriaServiceImpl implements AuditoriaService {
 
   @Transactional
   @Override
-  public void registrarAccion(Usuario operador, Usuario afectado, String accion) {
-    AuditoriaUsuario nuevaAuditoria = new AuditoriaUsuario(operador, afectado, accion);
+  public void registrarAccion(Usuario operador, Usuario afectado, TipoAccionAuditoria accion) {
+    AuditoriaUsuario nuevaAuditoria = new AuditoriaUsuario(operador, afectado, accion.getDescripcion());
     auditoriaRepository.save(nuevaAuditoria);
   }
 }

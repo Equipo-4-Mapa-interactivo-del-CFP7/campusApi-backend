@@ -5,11 +5,9 @@ import com.cfp.mapa.dto.usuario.UsuarioChangePasswordDTO;
 import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioNewRolRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
+import com.cfp.mapa.service.AuditoriaService;
 import com.cfp.mapa.service.UsuarioService;
-import com.cfp.mapa.validation.ValidDni;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -141,5 +139,18 @@ public class UsuarioController {
     return ResponseEntity
         .status(HttpStatus.OK)
         .body(response);
+  }
+
+  @PostMapping("/{id}/eliminar")
+  @PreAuthorize("hasRole('OWNER')")
+  public ResponseEntity<Void> eliminarUsuario (
+      @PathVariable Long id
+  ) {
+
+    usuarioService.eliminarUsuario(id);
+
+    return ResponseEntity
+        .status(HttpStatus.NO_CONTENT)
+        .build();
   }
 }

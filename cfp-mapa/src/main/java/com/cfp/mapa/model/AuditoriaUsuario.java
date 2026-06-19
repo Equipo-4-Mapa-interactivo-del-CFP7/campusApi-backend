@@ -40,10 +40,14 @@ public class AuditoriaUsuario {
   @Column(nullable = false, updatable = false)
   private String accion;
 
+  @Column(nullable = false, updatable = false)
+  private String operadorRol;
+
   public AuditoriaUsuario(Usuario operador, Usuario usuarioAfectado, String accion) {
     this.fechaAccion = LocalDateTime.now();
     this.operador = operador;
     this.usuarioAfectado = usuarioAfectado;
     this.accion = accion;
+    this.operadorRol = operador.getRol().name();
   }
 }

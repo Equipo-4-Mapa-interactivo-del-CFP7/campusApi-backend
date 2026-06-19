@@ -17,7 +17,6 @@ public interface UsuarioService {
       Pageable pageable
   );
 
-  /// Restablece la contraseña de un usuario a su DNI como clave temporal.
   UsuarioResponseDTO restablecerPassword(Long id);
 
   UsuarioResponseDTO cambiarEstadoActivo(Long id);
@@ -29,4 +28,6 @@ public interface UsuarioService {
   UsuarioResponseDTO obtenerMiPerfil(Long id);
 
   UsuarioResponseDTO obtenerPerfil(Long id);
+
+  void eliminarUsuario(Long id);
 }

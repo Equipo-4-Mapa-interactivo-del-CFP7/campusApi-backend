@@ -6,22 +6,21 @@ import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
 import com.cfp.mapa.exception.AccionInvalidaException;
 import com.cfp.mapa.exception.AccionNoPermitidaException;
 import com.cfp.mapa.exception.DniDuplicadoException;
-import com.cfp.mapa.exception.DniNotFoundException;
 import com.cfp.mapa.exception.PasswordIncorrectaException;
 import com.cfp.mapa.exception.RolInvalidoException;
 import com.cfp.mapa.exception.UsuarioNotFoundException;
 import com.cfp.mapa.mapper.UsuarioMapper;
 import com.cfp.mapa.model.Usuario;
 import com.cfp.mapa.model.enums.Rol;
+import com.cfp.mapa.model.enums.TipoAccionAuditoria;
 import com.cfp.mapa.repository.UsuarioRepository;
 import com.cfp.mapa.security.SecurityUtils;
+import com.cfp.mapa.service.AuditoriaService;
 import com.cfp.mapa.service.UsuarioService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +33,7 @@ public class UsuarioServiceImpl implements UsuarioService {
   private final UsuarioMapper usuarioMapper;
   private final PasswordEncoder passwordEncoder;
   private final SecurityUtils securityUtils;
+  private final AuditoriaService auditoriaService;
 
   @Transactional
   @Override
@@ -155,9 +155,17 @@ public class UsuarioServiceImpl implements UsuarioService {
   @Override
   public void cambiarPassword(Long id, String oldPassword, String newPassword) {
 
+    validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN, Rol.PERSONAL, Rol.CHANGE_PASSWORD);
+
     Usuario usuario = usuarioRepository.findById(id).orElseThrow(
         () -> new UsuarioNotFoundException(id)
     );
+
+    if (newPassword.equalsIgnoreCase(usuario.getDni()) ||
+        newPassword.equalsIgnoreCase("cfp" + usuario.getDni())) {
+
+      throw new PasswordIncorrectaException("No puedes usar esta contraseña");
+    }
 
     if (!passwordEncoder.matches(oldPassword, usuario.getPassword())) {
       throw new PasswordIncorrectaException();
@@ -246,6 +254,37 @@ public class UsuarioServiceImpl implements UsuarioService {
     return usuarioMapper.usuarioToResponse(usuario);
   }
 
+  @Transactional
+  @Override
+  public void eliminarUsuario(Long id) {
+
+    validarUsuarioActivoYRoles(Rol.OWNER);
+
+    Usuario usuario = usuarioRepository.findById(id).orElseThrow(
+        () -> new UsuarioNotFoundException(id)
+    );
+
+    if (usuario.getRol().equals(Rol.OWNER)) {
+      throw new AccionInvalidaException("Un OWNER no puede eliminarse a sí mismo del sistema.");
+    }
+
+    // Ofuscar dni, nombre y apellido
+    usuario.setDni("00000000");
+    usuario.setNombre("USUARIO");
+    usuario.setApellido("ELIMINADO");
+
+    usuario.setActivo(false);
+    usuario.setEliminado(true);
+
+    usuarioRepository.save(usuario);
+
+    auditoriaService.registrarAccion(
+        usuarioLogueado(),
+        usuario,
+        TipoAccionAuditoria.USUARIO_ELIMINADO
+    );
+  }
+
   // ======================================
   // FUNCIONES PRIVADAS
   // ======================================
@@ -294,4 +333,14 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
   }
 
+  private Usuario usuarioLogueado() {
+
+    Long usuarioId = securityUtils.getUsuarioLogueado().id();
+
+    Usuario usuarioLogueado = usuarioRepository.findById(usuarioId).orElseThrow(
+        () -> new UsuarioNotFoundException(usuarioId)
+    );
+
+    return usuarioLogueado;
+  }
 }
