@@ -176,20 +176,30 @@ public class UsuarioServiceImpl implements UsuarioService {
 
   @Transactional
   @Override
-  public UsuarioResponseDTO cambiarRolPorAdmin(String dni) {
+  public UsuarioResponseDTO cambiarRol(Long id, String newRol) {
 
-    Usuario usuario = usuarioRepository.findByDni(dni).orElseThrow(
-        () -> new DniNotFoundException(dni)
+    Usuario usuario = usuarioRepository.findById(id).orElseThrow(
+        () -> new UsuarioNotFoundException(id)
     );
 
-    usuario.setRol(
-        usuario.getRol() == Rol.ADMIN ? Rol.PERSONAL : Rol.ADMIN
+    validarJerarquias(
+        usuario.getRol(),
+        "No se puede cambiar el rol del dueño del sistema"
     );
+
+    if (usuario.getRol().equals(Rol.CHANGE_PASSWORD)) {
+      throw new AccionInvalidaException("No se puede puede cambiar el rol 'CHANGE_PASSWORD'");
+    }
+
+    newRol = newRol.toUpperCase().trim();
+
+    switch (newRol) {
+      case "PERSONAL" -> usuario.setRol(Rol.PERSONAL);
+      case "ADMIN" -> usuario.setRol(Rol.ADMIN);
+      default -> throw new RolInvalidoException("El rol proporcionado no es válido");
+    }
 
     Usuario usuarioGuardado = usuarioRepository.save(usuario);
-
-//    TODO
-//    tokenBlacklistAsyncSafe(dni, "rol_changed");
 
     return usuarioMapper.usuarioToResponse(usuarioGuardado);
   }
@@ -245,6 +255,9 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     // Nadie puede modificar a OWNER
     if (rolAfectado.equals(Rol.OWNER)) {
+
+      validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
+
       throw new AccionInvalidaException(
           mensajeCasoOwner
       );

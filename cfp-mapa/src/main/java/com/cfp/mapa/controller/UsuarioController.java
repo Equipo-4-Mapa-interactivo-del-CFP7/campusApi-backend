@@ -3,6 +3,7 @@ package com.cfp.mapa.controller;
 import com.cfp.mapa.dto.usuario.UsuarioAutenticadoDTO;
 import com.cfp.mapa.dto.usuario.UsuarioChangePasswordDTO;
 import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
+import com.cfp.mapa.dto.usuario.UsuarioNewRolRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
 import com.cfp.mapa.service.UsuarioService;
 import com.cfp.mapa.validation.ValidDni;
@@ -102,15 +103,14 @@ public class UsuarioController {
         .build();
   }
 
-  @PutMapping("/{dni}/cambiar-rol")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<UsuarioResponseDTO> cambiarRolPorAdmin (
-      @PathVariable
-      @Size(min = 6, max = 15)
-      String dni
+  @PutMapping("/{id}/cambiar-rol")
+  @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+  public ResponseEntity<UsuarioResponseDTO> cambiarRol (
+      @PathVariable Long id,
+      @Valid @RequestBody UsuarioNewRolRequestDTO request
   ) {
 
-    UsuarioResponseDTO response = usuarioService.cambiarRolPorAdmin(dni);
+    UsuarioResponseDTO response = usuarioService.cambiarRol(id, request.rol());
 
     return ResponseEntity
         .status(HttpStatus.OK)
