@@ -206,22 +206,42 @@ public class UsuarioServiceImpl implements UsuarioService {
 
   @Transactional(readOnly = true)
   @Override
-  public UsuarioResponseDTO obtenerMiPerfil(String dni) {
+  public UsuarioResponseDTO obtenerMiPerfil(Long id) {
 
-    Usuario usuario = usuarioRepository.findByDni(dni).orElseThrow(
-        () -> new DniNotFoundException(dni)
+    validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN, Rol.PERSONAL, Rol.CHANGE_PASSWORD);
+
+    Usuario usuario = usuarioRepository.findById(id).orElseThrow(
+        () -> new UsuarioNotFoundException(id)
     );
+
+    if (usuario.getRol().equals(Rol.CHANGE_PASSWORD)) {
+      throw new AccionInvalidaException("Debes cambiar tu contraseña para acceder a tu perfil");
+    }
 
     return usuarioMapper.usuarioToResponse(usuario);
   }
 
   @Transactional(readOnly = true)
   @Override
-  public UsuarioResponseDTO obtenerPerfilPorAdmin(String dni) {
+  public UsuarioResponseDTO obtenerPerfil(Long id) {
 
-    Usuario usuario = usuarioRepository.findByDni(dni).orElseThrow(
-        () -> new DniNotFoundException(dni)
+    validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
+
+    Rol rolLogueado = securityUtils.getUsuarioLogueado().getRol();
+
+    Usuario usuario = usuarioRepository.findById(id).orElseThrow(
+        () -> new UsuarioNotFoundException(id)
     );
+
+    // El rol OWNER solo puede ser visto por OWNER
+    if (usuario.getRol().equals(Rol.OWNER)) {
+
+      if (rolLogueado.equals(Rol.ADMIN)) {
+        throw new AccionInvalidaException(
+            "No tienes permitido ver el perfil de este usuario"
+        );
+      }
+    }
 
     return usuarioMapper.usuarioToResponse(usuario);
   }

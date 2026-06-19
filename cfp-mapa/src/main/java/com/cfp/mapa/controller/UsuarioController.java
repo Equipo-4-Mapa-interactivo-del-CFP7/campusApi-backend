@@ -122,22 +122,20 @@ public class UsuarioController {
       @AuthenticationPrincipal UsuarioAutenticadoDTO usuario
   ) {
 
-    UsuarioResponseDTO response = usuarioService.obtenerMiPerfil(usuario.dni());
+    UsuarioResponseDTO response = usuarioService.obtenerMiPerfil(usuario.id());
 
     return ResponseEntity
         .status(HttpStatus.OK)
         .body(response);
   }
 
-  @GetMapping("/{dni}")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<UsuarioResponseDTO> obtenerPerfilPorAdmin (
-      @PathVariable
-      @Size(min = 6, max = 15)
-      String dni
+  @GetMapping("/{id}")
+  @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+  public ResponseEntity<UsuarioResponseDTO> obtenerPerfil (
+      @PathVariable Long id
   ) {
 
-    UsuarioResponseDTO response = usuarioService.obtenerPerfilPorAdmin(dni);
+    UsuarioResponseDTO response = usuarioService.obtenerPerfil(id);
 
     return ResponseEntity
         .status(HttpStatus.OK)
