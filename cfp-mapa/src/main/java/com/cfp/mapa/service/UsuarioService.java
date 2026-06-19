@@ -22,7 +22,7 @@ public interface UsuarioService {
 
   UsuarioResponseDTO cambiarEstadoActivo(Long id);
 
-  void cambiarPassword(String dni, String oldPassword, String newPassword);
+  void cambiarPassword(Long id, String oldPassword, String newPassword);
 
   UsuarioResponseDTO cambiarRolPorAdmin(String dni);
 

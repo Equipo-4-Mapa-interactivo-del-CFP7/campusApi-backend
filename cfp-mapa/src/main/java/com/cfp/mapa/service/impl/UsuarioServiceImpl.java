@@ -154,16 +154,17 @@ public class UsuarioServiceImpl implements UsuarioService {
 
   @Transactional
   @Override
-  public void cambiarPassword(String dni, String oldPassword, String newPassword) {
+  public void cambiarPassword(Long id, String oldPassword, String newPassword) {
 
-    Usuario usuario = usuarioRepository.findByDni(dni).orElseThrow(
-        () -> new DniNotFoundException(dni)
+    Usuario usuario = usuarioRepository.findById(id).orElseThrow(
+        () -> new UsuarioNotFoundException(id)
     );
 
     if (!passwordEncoder.matches(oldPassword, usuario.getPassword())) {
       throw new PasswordIncorrectaException();
     }
 
+    // Si su rol era CHANGE_PASSWORD pasa a recuperar su rol real
     if (usuario.getRol() == Rol.CHANGE_PASSWORD) {
       usuario.setRol(usuario.getRolOriginal());
       usuario.setRolOriginal(null);
@@ -171,8 +172,6 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     usuario.setPassword(passwordEncoder.encode(newPassword));
     usuarioRepository.save(usuario);
-//    TODO
-//    tokenBlacklistAsyncSafe(dni, "password_changed");
   }
 
   @Transactional

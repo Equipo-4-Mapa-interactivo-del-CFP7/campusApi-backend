@@ -95,7 +95,7 @@ public class UsuarioController {
       @AuthenticationPrincipal UsuarioAutenticadoDTO usuario,
       @Valid @RequestBody UsuarioChangePasswordDTO request) {
 
-    usuarioService.cambiarPassword(usuario.dni(), request.oldPassword(), request.newPassword());
+    usuarioService.cambiarPassword(usuario.id(), request.oldPassword(), request.newPassword());
 
     return ResponseEntity
         .status(HttpStatus.OK)
