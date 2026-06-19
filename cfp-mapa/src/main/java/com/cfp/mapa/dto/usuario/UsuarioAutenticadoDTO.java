@@ -2,6 +2,7 @@ package com.cfp.mapa.dto.usuario;
 
 import com.cfp.mapa.model.enums.Rol;
 import java.util.Collection;
+import java.util.Objects;
 import org.springframework.security.core.GrantedAuthority;
 
 public record UsuarioAutenticadoDTO(
@@ -12,7 +13,8 @@ public record UsuarioAutenticadoDTO(
 
   public Rol getRol() {
     return this.authorities().stream()
-        .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+        .map(GrantedAuthority::getAuthority)
+        .filter(Objects::nonNull)
         .map(auth -> auth.replace("ROLE_", ""))
         .map(Rol::valueOf)
         .findFirst()

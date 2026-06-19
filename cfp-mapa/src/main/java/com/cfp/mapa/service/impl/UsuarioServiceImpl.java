@@ -65,6 +65,12 @@ public class UsuarioServiceImpl implements UsuarioService {
     Usuario usuarioGuardado = usuarioMapper.createToUsuario(request, encodedPassword);
     usuarioRepository.save(usuarioGuardado);
 
+    auditoriaService.registrarAccion(
+        usuarioLogueado(),
+        usuarioGuardado,
+        TipoAccionAuditoria.USUARIO_CREADO
+    );
+
     return usuarioMapper.usuarioToResponse(usuarioGuardado);
   }
 
@@ -109,22 +115,28 @@ public class UsuarioServiceImpl implements UsuarioService {
         "No se puede restablecer la contraseña del dueño del sistema."
     );
 
-    // Si el rol no es CHANGE_PASSWORD se restablece la password
-    if (!usuario.getRol().equals(Rol.CHANGE_PASSWORD)) {
+    if (usuario.getRol().equals(Rol.CHANGE_PASSWORD)) {
 
-      usuario.setRolOriginal(usuario.getRol());
-      usuario.setRol(Rol.CHANGE_PASSWORD);
-      usuario.setPassword(dniToPasswordEncoded(usuario.getDni()));
+      validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
 
-      Usuario usuarioGuardado = usuarioRepository.save(usuario);
-
-      return usuarioMapper.usuarioToResponse(usuarioGuardado);
+      throw new AccionInvalidaException(
+          "El usuario ya tiene un restablecimiento de contraseña pendiente."
+      );
     }
 
-    // Si el rol es CHANGE_PASSWORD no se realiza ningun cambio
-    validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
+     usuario.setRolOriginal(usuario.getRol());
+     usuario.setRol(Rol.CHANGE_PASSWORD);
+     usuario.setPassword(dniToPasswordEncoded(usuario.getDni()));
 
-    return usuarioMapper.usuarioToResponse(usuario);
+     Usuario usuarioGuardado = usuarioRepository.save(usuario);
+
+     auditoriaService.registrarAccion(
+         usuarioLogueado(),
+         usuarioGuardado,
+         TipoAccionAuditoria.PASSWORD_RESTABLECIDA
+     );
+
+     return usuarioMapper.usuarioToResponse(usuarioGuardado);
   }
 
   @Transactional
@@ -147,6 +159,12 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     usuario.setActivo(!usuario.isActivo());
     Usuario usuarioGuardado = usuarioRepository.save(usuario);
+
+    auditoriaService.registrarAccion(
+        usuarioLogueado(),
+        usuarioGuardado,
+        TipoAccionAuditoria.ESTADO_ACTIVO_MODIFICADO
+    );
 
     return usuarioMapper.usuarioToResponse(usuarioGuardado);
   }
@@ -178,7 +196,13 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     usuario.setPassword(passwordEncoder.encode(newPassword));
-    usuarioRepository.save(usuario);
+    Usuario usuarioGuardado = usuarioRepository.save(usuario);
+
+    auditoriaService.registrarAccion(
+        usuarioLogueado(),
+        usuarioGuardado,
+        TipoAccionAuditoria.PASSWORD_CAMBIADA
+    );
   }
 
   @Transactional
@@ -208,6 +232,12 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     Usuario usuarioGuardado = usuarioRepository.save(usuario);
+
+    auditoriaService.registrarAccion(
+        usuarioLogueado(),
+        usuarioGuardado,
+        TipoAccionAuditoria.ROL_MODIFICADO
+    );
 
     return usuarioMapper.usuarioToResponse(usuarioGuardado);
   }
@@ -276,11 +306,11 @@ public class UsuarioServiceImpl implements UsuarioService {
     usuario.setActivo(false);
     usuario.setEliminado(true);
 
-    usuarioRepository.save(usuario);
+    Usuario UsuarioGuardado = usuarioRepository.save(usuario);
 
     auditoriaService.registrarAccion(
         usuarioLogueado(),
-        usuario,
+        UsuarioGuardado,
         TipoAccionAuditoria.USUARIO_ELIMINADO
     );
   }
