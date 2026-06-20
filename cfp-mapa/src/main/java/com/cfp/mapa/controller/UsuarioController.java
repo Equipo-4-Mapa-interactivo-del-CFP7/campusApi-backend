@@ -5,6 +5,7 @@ import com.cfp.mapa.dto.usuario.UsuarioChangePasswordDTO;
 import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioNewRolRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioOwnerRecoveryRequestDTO;
+import com.cfp.mapa.dto.usuario.UsuarioOwnerTransferRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
 import com.cfp.mapa.service.UsuarioService;
 import jakarta.validation.Valid;
@@ -165,6 +166,20 @@ public class UsuarioController {
 
     return ResponseEntity
         .status(HttpStatus.NO_CONTENT)
+        .build();
+  }
+
+  @PostMapping("/{id}/transferir-owner")
+  @PreAuthorize("hasRole('OWNER')")
+  public ResponseEntity<Void> transferirOwner (
+      @Valid @RequestBody UsuarioOwnerTransferRequestDTO request,
+      @PathVariable Long id
+  ) {
+
+    usuarioService.transferirOwner(request.password(), id);
+
+    return ResponseEntity
+        .status(HttpStatus.OK)
         .build();
   }
 }

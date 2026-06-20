@@ -32,4 +32,6 @@ public interface UsuarioService {
   void eliminarUsuario(Long id);
 
   void recuperarPasswordOwner(String dni, String recoveryPassword, String nuevaPassword);
+
+  void transferirOwner(String password, Long id);
 }

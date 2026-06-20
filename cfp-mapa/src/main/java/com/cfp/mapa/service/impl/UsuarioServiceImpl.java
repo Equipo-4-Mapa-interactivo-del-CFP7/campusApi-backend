@@ -349,7 +349,46 @@ public class UsuarioServiceImpl implements UsuarioService {
     );
   }
 
-  // TODO: transferir owner
+  @Transactional
+  @Override
+  public void transferirOwner(String password, Long id) {
+
+    validarUsuarioActivoYRoles(Rol.OWNER);
+
+    Usuario antiguoOwner = usuarioLogueado();
+
+    // No se puede transferir a si mismo
+    if (antiguoOwner.getId().equals(id)) {
+      throw new AccionInvalidaException("No puedes transferirte el rol a ti mismo");
+    }
+
+    // Si la password no coincide, se lanza error con errorCode para desloguear
+    if (!passwordEncoder.matches(password, antiguoOwner.getPassword())) {
+      throw new AccionNoPermitidaException("No tienes permiso de realizar esta acción");
+    }
+
+    Usuario nuevoOwner = usuarioRepository.findById(id).orElseThrow(
+        () -> new UsuarioNotFoundException(id)
+    );
+
+    if (nuevoOwner.getRol().equals(Rol.CHANGE_PASSWORD)) {
+      throw new AccionInvalidaException("El usuario debe tener rol válido");
+    }
+
+    // Se hace la auditoria antes que cambien los roles
+    auditoriaService.registrarAccion(
+        antiguoOwner,
+        nuevoOwner,
+        TipoAccionAuditoria.OWNER_TRANSFERIDO
+    );
+
+    // El OWNER pasa a ser ADMIN, el usuario seleccionado pasa a ser OWNER
+    antiguoOwner.setRol(Rol.ADMIN);
+    nuevoOwner.setRol(Rol.OWNER);
+
+    usuarioRepository.save(antiguoOwner);
+    usuarioRepository.save(nuevoOwner);
+  }
 
   // ======================================
   // FUNCIONES PRIVADAS

@@ -8,7 +8,8 @@ public enum TipoAccionAuditoria {
   ROL_MODIFICADO("cambió el rol de un usuario"),
   PERFIL_VISUALIZADO("consultó el perfil de un usuario"),
   USUARIO_ELIMINADO("eliminó a un usuario"),
-  PASSWORD_OWNER_RECUPERADA("recuperó la contraseña de OWNER mediante clave de emergencia");
+  PASSWORD_OWNER_RECUPERADA("recuperó la contraseña de OWNER mediante clave de emergencia"),
+  OWNER_TRANSFERIDO("trasfirió su rol de OWNER a un usuario");
 
   private final String descripcion;
 
