@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SecurityUtils {
 
-  public UsuarioAutenticadoDTO getUsuarioLogueado() {
+  public UsuarioAutenticadoDTO getUsuarioLogueadoDto() {
     return (UsuarioAutenticadoDTO) Objects.requireNonNull(SecurityContextHolder
             .getContext()
             .getAuthentication())

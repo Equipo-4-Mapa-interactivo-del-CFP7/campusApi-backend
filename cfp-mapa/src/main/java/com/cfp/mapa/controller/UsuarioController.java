@@ -4,8 +4,8 @@ import com.cfp.mapa.dto.usuario.UsuarioAutenticadoDTO;
 import com.cfp.mapa.dto.usuario.UsuarioChangePasswordDTO;
 import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioNewRolRequestDTO;
+import com.cfp.mapa.dto.usuario.UsuarioOwnerRecoveryRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
-import com.cfp.mapa.service.AuditoriaService;
 import com.cfp.mapa.service.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -148,6 +148,20 @@ public class UsuarioController {
   ) {
 
     usuarioService.eliminarUsuario(id);
+
+    return ResponseEntity
+        .status(HttpStatus.NO_CONTENT)
+        .build();
+  }
+
+  @PostMapping("/recuperar-owner")
+  public ResponseEntity<Void> recuperarPasswordOwner (
+      @Valid @RequestBody UsuarioOwnerRecoveryRequestDTO request
+  ) {
+
+    usuarioService.recuperarPasswordOwner(
+        request.dni(), request.recoveryPassword(),  request.nuevaPassword()
+    );
 
     return ResponseEntity
         .status(HttpStatus.NO_CONTENT)

@@ -30,4 +30,6 @@ public interface UsuarioService {
   UsuarioResponseDTO obtenerPerfil(Long id);
 
   void eliminarUsuario(Long id);
+
+  void recuperarPasswordOwner(String dni, String recoveryPassword, String nuevaPassword);
 }

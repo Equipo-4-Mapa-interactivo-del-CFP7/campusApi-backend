@@ -6,6 +6,7 @@ import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
 import com.cfp.mapa.exception.AccionInvalidaException;
 import com.cfp.mapa.exception.AccionNoPermitidaException;
 import com.cfp.mapa.exception.DniDuplicadoException;
+import com.cfp.mapa.exception.DniNotFoundException;
 import com.cfp.mapa.exception.PasswordIncorrectaException;
 import com.cfp.mapa.exception.RolInvalidoException;
 import com.cfp.mapa.exception.UsuarioNotFoundException;
@@ -19,6 +20,7 @@ import com.cfp.mapa.service.AuditoriaService;
 import com.cfp.mapa.service.UsuarioService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,6 +37,9 @@ public class UsuarioServiceImpl implements UsuarioService {
   private final SecurityUtils securityUtils;
   private final AuditoriaService auditoriaService;
 
+  @Value("${app.ownerPasswordRecovery}")
+  String emergencyPassword;
+
   @Transactional
   @Override
   public UsuarioResponseDTO crearUsuario(UsuarioCreateRequestDTO request) {
@@ -49,7 +54,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     // ADMIN puede crear PERSONAL unicamente
-    if (securityUtils.getUsuarioLogueado().getRol() == Rol.ADMIN &&
+    if (securityUtils.getUsuarioLogueadoDto().getRol() == Rol.ADMIN &&
         rolRequest.equals(Rol.ADMIN.name())) {
 
       throw new AccionInvalidaException(String.format("Un %s solo puede crear %s",
@@ -265,7 +270,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
 
-    Rol rolLogueado = securityUtils.getUsuarioLogueado().getRol();
+    Rol rolLogueado = securityUtils.getUsuarioLogueadoDto().getRol();
 
     Usuario usuario = usuarioRepository.findById(id).orElseThrow(
         () -> new UsuarioNotFoundException(id)
@@ -315,6 +320,37 @@ public class UsuarioServiceImpl implements UsuarioService {
     );
   }
 
+  @Transactional
+  @Override
+  public void recuperarPasswordOwner(String dni, String recoveryPassword, String nuevaPassword) {
+
+    Usuario usuario = usuarioRepository.findByDni(dni).orElseThrow(
+        () -> new DniNotFoundException(dni)
+    );
+
+    if (!usuario.getRol().equals(Rol.OWNER)) {
+      throw new AccionInvalidaException("No tienes permiso de realizar esta acción");
+    }
+
+    if (!passwordEncoder.matches(recoveryPassword, emergencyPassword)) {
+      throw new AccionInvalidaException("Contraseña de recuperación incorrecta");
+    }
+
+    // Si el dni pertenece a un OWNER y la recovery password es correcta
+    String passwordEncoded = passwordEncoder.encode(nuevaPassword);
+    usuario.setPassword(passwordEncoded);
+
+    Usuario usuarioGuardado = usuarioRepository.save(usuario);
+
+    auditoriaService.registrarAccion(
+        usuarioGuardado,
+        usuarioGuardado,
+        TipoAccionAuditoria.PASSWORD_OWNER_RECUPERADA
+    );
+  }
+
+  // TODO: transferir owner
+
   // ======================================
   // FUNCIONES PRIVADAS
   // ======================================
@@ -327,7 +363,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
   private void validarUsuarioActivoYRoles(Rol... rolesPermitidos) {
 
-    UsuarioAutenticadoDTO usuarioLogueado = securityUtils.getUsuarioLogueado();
+    UsuarioAutenticadoDTO usuarioLogueado = securityUtils.getUsuarioLogueadoDto();
 
     List<Rol> listaRolesPermitidos = List.of(rolesPermitidos);
 
@@ -365,7 +401,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
   private Usuario usuarioLogueado() {
 
-    Long usuarioId = securityUtils.getUsuarioLogueado().id();
+    Long usuarioId = securityUtils.getUsuarioLogueadoDto().id();
 
     Usuario usuarioLogueado = usuarioRepository.findById(usuarioId).orElseThrow(
         () -> new UsuarioNotFoundException(usuarioId)
