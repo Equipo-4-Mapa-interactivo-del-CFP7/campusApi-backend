@@ -2,8 +2,8 @@
 
 #### Formato general de errores
 
-El `errorCode` será siempre siempre `null` a menos que se intente utilizar un endpoint con un token
-alterado, en cuyo caso tendrá valor `SESSION_INVALIDATED`.
+El `errorCode` será siempre `null`por default. En caso de que se requiera que la sesión del usuario
+sea finalizada, tendrá el valor `SESSION_INVALIDATED`.
 
 Los JSON de error están estandarizados con este formato:
 
@@ -43,7 +43,7 @@ Permite a los usuarios autenticarse en el sistema mediante su DNI y contraseña.
 <summary><b>📦 Cuerpo de la petición</b></summary>
 <table><tr><td>
 
-`dni` String, requerido, Exactamente 8 caracteres numéricos.
+`dni` String, requerido, entre 7 y 20 caracteres alfanuméricos.
 
 `password` String, requerido, entre 8 y 60 caracteres.
 
@@ -75,15 +75,18 @@ Permite a los usuarios autenticarse en el sistema mediante su DNI y contraseña.
 
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
-si el cuerpo de la petición no cumple las restricciones.
+si el cuerpo JSON no cumple las restricciones estructurales (dni vacío, etc.).
 
 🔴 `401 UNAUTHORIZED` +
 [JSON error](#formato-general-de-errores)
-si el `dni` o la `password` ingresada es incorrecta.
+- Si el dni o la password son incorrectos.
+- Si la cuenta se encuentra temporalmente desactivada.
+
 </td></tr></table>
 </details> 
 
 ---
+
 # 👥 Control de Usuarios
 
 #### Formato de respuesta de usuarios
@@ -120,10 +123,16 @@ El JSON de respuesta de usuario sigue este patrón:
 `POST /api/usuarios/registrar`
 
 Permite que usuarios con el rol `OWNER` o `ADMIN` puedan registrar un usuario nuevo en el sistema.
-A este usuario se le asignará su propio `dni` como contraseña y tendrá el rol `CHANGE_PASSWORD`
-hasta que cambie su propia contraseña para obtener su rol real que es `PERSONAL` por defecto.
 
-🔑 Encabezados (Headers)
+- Para registrarlo se ingresará su `DNI`, `NOMBRE`, `APELLIDO` y `rol`.
+- El usuario creado tendrá rol `CHANGE_PASSWORD` y no obtendrá su rol real hasta que cambie su
+contraseña.
+- Al usuario creado se le asignará como contraseña `cfp + dni`. Ejemplo: `cfp12345678`.
+- `OWNER` puede crear usuarios con los roles `ADMIN` y `PERSONAL`.
+- `ADMIN` puede crear usuarios con el rol `PERSONAL`.
+
+🔑 Encabezados válidos (Headers)
+* `Authorization`: `Bearer <token_de_owner>`
 * `Authorization`: `Bearer <token_de_admin>`
 
 <details>
@@ -136,11 +145,14 @@ hasta que cambie su propia contraseña para obtener su rol real que es `PERSONAL
 
 `apellido` String, requerido, 2 a 50 caracteres (solo letras, espacios, `-` y `'`).
 
+`rol` String, requerido, solo se admite `ADMIN` y `PERSONAL`.
+
 ```JSON
 {
   "dni": "12345678",
   "nombre": "nombre",
-  "apellido": "apellido"
+  "apellido": "apellido",
+  "rol": "PERSONAL"
 }
 ```
 
@@ -157,18 +169,26 @@ con la información del usuario creado.
 
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
-si el cuerpo de la petición no cumple las restricciones.
+- Si el cuerpo JSON no cumple las restricciones estructurales (dni vacío, etc.).
+- Si se intenta enviar en el campo `rol` los valores `OWNER` o `CHANGE_PASSWORD`
 
 🔴 `401 UNAUTHORIZED` +
 [JSON error](#formato-general-de-errores)
-si el token es inválido.
+si el token no existe, está expirado o fue mal alterado de forma externa.
+
+🔴 `403 FORBIDDEN` +
+[JSON error](#formato-general-de-errores)
+- Si el usuario logueado no posee los roles permitidos (`OWNER` / `ADMIN`).
+- Si un `ADMIN` intenta registrar a otro `ADMIN` u `OWNER`.
+- Si la sesión fue revocada en base de datos. Retorna el JSON de error con 
+`"errorCode": "SESSION_INVALIDATED"`.
 
 🔴 `409 CONFLICT` +
 [JSON error](#formato-general-de-errores)
-si ya existe un usuario con el mismo DNI.
+si el DNI ya se encuentra registrado en el sistema.
 
 </td></tr></table>
-</details> 
+</details>
 
 ## 🟢 Listar usuarios con filtros y paginación [solo para ADMIN]
 

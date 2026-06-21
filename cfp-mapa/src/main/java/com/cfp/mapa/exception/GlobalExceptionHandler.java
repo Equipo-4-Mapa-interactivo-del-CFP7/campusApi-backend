@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
@@ -21,13 +22,33 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({
         UsernameNotFoundException.class,
-        BadCredentialsException.class,
-        DisabledException.class})
+        BadCredentialsException.class
+    })
     public ResponseEntity<ErrorResponse> handleAuthenticationException(Exception ex) {
 
         return buildErrorResponse(
             HttpStatus.UNAUTHORIZED,
             "Credenciales incorrectas (DNI o contraseña inválidos)");
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ErrorResponse> handleDisabledException(DisabledException ex) {
+
+        return buildErrorResponse(
+            HttpStatus.UNAUTHORIZED,
+            "Tu cuenta se encuentra temporalmente desactivada"
+        );
+    }
+
+    @ExceptionHandler(AuthenticationCredentialsNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationCredentialsNotFoundException(
+        org.springframework.security.authentication.AuthenticationCredentialsNotFoundException ex
+    ) {
+
+        return buildErrorResponse(
+            HttpStatus.UNAUTHORIZED,
+            "No se encontraron credenciales de autenticación"
+        );
     }
 
     @ExceptionHandler(DniDuplicadoException.class)

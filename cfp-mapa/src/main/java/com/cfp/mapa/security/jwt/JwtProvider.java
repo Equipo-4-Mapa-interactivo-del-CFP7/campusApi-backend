@@ -51,7 +51,7 @@ public class JwtProvider {
     Date fechaExpiracion = new Date(fechaActual.getTime() + jwtExpirationMs);
 
     return Jwts.builder()
-        .subject(usuarioPrincipal.getUsername())
+        .subject(String.valueOf(usuarioPrincipal.getId()))
         .claim("roles", roles)
         .issuedAt(fechaActual)
         .expiration(fechaExpiracion)

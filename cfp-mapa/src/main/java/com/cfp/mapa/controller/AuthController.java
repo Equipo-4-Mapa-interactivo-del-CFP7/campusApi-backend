@@ -2,7 +2,6 @@ package com.cfp.mapa.controller;
 
 import com.cfp.mapa.dto.jwt.JwtAuthResponseDTO;
 import com.cfp.mapa.dto.usuario.UsuarioLoginDTO;
-import com.cfp.mapa.repository.ReporteRepository;
 import com.cfp.mapa.security.jwt.JwtProvider;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,9 +29,11 @@ public class AuthController {
       @Valid @RequestBody UsuarioLoginDTO loginDTO
   ) {
 
+    String dniMarcado = "-" + loginDTO.dni();
+
     Authentication authentication = authenticationManager.authenticate(
         new UsernamePasswordAuthenticationToken(
-            loginDTO.dni(),
+            dniMarcado,
             loginDTO.password()
         )
     );

@@ -19,14 +19,18 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     Usuario usuario;
 
-    try {
+    // Si contiene "-" al comienzo es el dni del endpoint /login
+    if (identificador.startsWith("-")) {
+
+      String dniReal = identificador.substring(1);
+
+      usuario = usuarioRepository.findByDni(dniReal)
+          .orElseThrow(() -> new UsernameNotFoundException("Credenciales incorrectas"));
+    } else {
+
       Long usuarioId = Long.parseLong(identificador);
 
       usuario = usuarioRepository.findById(usuarioId)
-          .orElseThrow(() -> new UsernameNotFoundException("Credenciales incorrectas"));
-
-    } catch (NumberFormatException e) {
-      usuario = usuarioRepository.findByDni(identificador)
           .orElseThrow(() -> new UsernameNotFoundException("Credenciales incorrectas"));
     }
 
