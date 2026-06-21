@@ -40,6 +40,7 @@ public class AuthControllerTest {
   // VALIDACIONES DE ESTRUCTURA (DTO / @Valid)
   // =========================================================================
 
+  // ERROR 400 BAD REQUEST: Intento de login con DNI vacío
   @Test
   void authenticateUser_ConDniVacio_DebeDevolver400BadRequest() throws Exception {
     //GIVEN
@@ -53,6 +54,7 @@ public class AuthControllerTest {
         .andExpect(status().isBadRequest());
   }
 
+  // ERROR 400 BAD REQUEST: Intento de login con contraseña vacía
   @Test
   void authenticateUser_ConPasswordVacio_DebeDevolver400BadRequest() throws Exception {
     // GIVEN
@@ -66,6 +68,7 @@ public class AuthControllerTest {
         .andExpect(status().isBadRequest());
   }
 
+  // ERROR 400 BAD REQUEST: Intento de login con DNI y contraseña vacíos
   @Test
   void authenticateUser_ConDniYPasswordVacios_DebeDevolver400BadRequest() throws Exception {
     // GIVEN
@@ -79,6 +82,7 @@ public class AuthControllerTest {
         .andExpect(status().isBadRequest());
   }
 
+  // ERROR 400 BAD REQUEST: Intento de login con un formato de DNI inválido
   @Test
   void authenticateUser_ConDniInvalido_DebeDevolver400BadRequest() throws Exception {
     // GIVEN
@@ -92,6 +96,7 @@ public class AuthControllerTest {
         .andExpect(status().isBadRequest());
   }
 
+  // ERROR 400 BAD REQUEST: Intento de login con una contraseña que no cumple los mínimos requeridos
   @Test
   void authenticateUser_ConPasswordInvalida_DebeDevolver400BadRequest() throws Exception {
     // GIVEN
@@ -109,6 +114,7 @@ public class AuthControllerTest {
   // LÓGICA DE NEGOCIO (Autenticación / Credenciales)
   // =========================================================================
 
+  // ÉXITO 200 OK: Credenciales correctas, retorna el token de acceso
   @Test
   void authenticateUser_ConCredencialesCorrectas_DebeDevolver200YToken() throws Exception {
     // GIVEN
@@ -130,6 +136,7 @@ public class AuthControllerTest {
         .andExpect(jsonPath("$.accessToken").value(tokenSimulado));
   }
 
+  // ERROR 401 UNAUTHORIZED: Intento de login con contraseña incorrecta
   @Test
   void authenticateUser_ConPasswordIncorrecto_DebeLanzarBadCredentialsException() throws Exception {
     // GIVEN
@@ -148,6 +155,7 @@ public class AuthControllerTest {
             .value("Credenciales incorrectas (DNI o contraseña inválidos)"));
   }
 
+  // ERROR 401 UNAUTHORIZED: Intento de login con un usuario desactivado en el sistema
   @Test
   void authenticateUser_ConCuentaDesactivada_DebeDevolver401ConMensajeDeBloqueo() throws Exception {
     // GIVEN

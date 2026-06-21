@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -14,6 +15,7 @@ import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
 import com.cfp.mapa.exception.AccionInvalidaException;
 import com.cfp.mapa.exception.AccionNoPermitidaException;
 import com.cfp.mapa.exception.DniDuplicadoException;
+import com.cfp.mapa.exception.UsuarioNotFoundException;
 import com.cfp.mapa.model.enums.Rol;
 import com.cfp.mapa.security.jwt.JwtProvider;
 import com.cfp.mapa.service.UsuarioService;
@@ -27,6 +29,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -91,7 +94,7 @@ public class UsuarioControllerTest {
   // ENDPOINT: POST /api/usuarios/registrar
   // =========================================================================
 
-  // --- ESCENARIO 1: EXITO 201 CREATED [OWNER CREA UN ADMIN] ---
+  // EXITO 201 CREATED: OWNER crea un ADMIN
   @Test
   @WithMockUser(roles = "OWNER")
   void crearUsuario_ComoOwner_DebeDevolver201Created() throws Exception {
@@ -108,7 +111,7 @@ public class UsuarioControllerTest {
         .andExpect(jsonPath("$.rol").value("CHANGE_PASSWORD"));
   }
 
-  // --- ESCENARIO 2: ERROR 403 FORBIDDEN [PERSONAL ACCEDE AL ENDPOINT] ---
+  // ERROR 403 FORBIDDEN: PERSONAL accede al endpoint
   @Test
   @WithMockUser(roles = "PERSONAL")
   void crearUsuario_ComoPersonal_DebeDevolver403Forbidden() throws Exception {
@@ -120,7 +123,7 @@ public class UsuarioControllerTest {
         .andExpect(status().isForbidden());
   }
 
-  // --- ESCENARIO 3: ERROR 403 FORBIDDEN [ADMIN INTENTA CREAR UN ADMIN] ---
+  // ERROR 403 FORBIDDEN: ADMIN intenta crear un ADMIN
   @Test
   @WithMockUser(roles = "ADMIN")
   void crearUsuario_ComoAdminRegistrandoAdmin_DebeDevolver403Forbidden() throws Exception {
@@ -136,7 +139,7 @@ public class UsuarioControllerTest {
         .andExpect(status().isForbidden());
   }
 
-  // --- ESCENARIO 4: ERROR 400 BAD REQUEST [SE INGRESA UN DTO INVALIDO] ---
+  // ERROR 400 BAD REQUEST: Se ingresa un dto invalido
   @Test
   @WithMockUser(roles = "OWNER")
   void crearUsuario_ConDatosInvalidos_DebeDevolver400BadRequest() throws Exception {
@@ -151,7 +154,7 @@ public class UsuarioControllerTest {
         .andExpect(status().isBadRequest());
   }
 
-  // --- ESCENARIO 5: ERROR 401 UNAUTHORIZED [SE INTENTA ACCEDER AL ENDPOINT SIN ESTAR LOGUEADO] ---
+  // ERROR 401 UNAUTHORIZED: Se intenta acceder al endpoint sin estar logueado
   @Test
   void crearUsuario_SinTokenOAnonimo_DebeDevolver401Unauthorized() throws Exception {
     // WHEN & THEN
@@ -162,7 +165,7 @@ public class UsuarioControllerTest {
         .andExpect(status().isUnauthorized());
   }
 
-  // --- ESCENARIO 6: ERROR 409 CONFLICT [EL DNI DEL NUEVO USUARIO YA ESTA REGISTRADO] ---
+  // ERROR 409 CONFLICT: El dni del nuevo usuario ya esta registrado
   @Test
   @WithMockUser(roles = "OWNER")
   void crearUsuario_ConDniDuplicado_DebeDevolver409Conflict() throws Exception {
@@ -178,7 +181,7 @@ public class UsuarioControllerTest {
         .andExpect(status().isConflict());
   }
 
-  // --- ESCENARIO 7: ERROR 403 FORBIDDEN [TOKEN MODIFICADO / PERMISOS REVOCADOS EN BD] ---
+  // ERROR 403 FORBIDDEN: Token modificado / permisos revocados en BD
   @Test
   @WithMockUser(roles = "OWNER")
   void crearUsuario_ConTokenModificadoOPermisosRevocados_DebeDevolver403ForbiddenYSessionInvalidated() throws Exception {
@@ -201,7 +204,7 @@ public class UsuarioControllerTest {
   // ENDPOINT: GET /api/usuarios
   // =========================================================================
 
-  // --- ESCENARIO 1: EXITO 200 OK [OWNER OBTIENE LISTA COMPLETA] --
+  // EXITO 200 OK: OWNER obtiene lista completa
   @Test
   @WithMockUser(roles = "OWNER")
   void listarUsuarios_ComoOwner_DebeDevolver200OKConPagina() throws Exception {
@@ -221,7 +224,7 @@ public class UsuarioControllerTest {
         .andExpect(jsonPath("$.content[0].dni").value("11111111"));
   }
 
-  // --- ESCENARIO 2: EXITO 200 OK [ADMIN OBTIENE LISTA COMPLETA] ---
+  // EXITO 200 OK: ADMIN obtiene lista completa
   @Test
   @WithMockUser(roles = "ADMIN")
   void listarUsuarios_ComoAdmin_DebeDevolver200OKConPagina() throws Exception {
@@ -237,7 +240,7 @@ public class UsuarioControllerTest {
         .andExpect(jsonPath("$.content[0].dni").value("22222222"));
   }
 
-  // --- ESCENARIO 3: EXITO 200 OK [ADMIN OBTIENE LISTA FILTRADA POR nombre] ---
+  // EXITO 200 OK: ADMIN obtiene lista filtrada por nombre
   @Test
   @WithMockUser(roles = "ADMIN")
   void listarUsuarios_ConFiltroNombre_DebeDevolver200OKConPaginaFiltrada() throws Exception {
@@ -254,7 +257,7 @@ public class UsuarioControllerTest {
         .andExpect(jsonPath("$.content[0].nombre").value("Perfil Ad"));
   }
 
-  // --- ESCENARIO 4: ERROR 403 FORBIDDEN [PERSONAL INTENTA OBTENER LISTA COMPLETA] ---
+  // ERROR 403 FORBIDDEN: PERSONAL intenta obtener lista completa
   @Test
   @WithMockUser(roles = "PERSONAL")
   void listarUsuarios_ComoPersonal_DebeDevolver403Forbidden() throws Exception {
@@ -264,7 +267,7 @@ public class UsuarioControllerTest {
         .andExpect(status().isForbidden());
   }
 
-  // --- ESCENARIO 5: ERROR 400 BAD REQUEST [FILTRADA POR BOOLEAN ACTIVO CON STRING INVALIDO] ---
+  // ERROR 400 BAD REQUEST: Filtrado por boolean activo con string invalido
   @Test
   @WithMockUser(roles = "ADMIN")
   void listarUsuarios_ConActivoInvalido_DebeDevolver400BadRequest() throws Exception {
@@ -275,7 +278,7 @@ public class UsuarioControllerTest {
         .andExpect(status().isBadRequest());
   }
 
-  // --- ESCENARIO 6: ERROR 401 UNAUTHORIZED [SE INTENTA USAR EL ENDPOINT SIN ESTAR LOGUEADO] ---
+  // ERROR 401 UNAUTHORIZED: Se intenta usar el endpoint sin estar logueado
   @Test
   void listarUsuarios_SinTokenOAnonimo_DebeDevolver401Unauthorized() throws Exception {
     // WHEN & THEN
@@ -284,7 +287,7 @@ public class UsuarioControllerTest {
         .andExpect(status().isUnauthorized());
   }
 
-  // --- ESCENARIO 7: ERROR 403 FORBIDDEN [TOKEN MODIFICADO / PERMISOS REVOCADOS EN BD] ---
+  // ERROR 403 FORBIDDEN: Token modificado / permisos revocados en BD
   @Test
   @WithMockUser(roles = "OWNER")
   void listarUsuarios_ConTokenModificadoOPermisosRevocados_DebeDevolver403ForbiddenYSessionInvalidated() throws Exception {
@@ -301,7 +304,7 @@ public class UsuarioControllerTest {
         .andExpect(jsonPath("$.errorCode").value("SESSION_INVALIDATED"));
   }
 
-  // --- ESCENARIO 8: ERROR 400 BAD REQUEST [SE FILTRA POR UN ROL INEXISTENTE] ---
+  // ERROR 400 BAD REQUEST: Se filtra por un rol inexistente
   @Test
   @WithMockUser(roles = "ADMIN")
   void listarUsuarios_ConRolInexistente_DebeDevolver500InternalServerError() throws Exception {
@@ -316,7 +319,7 @@ public class UsuarioControllerTest {
         .andExpect(status().isBadRequest());
   }
 
-  // --- ESCENARIO 9: ERROR 401 UNAUTHORIZED [EL TOKEN ES VALIDO PERO EL USUARIO ESTA DESACTIVADO EN EL FILTRO] ---
+  // ERROR 401 UNAUTHORIZED: El token es valido pero el usuario esta desactivado en el filtro
   @Test
   void listarUsuarios_ConTokenValidoPeroUsuarioDesactivado_DebeDevolver401Unauthorized() throws Exception {
     // GIVEN: El token es válido estructuralmente, pero al procesarlo, Spring Security
@@ -328,9 +331,138 @@ public class UsuarioControllerTest {
         .andDo(print())
         .andExpect(status().isUnauthorized());
   }
+
   // =========================================================================
   // ENDPOINT: PUT /api/usuarios/{id}/restablecer
   // =========================================================================
+
+  // ÉXITO 200 OK: OWNER restablece la contraseña de un ADMIN
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void restablecerPassword_ComoOwnerAAdmin_DebeDevolver200OK() throws Exception {
+    // GIVEN: Usamos el DTO del ADMIN configurado en el setUp pero simulando el cambio de rol
+    when(usuarioService.restablecerPassword(2L)).thenReturn(usuarioChangePasswordResponse);
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/restablecer", 2L))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.rol").value("CHANGE_PASSWORD"));
+  }
+
+  // ÉXITO 200 OK: ADMIN restablece la contraseña de un PERSONAL
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void restablecerPassword_ComoAdminAPersonal_DebeDevolver200OK() throws Exception {
+    // GIVEN: El servicio procesa al PERSONAL y retorna la respuesta correspondiente
+    when(usuarioService.restablecerPassword(3L)).thenReturn(usuarioChangePasswordResponse);
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/restablecer", 3L))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.rol").value("CHANGE_PASSWORD"));
+  }
+
+  // ERROR 400 BAD REQUEST: Se envía un identificador en formato alfanumérico inválido para el tipo Long
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void restablecerPassword_ConIdAlfanumericoInvalido_DebeDevolver400BadRequest() throws Exception {
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/restablecer", "ABC1234567"))
+        .andDo(print())
+        .andExpect(status().isBadRequest());
+  }
+
+  // ERROR 403 FORBIDDEN: OWNER intenta restablecer la contraseña de otro OWNER (Restricción de Jerarquía)
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void restablecerPassword_AUnOwner_DebeDevolver400BadRequest() throws Exception {
+    // GIVEN
+    when(usuarioService.restablecerPassword(1L))
+        .thenThrow(new AccionInvalidaException("No se puede restablecer la contraseña del dueño del sistema."));
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/restablecer", 1L))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("No se puede restablecer la contraseña del dueño del sistema."));
+  }
+
+  // ERROR 403 FORBIDDEN: Se intenta restablecer la contraseña a un usuario que ya tiene un cambio pendiente
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void restablecerPassword_ConRestablecimientoPendiente_DebeDevolver400BadRequest() throws Exception {
+    // GIVEN
+    when(usuarioService.restablecerPassword(4L))
+        .thenThrow(new AccionInvalidaException("El usuario ya tiene un restablecimiento de contraseña pendiente."));
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/restablecer", 4L))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("El usuario ya tiene un restablecimiento de contraseña pendiente."));
+  }
+
+  // ERROR 401 UNAUTHORIZED: Se intenta acceder al endpoint sin estar logueado
+  @Test
+  void restablecerPassword_SinAutenticacion_DebeDevolver401Unauthorized() throws Exception {
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/2/restablecer"))
+        .andDo(print())
+        .andExpect(status().isUnauthorized());
+  }
+
+  // ERROR 401 UNAUTHORIZED: El token de acceso es válido pero el usuario fue desactivado en los filtros de entrada
+  @Test
+  void restablecerPassword_ConUsuarioDesactivadoEnFiltro_DebeDevolver401Unauthorized() throws Exception {
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/restablecer", 2L)
+            .header("Authorization", "Bearer token_desactivado_ejemplo"))
+        .andDo(print())
+        .andExpect(status().isUnauthorized());
+  }
+
+  // ERROR 403 FORBIDDEN: Un usuario con rol PERSONAL intenta acceder al endpoint
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void restablecerPassword_ComoPersonal_DebeDevolver403Forbidden() throws Exception {
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/2/restablecer"))
+        .andDo(print())
+        .andExpect(status().isForbidden());
+  }
+
+  // ERROR 403 FORBIDDEN: La sesión del ADMIN fue revocada en la base de datos en tiempo real
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void restablecerPassword_ConSesionRevocadaEnBD_DebeDevolver403ForbiddenYSessionInvalidated() throws Exception {
+    // GIVEN
+    when(usuarioService.restablecerPassword(2L))
+        .thenThrow(new AccionNoPermitidaException(
+            "Su sesión ya no es válida. Sus permisos han cambiado o su cuenta fue desactivada."
+        ));
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/restablecer", 2L))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value("SESSION_INVALIDATED"));
+  }
+
+  // ERROR 404 NOT FOUND: Se intenta restablecer la contraseña de un identificador de usuario que no existe
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void restablecerPassword_ConUsuarioInexistente_DebeDevolver404NotFound() throws Exception {
+    // GIVEN
+    when(usuarioService.restablecerPassword(99L))
+        .thenThrow(new UsuarioNotFoundException(99L));
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/restablecer", 99L))
+        .andDo(print())
+        .andExpect(status().isNotFound());
+  }
 
   // =========================================================================
   // ENDPOINT: PUT /api/usuarios/{id}/cambiar-activo

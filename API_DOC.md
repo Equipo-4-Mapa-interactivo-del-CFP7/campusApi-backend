@@ -310,22 +310,29 @@ si los tipos de datos enviados en los parámetros son incompatibles (ejemplo: `?
 
 ## 🟢 Restablecer contraseña [solo para OWNER o ADMIN]
 
-`PUT /api/usuarios/{dni}/restablecer`
+`PUT /api/usuarios/{id}/restablecer`
 
-Permite restablecer la contraseña de otro usuario a su propio `dni` y le asigna el rol
+Permite restablecer la contraseña de otro usuario a `cfp + dni` (ejemplo: usuario con 
+`dni=12345678` obtiene contraseña `cfp12345678`) y le asigna el rol
 `CHANGE_PASSWORD` hasta que cambie su propia contraseña.
 - Un usuario con rol `OWNER` puede restablecer la contraseña de `ADMIN` y `PERSONAL`.
-- Un usuario con rol `ADMIN` solo puede restablecer la contraseña de un usuario `PERSONAL`.
-- Ningún rol puede restablecer la contraseña del rol `OWNER`.
+- Un usuario con rol `ADMIN` solo puede restablecer la contraseña de `PERSONAL`.
 
-🔑 Encabezados (Headers)
+<details>
+<summary><b>🔑 Encabezados válidos (Headers)</b></summary>
 
-* `Authorization`: `Bearer <token_de_owner/admin>`
+* `Authorization`: `Bearer <token_de_owner>`
+* `Authorization`: `Bearer <token_de_admin>`
 
-🔎 Path variable
+</details>
 
-* `dni` String, requerido, Exactamente 8 caracteres numéricos. <br>
-DNI del usuario al que se le va a restablecer la contraseña.
+<details>
+<summary><b>🔎 Path variable</b></summary>
+
+* `id` Long, requerido. <br>
+ID del usuario al que se le va a restablecer la contraseña.
+
+</details>
 
 <details>
 <summary><b>🔄 Respuesta del servidor</b></summary>
@@ -341,16 +348,19 @@ si el path variable no cumple con las restricciones.
 
 🔴 `401 UNAUTHORIZED` +
 [JSON error](#formato-general-de-errores)
-si el token es inválido.
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
 
 🔴 `403 FORBIDDEN` +
 [JSON error](#formato-general-de-errores)
-si los permisos del token no coinciden con la base de datos o si se intentó modificar al usuario
-con rol `OWNER`.
+- Si el usuario logueado no posee los roles permitidos (`OWNER` / `ADMIN`).
+- Si se intentó modificar al usuario con rol `OWNER` o `CHANGE_PASSWORD`.
+- Si la sesión fue revocada en base de datos. Retorna el JSON de error con
+`"errorCode": "SESSION_INVALIDATED"`.
 
 🔴 `404 NOT FOUND` +
 [JSON error](#formato-general-de-errores)
-si no existe un usuario con el DNI solicitado.
+si no existe un usuario registrado con el `id` solicitado.
 
 </td></tr></table>
 </details>

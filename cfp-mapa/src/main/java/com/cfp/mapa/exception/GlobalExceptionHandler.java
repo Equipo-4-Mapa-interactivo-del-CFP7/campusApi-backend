@@ -20,15 +20,21 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({
-        UsernameNotFoundException.class,
-        BadCredentialsException.class
-    })
-    public ResponseEntity<ErrorResponse> handleAuthenticationException(Exception ex) {
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUsernameNotFoundException(UsernameNotFoundException ex) {
 
         return buildErrorResponse(
             HttpStatus.UNAUTHORIZED,
             "Credenciales incorrectas (DNI o contraseña inválidos)");
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException ex) {
+
+        return buildErrorResponse(
+            HttpStatus.UNAUTHORIZED,
+            "Token inválido o revocado"
+        );
     }
 
     @ExceptionHandler(DisabledException.class)
