@@ -1,5 +1,6 @@
 package com.cfp.mapa.controller;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -29,7 +30,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -120,7 +120,8 @@ public class UsuarioControllerTest {
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(createDtoPersonalValido)))
         .andDo(print())
-        .andExpect(status().isForbidden());
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
   }
 
   // ERROR 403 FORBIDDEN: ADMIN intenta crear un ADMIN
@@ -136,7 +137,8 @@ public class UsuarioControllerTest {
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(createDtoAdminValido)))
         .andDo(print())
-        .andExpect(status().isForbidden());
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
   }
 
   // ERROR 400 BAD REQUEST: Se ingresa un dto invalido
@@ -264,7 +266,8 @@ public class UsuarioControllerTest {
     // WHEN & THEN
     mockMvc.perform(get("/api/usuarios"))
         .andDo(print())
-        .andExpect(status().isForbidden());
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
   }
 
   // ERROR 400 BAD REQUEST: Filtrado por boolean activo con string invalido
@@ -386,7 +389,8 @@ public class UsuarioControllerTest {
     mockMvc.perform(put("/api/usuarios/{id}/restablecer", 1L))
         .andDo(print())
         .andExpect(status().isForbidden())
-        .andExpect(jsonPath("$.message").value("No se puede restablecer la contraseña del dueño del sistema."));
+        .andExpect(jsonPath("$.message").value("No se puede restablecer la contraseña del dueño del sistema."))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
   }
 
   // ERROR 403 FORBIDDEN: Se intenta restablecer la contraseña a un usuario que ya tiene un cambio pendiente
@@ -401,7 +405,8 @@ public class UsuarioControllerTest {
     mockMvc.perform(put("/api/usuarios/{id}/restablecer", 4L))
         .andDo(print())
         .andExpect(status().isForbidden())
-        .andExpect(jsonPath("$.message").value("El usuario ya tiene un restablecimiento de contraseña pendiente."));
+        .andExpect(jsonPath("$.message").value("El usuario ya tiene un restablecimiento de contraseña pendiente."))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
   }
 
   // ERROR 401 UNAUTHORIZED: Se intenta acceder al endpoint sin estar logueado
@@ -430,7 +435,8 @@ public class UsuarioControllerTest {
     // WHEN & THEN
     mockMvc.perform(put("/api/usuarios/2/restablecer"))
         .andDo(print())
-        .andExpect(status().isForbidden());
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
   }
 
   // ERROR 403 FORBIDDEN: La sesión del ADMIN fue revocada en la base de datos en tiempo real
@@ -467,6 +473,132 @@ public class UsuarioControllerTest {
   // =========================================================================
   // ENDPOINT: PUT /api/usuarios/{id}/cambiar-activo
   // =========================================================================
+
+  // ÉXITO 200 OK: OWNER cambia el estado activo de un ADMIN
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void cambiarEstadoActivo_ComoOwnerAAdmin_DebeDevolver200OK() throws Exception {
+    // GIVEN: El servicio realiza el toggle del estado activo
+    when(usuarioService.cambiarEstadoActivo(2L)).thenReturn(usuarioAdminReponse);
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-activo", 2L))
+        .andDo(print())
+        .andExpect(status().isOk());
+  }
+
+  // ÉXITO 200 OK: ADMIN cambia el estado activo de un PERSONAL
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void cambiarEstadoActivo_ComoAdminAPersonal_DebeDevolver200OK() throws Exception {
+    // GIVEN
+    when(usuarioService.cambiarEstadoActivo(3L)).thenReturn(usuarioPersonalReponse);
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-activo", 3L))
+        .andDo(print())
+        .andExpect(status().isOk());
+  }
+
+  // ÉXITO 200 OK: ADMIN cambia el estado activo de un usuario con cambio de clave pendiente
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void cambiarEstadoActivo_ComoAdminAUsuarioConClavePendiente_DebeDevolver200OK() throws Exception {
+    // GIVEN: Valida que el estado CHANGE_PASSWORD no bloquee el flujo
+    when(usuarioService.cambiarEstadoActivo(4L)).thenReturn(usuarioChangePasswordResponse);
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-activo", 4L))
+        .andDo(print())
+        .andExpect(status().isOk());
+  }
+
+  // ERROR 400 BAD REQUEST: Se envía un identificador en formato alfanumérico inválido para el tipo Long
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void cambiarEstadoActivo_ConIdAlfanumericoInvalido_DebeDevolver400BadRequest() throws Exception {
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-activo", "ABC12345"))
+        .andDo(print())
+        .andExpect(status().isBadRequest());
+  }
+
+  // ERROR 401 UNAUTHORIZED: Se intenta acceder al endpoint sin estar logueado
+  @Test
+  void cambiarEstadoActivo_SinAutenticacion_DebeDevolver401Unauthorized() throws Exception {
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/2/cambiar-activo"))
+        .andDo(print())
+        .andExpect(status().isUnauthorized());
+  }
+
+  // ERROR 401 UNAUTHORIZED: El token de acceso es válido pero el usuario fue desactivado en los filtros de entrada
+  @Test
+  void cambiarEstadoActivo_ConUsuarioDesactivadoEnFiltro_DebeDevolver401Unauthorized() throws Exception {
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-activo", 2L)
+            .header("Authorization", "Bearer token_desactivado_ejemplo"))
+        .andDo(print())
+        .andExpect(status().isUnauthorized());
+  }
+
+  // ERROR 403 FORBIDDEN: Un usuario con rol PERSONAL intenta acceder al endpoint
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void cambiarEstadoActivo_ComoPersonal_DebeDevolver403Forbidden() throws Exception {
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/2/cambiar-activo"))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: OWNER intenta modificar el estado de otro OWNER (Restricción de Jerarquía)
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void cambiarEstadoActivo_AUnOwner_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    when(usuarioService.cambiarEstadoActivo(1L))
+        .thenThrow(new AccionInvalidaException("No se puede cambiar el estado del dueño del sistema"));
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-activo", 1L))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("No se puede cambiar el estado del dueño del sistema"))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: La sesión del ADMIN fue revocada en la base de datos en tiempo real
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void cambiarEstadoActivo_ConSesionRevocadaEnBD_DebeDevolver403ForbiddenYSessionInvalidated() throws Exception {
+    // GIVEN
+    when(usuarioService.cambiarEstadoActivo(2L))
+        .thenThrow(new AccionNoPermitidaException(
+            "Su sesión ya no es válida. Sus permisos han cambiado o su cuenta fue desactivada."
+        ));
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-activo", 2L))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value("SESSION_INVALIDATED"));
+  }
+
+  // ERROR 404 NOT FOUND: Se intenta modificar el estado de un identificador de usuario que no existe
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void cambiarEstadoActivo_ConUsuarioInexistente_DebeDevolver404NotFound() throws Exception {
+    // GIVEN
+    when(usuarioService.cambiarEstadoActivo(99L))
+        .thenThrow(new UsuarioNotFoundException(99L));
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-activo", 99L))
+        .andDo(print())
+        .andExpect(status().isNotFound());
+  }
 
   // =========================================================================
   // ENDPOINT: PUT /api/usuarios/me/password
