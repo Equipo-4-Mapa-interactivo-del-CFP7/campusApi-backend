@@ -86,13 +86,14 @@ public class UsuarioServiceImpl implements UsuarioService {
       String nombre,
       String apellido,
       Boolean activo,
+      String rol,
       Pageable pageable
   ) {
 
     validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
 
     String dniParam = (dni != null && !dni.isBlank()) ?
-        "%" + dni.trim() + "%" : null;
+        "%" + dni.toLowerCase().trim() + "%" : null;
 
     String nombreParam = (nombre != null && !nombre.isBlank()) ?
         "%" + nombre.toLowerCase().trim() + "%" : null;
@@ -100,8 +101,11 @@ public class UsuarioServiceImpl implements UsuarioService {
     String apellidoParam = (apellido != null && !apellido.isBlank()) ?
         "%" + apellido.toLowerCase().trim() + "%" : null;
 
+    Rol rolParam = (rol != null && !rol.isBlank()) ?
+        Rol.valueOf(rol.toUpperCase().trim()) : null;
+
     Page<Usuario> usuariosPage = usuarioRepository.buscarUsuariosDinamico(
-        dniParam, nombreParam, apellidoParam, activo, pageable
+        dniParam, nombreParam, apellidoParam, activo, rolParam, pageable
     );
 
     return usuariosPage.map(usuarioMapper::usuarioToResponse);
@@ -389,6 +393,12 @@ public class UsuarioServiceImpl implements UsuarioService {
     usuarioRepository.save(antiguoOwner);
     usuarioRepository.save(nuevoOwner);
   }
+
+  // TODO: cambiar dni
+
+  // TODO: cambiar nombre
+
+  // TODO: cambiar apellido
 
   // ======================================
   // FUNCIONES PRIVADAS

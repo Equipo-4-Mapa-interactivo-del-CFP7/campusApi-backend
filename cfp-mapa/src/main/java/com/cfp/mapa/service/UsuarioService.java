@@ -14,6 +14,7 @@ public interface UsuarioService {
       String nombre,
       String apellido,
       Boolean activo,
+      String rol,
       Pageable pageable
   );
 

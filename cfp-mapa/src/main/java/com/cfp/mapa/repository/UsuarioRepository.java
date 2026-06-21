@@ -22,13 +22,15 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
       "(:dni IS NULL OR u.dni LIKE :dni) AND " +
       "(:nombre IS NULL OR u.nombre LIKE :nombre) AND " +
       "(:apellido IS NULL OR u.apellido LIKE :apellido) AND " +
-      "(:activo IS NULL OR u.activo = :activo)"
+      "(:activo IS NULL OR u.activo = :activo) AND " +
+      "(:rol IS NULL OR u.rol = :rol)"
   )
   Page<Usuario> buscarUsuariosDinamico(
       @Param("dni") String dni,
       @Param("nombre") String nombre,
       @Param("apellido") String apellido,
       @Param("activo") Boolean activo,
+      @Param("rol") Rol rol,
       Pageable pageable
   );
 

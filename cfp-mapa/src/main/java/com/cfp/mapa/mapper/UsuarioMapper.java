@@ -2,7 +2,6 @@ package com.cfp.mapa.mapper;
 
 import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
-import com.cfp.mapa.exception.NombreInvalidoException;
 import com.cfp.mapa.model.Usuario;
 import com.cfp.mapa.model.enums.Rol;
 import org.springframework.stereotype.Component;

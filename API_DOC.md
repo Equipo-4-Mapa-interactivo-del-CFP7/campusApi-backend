@@ -124,26 +124,34 @@ El JSON de respuesta de usuario sigue este patrón:
 
 Permite que usuarios con el rol `OWNER` o `ADMIN` puedan registrar un usuario nuevo en el sistema.
 
-- Para registrarlo se ingresará su `DNI`, `NOMBRE`, `APELLIDO` y `rol`.
+- Para registrarlo se ingresará su `dni`, `nombre`, `apellido` y `rol`.
+- El nombre y apellido será normalizado poniendo la primera letra de cada palabra en mayúscula y
+quitando los espacios adicionales.
 - El usuario creado tendrá rol `CHANGE_PASSWORD` y no obtendrá su rol real hasta que cambie su
 contraseña.
 - Al usuario creado se le asignará como contraseña `cfp + dni`. Ejemplo: `cfp12345678`.
 - `OWNER` puede crear usuarios con los roles `ADMIN` y `PERSONAL`.
 - `ADMIN` puede crear usuarios con el rol `PERSONAL`.
 
-🔑 Encabezados válidos (Headers)
+<details>
+<summary><b>🔑 Encabezados válidos (Headers)</b></summary>
+
 * `Authorization`: `Bearer <token_de_owner>`
 * `Authorization`: `Bearer <token_de_admin>`
+
+</details> 
 
 <details>
 <summary><b>📦 Cuerpo de la petición</b></summary>
 <table><tr><td>
 
-`dni` String, requerido, Exactamente 8 caracteres numéricos.
+`dni` String, requerido, entre 7 y 20 caracteres alfanuméricos.
 
-`nombre` String, requerido, 2 a 50 caracteres (solo letras, espacios, `-` y `'`).
+`nombre` String, requerido, 2 a 50 caracteres (solo letras, espacios, `-` y `'`), debe contener al
+menos una letra.
 
-`apellido` String, requerido, 2 a 50 caracteres (solo letras, espacios, `-` y `'`).
+`apellido` String, requerido, 2 a 50 caracteres (solo letras, espacios, `-` y `'`), debe contener al
+menos una letra.
 
 `rol` String, requerido, solo se admite `ADMIN` y `PERSONAL`.
 
@@ -170,11 +178,12 @@ con la información del usuario creado.
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
 - Si el cuerpo JSON no cumple las restricciones estructurales (dni vacío, etc.).
-- Si se intenta enviar en el campo `rol` los valores `OWNER` o `CHANGE_PASSWORD`
+- Si se intenta enviar en el campo `rol` los valores `OWNER` o `CHANGE_PASSWORD`.
 
 🔴 `401 UNAUTHORIZED` +
 [JSON error](#formato-general-de-errores)
-si el token no existe, está expirado o fue mal alterado de forma externa.
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
 
 🔴 `403 FORBIDDEN` +
 [JSON error](#formato-general-de-errores)
@@ -190,26 +199,39 @@ si el DNI ya se encuentra registrado en el sistema.
 </td></tr></table>
 </details>
 
-## 🟢 Listar usuarios con filtros y paginación [solo para ADMIN]
+## 🟢 Listar usuarios con filtros y paginación [solo para OWNER o ADMIN]
 
 `GET /api/usuarios`
 
-Permite que únicamente usuarios con rol `ADMIN` pueda ver la lista completa de usuarios
-registrados. Además podrá filtrarlos por: `dni`, `nombre`, `apellido`, `activo`. También se utiliza
-la paginación para mostrarlo, por lo que puede definir cuántos (`size`) usuarios ver por página 
-(`page`).
+Permite que usuarios con el rol `OWNER` o `ADMIN` puedan ver la lista completa de usuarios
+registrados.
 
-🔑 Encabezados (Headers)
+- Podrá filtrarlos por: `dni`, `nombre`, `apellido`, `activo`, `rol`.
+- Se utiliza la paginación para mostrarlo, por lo que se puede definir cuántos (`size`) usuarios ver
+por página (`page`).
+
+<details>
+<summary><b>🔑 Encabezados válidos (Headers)</b></summary>
+
+* `Authorization`: `Bearer <token_de_owner>`
 * `Authorization`: `Bearer <token_de_admin>`
 
-🔎 Parámetros de Consulta (Query Parameters). Todos los filtros son opcionales.
+</details> 
+
+<details>
+<summary><b>❓ Parámetros de Consulta (Query Parameters)</b></summary>
+
+**Todos los filtros son opcionales**.
 Se añaden a la URL (ej. `?nombre=Juan&size=5`).
-* `dni` String.
-* `nombre` String.
-* `apellido` String.
-* `activo` Boolean - Filtro por estado del usuario (`true` o `false`).
+* `dni` String - Filtro por coincidencia parcial (no distingue mayúsculas/minúsculas).
+* `nombre` String - Filtro por coincidencia parcial (no distingue mayúsculas/minúsculas).
+* `apellido` String - Filtro por coincidencia parcial (no distingue mayúsculas/minúsculas).
+* `activo` Boolean - Filtro exacto (`true` o `false`).
+* `rol`: String - Filtro exacto (`OWNER`, `ADMIN`, `PERSONAL`, `CHANGE_PASSWORD`).
 * `page` int - Número de página, empieza en 0 (Por defecto: 0).
 * `size` int - Cantidad de registros por página (Por defecto: 10).
+
+</details> 
 
 <details>
 <summary><b>🔄 Respuesta del servidor</b></summary>
@@ -274,7 +296,14 @@ si los tipos de datos enviados en los parámetros son incompatibles (ejemplo: `?
 
 🔴 `401 UNAUTHORIZED` +
 [JSON error](#formato-general-de-errores)
-si el token es inválido.
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
+
+🔴 `403 FORBIDDEN` +
+[JSON error](#formato-general-de-errores)
+- Si el usuario logueado no posee los roles permitidos (`OWNER` / `ADMIN`).
+- Si la sesión fue revocada en base de datos. Retorna el JSON de error con
+`"errorCode": "SESSION_INVALIDATED"`.
 
 </td></tr></table>
 </details>

@@ -5,7 +5,7 @@ import jakarta.validation.ConstraintValidatorContext;
 
 public class ValidNombreValidator implements ConstraintValidator<ValidNombre, String> {
 
-  private static final String NOMBRE_REGEX = "^[a-zA-ZáéíóúÁÉÍÓÚñÑ '-]{2,50}$";
+  private static final String NOMBRE_REGEX = "^(?=.*[a-zA-ZáéíóúÁÉÍÓÚñÑ])[a-zA-ZáéíóúÁÉÍÓÚñÑ '-]{2,50}$";
 
   @Override
   public boolean isValid(String value, ConstraintValidatorContext context) {

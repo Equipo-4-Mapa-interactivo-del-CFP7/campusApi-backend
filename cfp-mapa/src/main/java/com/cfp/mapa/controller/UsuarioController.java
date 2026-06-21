@@ -53,11 +53,12 @@ public class UsuarioController {
       @RequestParam(required = false) String nombre,
       @RequestParam(required = false) String apellido,
       @RequestParam(required = false) Boolean activo,
+      @RequestParam(required = false) String rol,
       @PageableDefault(page = 0, size = 10) Pageable pageable
   ) {
 
     Page<UsuarioResponseDTO> usuarios = usuarioService.listarUsuariosConFiltro(
-        dni, nombre, apellido, activo, pageable
+        dni, nombre, apellido, activo, rol, pageable
     );
 
     return ResponseEntity
