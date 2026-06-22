@@ -1052,6 +1052,114 @@ public class UsuarioControllerTest {
   // ENDPOINT: GET /api/usuarios/{id}
   // =========================================================================
 
+  // ÉXITO 200 OK: OWNER puede ver el perfil de otro OWNER
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void obtenerPerfil_ComoOwnerAUnOwner_DebeDevolver200Ok() throws Exception {
+    // GIVEN
+    when(usuarioService.obtenerPerfil(1L)).thenReturn(usuarioOwnerResponse);
+
+    // WHEN & THEN
+    mockMvc.perform(get("/api/usuarios/{id}", 1L)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isOk());
+  }
+
+  // ÉXITO 200 OK: ADMIN puede ver el perfil de un usuario PERSONAL o ADMIN
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void obtenerPerfil_ComoAdminAPersonal_DebeDevolver200Ok() throws Exception {
+    // GIVEN
+    when(usuarioService.obtenerPerfil(3L)).thenReturn(usuarioPersonalResponse);
+
+    // WHEN & THEN
+    mockMvc.perform(get("/api/usuarios/{id}", 3L)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isOk());
+  }
+
+  // ERROR 400 BAD REQUEST: Se envía un ID alfanumérico inválido en la URL
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void obtenerPerfil_ConIdInvalido_DebeDevolver400BadRequest() throws Exception {
+    // WHEN & THEN
+    mockMvc.perform(get("/api/usuarios/{id}", "INVALID_ID")
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isBadRequest());
+  }
+
+  // ERROR 401 UNAUTHORIZED: Intento de acceso sin token
+  @Test
+  void obtenerPerfil_SinAutenticacion_DebeDevolver401Unauthorized() throws Exception {
+    // WHEN & THEN
+    mockMvc.perform(get("/api/usuarios/1")
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isUnauthorized());
+  }
+
+  // ERROR 403 FORBIDDEN: Un rol PERSONAL intenta ver el perfil de otra persona (No tiene permiso periférico)
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void obtenerPerfil_ComoPersonal_DebeDevolver403Forbidden() throws Exception {
+    // WHEN & THEN
+    mockMvc.perform(get("/api/usuarios/2")
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: Un ADMIN intenta ver el perfil de un OWNER (Jerarquía de Negocio)
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void obtenerPerfil_ComoAdminAUnOwner_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    doThrow(new AccionInvalidaException("No tienes permitido ver el perfil de este usuario"))
+        .when(usuarioService).obtenerPerfil(any());
+
+    // WHEN & THEN
+    mockMvc.perform(get("/api/usuarios/{id}", 1L)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("No tienes permitido ver el perfil de este usuario"));
+  }
+
+  // ERROR 403 FORBIDDEN: La sesión de quien consulta fue revocada/modificada en BD (validarUsuarioActivoYRoles)
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void obtenerPerfil_ConSesionRevocadaEnBD_DebeDevolver403ForbiddenYSessionInvalidated() throws Exception {
+    // GIVEN
+    doThrow(new AccionNoPermitidaException(
+        "Su sesión ya no es válida. Sus permisos han cambiado o su cuenta fue desactivada."
+    )).when(usuarioService).obtenerPerfil(any());
+
+    // WHEN & THEN
+    mockMvc.perform(get("/api/usuarios/{id}", 2L)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value("SESSION_INVALIDATED"));
+  }
+
+  // ERROR 404 NOT FOUND: Se busca un usuario con un ID numérico que no existe en el sistema
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void obtenerPerfil_ConUsuarioInexistente_DebeDevolver404NotFound() throws Exception {
+    // GIVEN
+    doThrow(new UsuarioNotFoundException(99L)).when(usuarioService).obtenerPerfil(any());
+
+    // WHEN & THEN
+    mockMvc.perform(get("/api/usuarios/{id}", 99L)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isNotFound());
+  }
+
   // =========================================================================
   // ENDPOINT: POST /api/usuarios/{id}/eliminar
   // =========================================================================

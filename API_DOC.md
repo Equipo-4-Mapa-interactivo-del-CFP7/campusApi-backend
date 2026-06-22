@@ -594,21 +594,29 @@ del usuario logueado.
 </td></tr></table>
 </details>
 
-## 🟢 Obtener cualquier perfil [solo para ADMIN]
+## 🟢 Obtener el perfil de otro usuario [solo para OWNER o ADMIN]
 
-`GET /api/usuarios/{dni}`
+`GET /api/usuarios/{id}`
 
-Permite que únicamente usuarios con el rol `ADMIN` puedan obtener información de cualquier perfil
-de usuarios a través de su DNI.
+Permite que usuarios con el rol `OWNER` o `ADMIN` puedan revisar el perfil de otros usuarios.
 
-🔑 Encabezados (Headers)
+- El perfil de un `OWNER` solo puede ser visto por un usuario con rol `OWNER`.
 
+<details>
+<summary><b>🔑 Encabezados válidos (Headers)</b></summary>
+
+* `Authorization`: `Bearer <token_de_owner>`
 * `Authorization`: `Bearer <token_de_admin>`
 
-🔎 Path variable
+</details>
 
-* `dni` String, requerido, Exactamente 8 caracteres numéricos. <br>
-DNI del usuario del cual se quiere obtener el perfil.
+<details>
+<summary><b>🔎 Path variable</b></summary>
+
+* `id` Long, requerido. <br>
+ID del usuario al que se le quiere ver el perfil.
+
+</details>
 
 <details>
 <summary><b>🔄 Respuesta del servidor</b></summary>
@@ -620,15 +628,23 @@ del usuario solicitado.
 
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
-si el path variable no cumple con las restricciones.
+si el `id` enviado en el path variable no tiene un formato numérico válido.
 
 🔴 `401 UNAUTHORIZED` +
 [JSON error](#formato-general-de-errores)
-si el token es inválido.
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
+
+🔴 `403 FORBIDDEN` +
+[JSON error](#formato-general-de-errores)
+- Si el usuario logueado no posee los roles permitidos (`OWNER` / `ADMIN`).
+- Si un `ADMIN` intenta ver el perfil de un `OWNER`.
+- Si la sesión fue revocada en base de datos. Retorna el JSON de error con
+`"errorCode": "SESSION_INVALIDATED"`.
 
 🔴 `404 NOT FOUND` +
 [JSON error](#formato-general-de-errores)
-si no existe un usuario con el DNI solicitado.
+si no existe un usuario registrado con el `id` solicitado.
 
 </td></tr></table>
 </details>
