@@ -234,6 +234,10 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     newRol = newRol.toUpperCase().trim();
 
+    if (usuario.getRol().name().equals(newRol)) {
+      throw new AccionInvalidaException("El usuario ya tiene asignado el rol " + newRol);
+    }
+
     switch (newRol) {
       case "PERSONAL" -> usuario.setRol(Rol.PERSONAL);
       case "ADMIN" -> usuario.setRol(Rol.ADMIN);

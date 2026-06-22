@@ -17,11 +17,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.cfp.mapa.dto.usuario.UsuarioChangePasswordDTO;
 import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
+import com.cfp.mapa.dto.usuario.UsuarioNewRolRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
 import com.cfp.mapa.exception.AccionInvalidaException;
 import com.cfp.mapa.exception.AccionNoPermitidaException;
 import com.cfp.mapa.exception.DniDuplicadoException;
 import com.cfp.mapa.exception.PasswordIncorrectaException;
+import com.cfp.mapa.exception.RolInvalidoException;
 import com.cfp.mapa.exception.UsuarioNotFoundException;
 import com.cfp.mapa.model.enums.Rol;
 import com.cfp.mapa.security.jwt.JwtProvider;
@@ -751,6 +753,224 @@ public class UsuarioControllerTest {
   // =========================================================================
   // ENDPOINT: PUT /api/usuarios/{id}/cambiar-rol
   // =========================================================================
+
+  // ÉXITO 200 OK: OWNER cambia exitosamente el rol de un usuario a ADMIN
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void cambiarRol_ComoOwnerAAdmin_DebeDevolver200OK() throws Exception {
+    // GIVEN
+    UsuarioNewRolRequestDTO request = new UsuarioNewRolRequestDTO("ADMIN");
+    when(usuarioService.cambiarRol(2L, "ADMIN")).thenReturn(usuarioAdminReponse);
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-rol", 2L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isOk());
+  }
+
+  // ERROR 400 BAD REQUEST: Se envía un formato de id alfanumérico inválido para el tipo Long
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void cambiarRol_ConIdAlfanumericoInvalido_DebeDevolver400BadRequest() throws Exception {
+    // GIVEN
+    UsuarioNewRolRequestDTO request = new UsuarioNewRolRequestDTO("ADMIN");
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-rol", "ABC12345")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isBadRequest());
+  }
+
+  // ERROR 400 BAD REQUEST: El cuerpo de la petición rompe la validación @NotBlank del DTO
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void cambiarRol_ConRolVacio_DebeDevolver400BadRequest() throws Exception {
+    // GIVEN
+    UsuarioNewRolRequestDTO request = new UsuarioNewRolRequestDTO("");
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-rol", 2L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isBadRequest());
+  }
+
+  // ERROR 400 BAD REQUEST: El rol enviado es un texto que no pertenece al Enum ni pasa el @ValidRol
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void cambiarRol_ConRolInexistenteEnEnum_DebeDevolver400BadRequest() throws Exception {
+    // GIVEN
+    UsuarioNewRolRequestDTO request = new UsuarioNewRolRequestDTO("SUPER_ADMIN");
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-rol", 2L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isBadRequest());
+  }
+
+  // ERROR 400 BAD REQUEST: El rol pasa la anotación @ValidRol, pero el switch del Service lo rechaza
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void cambiarRol_ConRolNoSoportadoPorElSwitch_DebeDevolver400BadRequest() throws Exception {
+    // GIVEN
+    UsuarioNewRolRequestDTO request = new UsuarioNewRolRequestDTO("OWNER");
+
+    doThrow(new RolInvalidoException("El rol proporcionado no es válido"))
+        .when(usuarioService).cambiarRol(any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-rol", 2L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("El rol proporcionado no es válido"));
+  }
+
+  // ERROR 401 UNAUTHORIZED: Se intenta acceder al endpoint sin estar logueado
+  @Test
+  void cambiarRol_SinAutenticacion_DebeDevolver401Unauthorized() throws Exception {
+    // GIVEN
+    UsuarioNewRolRequestDTO request = new UsuarioNewRolRequestDTO("ADMIN");
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/2/cambiar-rol")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isUnauthorized());
+  }
+
+  // ERROR 401 UNAUTHORIZED: El token es válido pero el usuario fue desactivado en los filtros de entrada
+  @Test
+  void cambiarRol_ConUsuarioDesactivadoEnFiltro_DebeDevolver401Unauthorized() throws Exception {
+    // GIVEN
+    UsuarioNewRolRequestDTO request = new UsuarioNewRolRequestDTO("ADMIN");
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-rol", 2L)
+            .header("Authorization", "Bearer token_desactivado_ejemplo")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isUnauthorized());
+  }
+
+  // ERROR 403 FORBIDDEN: Un usuario con rol ADMIN intenta acceder (Acceso exclusivo OWNER)
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void cambiarRol_ComoAdmin_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    UsuarioNewRolRequestDTO request = new UsuarioNewRolRequestDTO("PERSONAL");
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/2/cambiar-rol")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: OWNER intenta cambiarle el rol al OWNER del sistema (Restricción de Negocio)
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void cambiarRol_AUnOwner_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    UsuarioNewRolRequestDTO request = new UsuarioNewRolRequestDTO("ADMIN");
+    doThrow(new AccionInvalidaException("No se puede cambiar el rol del dueño del sistema"))
+        .when(usuarioService).cambiarRol(any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-rol", 1L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("No se puede cambiar el rol del dueño del sistema"))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: OWNER intenta cambiarle el rol a un usuario que tiene el estado CHANGE_PASSWORD
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void cambiarRol_AUsuarioConClavePendiente_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    UsuarioNewRolRequestDTO request = new UsuarioNewRolRequestDTO("ADMIN");
+    doThrow(new AccionInvalidaException("No se puede puede cambiar el rol 'CHANGE_PASSWORD'"))
+        .when(usuarioService).cambiarRol(any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-rol", 4L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("No se puede puede cambiar el rol 'CHANGE_PASSWORD'"))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: La sesión del OWNER fue revocada en la base de datos en tiempo real
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void cambiarRol_ConSesionRevocadaEnBD_DebeDevolver403ForbiddenYSessionInvalidated() throws Exception {
+    // GIVEN
+    UsuarioNewRolRequestDTO request = new UsuarioNewRolRequestDTO("ADMIN");
+    doThrow(new AccionNoPermitidaException(
+        "Su sesión ya no es válida. Sus permisos han cambiado o su cuenta fue desactivada."
+    )).when(usuarioService).cambiarRol(any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-rol", 2L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value("SESSION_INVALIDATED"));
+  }
+
+  // ERROR 403 FORBIDDEN: OWNER intenta cambiar el rol de un usuario al mismo que ya posee (Optimización)
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void cambiarRol_AMismoRolQueYaPosee_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN: El usuario ya es ADMIN e intentamos pasarle "ADMIN" de nuevo
+    UsuarioNewRolRequestDTO request = new UsuarioNewRolRequestDTO("ADMIN");
+
+    doThrow(new AccionInvalidaException("El usuario ya tiene asignado el rol ADMIN"))
+        .when(usuarioService).cambiarRol(any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-rol", 2L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("El usuario ya tiene asignado el rol ADMIN"))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 404 NOT FOUND: Se intenta cambiar el rol de un identificador de usuario que no existe
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void cambiarRol_ConUsuarioInexistente_DebeDevolver404NotFound() throws Exception {
+    // GIVEN
+    UsuarioNewRolRequestDTO request = new UsuarioNewRolRequestDTO("ADMIN");
+    doThrow(new UsuarioNotFoundException(99L)).when(usuarioService).cambiarRol(any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-rol", 99L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isNotFound());
+  }
 
   // =========================================================================
   // ENDPOINT: GET /api/usuarios/me

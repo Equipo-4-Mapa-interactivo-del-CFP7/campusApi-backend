@@ -33,7 +33,7 @@ Los JSON de error están estandarizados con este formato:
 
 ---
 
-# 🔐 Iniciar sesión
+# 🔐 Iniciar sesión [acceso público]
 
 `POST /api/auth/login`
 
@@ -118,7 +118,7 @@ El JSON de respuesta de usuario sigue este patrón:
 ```
 </details>
 
-## 🟢 Registrar usuario [solo para OWNER o ADMIN]
+## 🟢 Registrar un usuario [solo para OWNER o ADMIN]
 
 `POST /api/usuarios/registrar`
 
@@ -308,7 +308,7 @@ si los tipos de datos enviados en los parámetros son incompatibles (ejemplo: `?
 </td></tr></table>
 </details>
 
-## 🟢 Restablecer contraseña [solo para OWNER o ADMIN]
+## 🟢 Restablecer contraseña de otro usuario [solo para OWNER o ADMIN]
 
 `PUT /api/usuarios/{id}/restablecer`
 
@@ -366,7 +366,7 @@ si no existe un usuario registrado con el `id` solicitado.
 </td></tr></table>
 </details>
 
-## 🟢 Cambiar estado de la cuenta [solo para OWNER o ADMIN]
+## 🟢 Cambiar estado de la cuenta de otro usuario [solo para OWNER o ADMIN]
 
 `PUT /api/usuarios/{id}/cambiar-activo`
 
@@ -422,7 +422,7 @@ si no existe un usuario registrado con el `id` solicitado.
 </td></tr></table>
 </details> 
 
-## 🟢 Cambiar contraseña [usuarios logueados]
+## 🟢 Cambiar contraseña propia [usuarios logueados]
 
 `PUT /api/usuarios/me/password`
 
@@ -482,21 +482,45 @@ si la sesión fue revocada en base de datos. Retorna el JSON de error con
 </td></tr></table>
 </details>
 
-## 🟢 Cambiar rol [solo para ADMIN]
+## 🟢 Cambiar rol de otro usuario [solo para OWNER]
 
-`PUT /api/usuarios/{dni}/cambiar-rol`
+`PUT /api/usuarios/{id}/cambiar-rol`
 
-Permite que únicamente los usuarios con el rol `ADMIN` puedan cambiar el rol de otro usuario. Los
-va intercambiando entre los roles `ADMIN` y `PERSONAL`.
+Permite que únicamente usuarios con el rol `OWNER` puedan cambiar el `rol` de otro usuario.
 
-🔑 Encabezados (Headers)
+- Solo puede cambiar el rol de usuarios con el rol `ADMIN` o `PERSONAL`.
+- Solo puede asignar los roles `ADMIN` y `PERSONAL`.
+- No puede asignar el mismo rol que el otro usuario ya tiene.
 
-* `Authorization`: `Bearer <token_de_admin>`
+<details>
+<summary><b>🔑 Encabezado (Header)</b></summary>
 
-🔎 Path variable
+* `Authorization`: `Bearer <token_de_owner>`
 
-* `dni` String, requerido, Exactamente 8 caracteres numéricos. <br>
-DNI del usuario al que se le va a cambiar el rol.
+</details>
+
+<details>
+<summary><b>🔎 Path variable</b></summary>
+
+* `id` Long, requerido. <br>
+ID del usuario al que se le va a cambiar el `rol`.
+
+</details>
+
+<details>
+<summary><b>📦 Cuerpo de la petición</b></summary>
+<table><tr><td>
+
+`rol` String, requerido, solo se admite `ADMIN` y `PERSONAL`.
+
+```JSON
+{
+  "rol": "ADMIN"
+}
+```
+
+</td></tr></table>
+</details> 
 
 <details>
 <summary><b>🔄 Respuesta del servidor</b></summary>
@@ -508,13 +532,25 @@ del usuario al que se le cambió el rol.
 
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
-si el path variable no cumple con las restricciones.
+- Si el `id` enviado en el path variable no tiene un formato numérico válido.
+- Si el campo `rol` en el cuerpo está vacío o no es un rol válido del sistema.
 
 🔴 `401 UNAUTHORIZED` +
 [JSON error](#formato-general-de-errores)
-si el token es inválido.
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
 
-🔴 `404 NOT FOUND` Si no existe un usuario con el DNI solicitado.
+🔴 `403 FORBIDDEN` +
+[JSON error](#formato-general-de-errores)
+- Si el usuario logueado no posee el rol `OWNER`.
+- Si se intenta modificar a un usuario que es `OWNER` o se encuentra en estado `CHANGE_PASSWORD`.
+- Si el usuario ya cuenta con el rol que se está intentando asignar.
+- Si la sesión fue revocada en base de datos. Retorna el JSON de error con
+`"errorCode": "SESSION_INVALIDATED"`.
+
+🔴 `404 NOT FOUND` +
+[JSON error](#formato-general-de-errores)
+si no existe un usuario con el `id` solicitado.
 
 </td></tr></table>
 </details>
