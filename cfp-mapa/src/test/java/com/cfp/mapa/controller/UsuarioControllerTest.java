@@ -2,7 +2,11 @@ package com.cfp.mapa.controller;
 
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -11,11 +15,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.cfp.mapa.dto.usuario.UsuarioChangePasswordDTO;
 import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
 import com.cfp.mapa.exception.AccionInvalidaException;
 import com.cfp.mapa.exception.AccionNoPermitidaException;
 import com.cfp.mapa.exception.DniDuplicadoException;
+import com.cfp.mapa.exception.PasswordIncorrectaException;
 import com.cfp.mapa.exception.UsuarioNotFoundException;
 import com.cfp.mapa.model.enums.Rol;
 import com.cfp.mapa.security.jwt.JwtProvider;
@@ -603,6 +609,144 @@ public class UsuarioControllerTest {
   // =========================================================================
   // ENDPOINT: PUT /api/usuarios/me/password
   // =========================================================================
+
+  // ÉXITO 200 OK: El usuario cambia su contraseña correctamente
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void cambiarPassword_ConDatosValidos_DebeDevolver200Ok() throws Exception {
+    // GIVEN
+    UsuarioChangePasswordDTO request = new UsuarioChangePasswordDTO("Password123", "NuevaPassword123");
+
+    // Como el controlador extrae el principal del contexto, no requerimos un 'when' del service que devuelva datos ya que es void
+    doNothing().when(usuarioService).cambiarPassword(anyLong(), anyString(), anyString());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/me/password")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isOk());
+  }
+
+  // ÉXITO 200 OK: Un usuario con rol CHANGE_PASSWORD cambia su contraseña correctamente
+  @Test
+  @WithMockUser(roles = "CHANGE_PASSWORD")
+  void cambiarPassword_ComoUsuarioConCambioPendiente_DebeDevolver200Ok() throws Exception {
+    // GIVEN
+    UsuarioChangePasswordDTO request = new UsuarioChangePasswordDTO("cfp12345678", "MiNuevaClaveSegura123");
+    doNothing().when(usuarioService).cambiarPassword(anyLong(), anyString(), anyString());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/me/password")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isOk());
+  }
+
+  // ERROR 400 BAD REQUEST: Intento de cambio con contraseñas vacías o que rompen el @Valid (Validación DTO)
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void cambiarPassword_ConContrasenasVacias_DebeDevolver400BadRequest() throws Exception {
+    // GIVEN: Contraseñas que rompen el regex o restricciones NotBlank
+    UsuarioChangePasswordDTO request = new UsuarioChangePasswordDTO("", "   ");
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/me/password")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isBadRequest());
+  }
+
+  // ERROR 400 BAD REQUEST: La nueva contraseña es idéntica al DNI o por defecto de seguridad (Regla de Negocio)
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void cambiarPassword_ConNuevaPasswordIgualADni_DebeDevolver400BadRequest() throws Exception {
+    // GIVEN
+    UsuarioChangePasswordDTO request = new UsuarioChangePasswordDTO("ClaveActual123", "cfp12345678");
+
+    // Usamos any() o especificamos adecuadamente para que intercepte la firma sin importar los nulos del principal
+    doThrow(new PasswordIncorrectaException("No puedes usar esta contraseña"))
+        .when(usuarioService).cambiarPassword(any(), any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/me/password")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("No puedes usar esta contraseña"));
+  }
+
+  // ERROR 400 BAD REQUEST: La contraseña actual ('oldPassword') ingresada es incorrecta
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void cambiarPassword_ConPasswordActualIncorrecta_DebeDevolver400BadRequest() throws Exception {
+    // GIVEN
+    UsuarioChangePasswordDTO request = new UsuarioChangePasswordDTO("ClaveErronea", "NuevaClave123");
+
+    // 💡 Usamos any() genérico para asegurar que Mockito intercepte la firma del void
+    doThrow(new PasswordIncorrectaException())
+        .when(usuarioService).cambiarPassword(any(), any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/me/password")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("La contraseña ingresada es incorrecta"));
+  }
+
+  // ERROR 401 UNAUTHORIZED: Se intenta acceder al endpoint sin estar logueado
+  @Test
+  void cambiarPassword_SinAutenticacion_DebeDevolver401Unauthorized() throws Exception {
+    // GIVEN
+    UsuarioChangePasswordDTO request = new UsuarioChangePasswordDTO("ClaveActual123", "NuevaClave123");
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/me/password")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isUnauthorized());
+  }
+
+  // ERROR 401 UNAUTHORIZED: El token es estructuralmente válido pero el usuario fue desactivado en los filtros
+  @Test
+  void cambiarPassword_ConUsuarioDesactivadoEnFiltro_DebeDevolver401Unauthorized() throws Exception {
+    // GIVEN
+    UsuarioChangePasswordDTO request = new UsuarioChangePasswordDTO("ClaveActual123", "NuevaClave123");
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/me/password")
+            .header("Authorization", "Bearer token_desactivado_ejemplo")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isUnauthorized());
+  }
+
+  // ERROR 403 FORBIDDEN: La sesión del usuario fue revocada en la base de datos en tiempo real
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void cambiarPassword_ConSesionRevocadaEnBD_DebeDevolver403ForbiddenYSessionInvalidated() throws Exception {
+    // GIVEN
+    UsuarioChangePasswordDTO request = new UsuarioChangePasswordDTO("ClaveActual123", "NuevaClave123");
+
+    doThrow(new AccionNoPermitidaException(
+        "Su sesión ya no es válida. Sus permisos han cambiado o su cuenta fue desactivada."
+    )).when(usuarioService).cambiarPassword(any(), any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/me/password")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value("SESSION_INVALIDATED"));
+  }
 
   // =========================================================================
   // ENDPOINT: PUT /api/usuarios/{id}/cambiar-rol

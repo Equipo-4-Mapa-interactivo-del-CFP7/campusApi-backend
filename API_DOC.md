@@ -422,16 +422,22 @@ si no existe un usuario registrado con el `id` solicitado.
 </td></tr></table>
 </details> 
 
-## 🟢 Cambiar contraseña
+## 🟢 Cambiar contraseña [usuarios logueados]
 
 `PUT /api/usuarios/me/password`
 
 Permite que únicamente un usuario logueado pueda cambiar su propia contraseña. Si el usuario tenía
 el rol `CHANGE_PASSWORD` entonces recuperará su rol normal.
 
-🔑 Encabezados (Headers)
+- La nueva contraseña no puede ser su `dni`.
+- La nueva contraseña no puede ser la contraseña por defecto `cfp + dni`.
+
+<details>
+<summary><b>🔑 Encabezados válidos (Headers)</b></summary>
 
 * `Authorization`: `Bearer <token_de_usuario_logueado>`
+
+</details>
 
 <details>
 <summary><b>📦 Cuerpo de la petición</b></summary>
@@ -443,7 +449,7 @@ el rol `CHANGE_PASSWORD` entonces recuperará su rol normal.
 
 ```JSON
 {
-  "oldPassword": "passwordVieja",
+  "oldPassword": "passwordActual",
   "newPassword": "passwordNueva"
 }
 ```
@@ -459,15 +465,19 @@ el rol `CHANGE_PASSWORD` entonces recuperará su rol normal.
 
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
-si el cuerpo de la petición no cumple las restricciones.
+- Si el cuerpo de la petición no cumple las restricciones.
+- Si la nueva contraseña es el `dni` o `cfp + dni`.
+- Si la `oldPassword` es incorrecta.
 
 🔴 `401 UNAUTHORIZED` +
 [JSON error](#formato-general-de-errores)
-si `oldPassword` no coincide con la contraseña actual.
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
 
-🔴 `401 UNAUTHORIZED` +
+🔴 `403 FORBIDDEN` +
 [JSON error](#formato-general-de-errores)
-si el token es inválido.
+si la sesión fue revocada en base de datos. Retorna el JSON de error con
+`"errorCode": "SESSION_INVALIDATED"`.
 
 </td></tr></table>
 </details>

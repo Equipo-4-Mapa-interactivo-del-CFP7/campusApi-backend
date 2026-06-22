@@ -79,7 +79,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handlePasswordIncorrectaException(PasswordIncorrectaException ex) {
 
         return buildErrorResponse(
-            HttpStatus.UNAUTHORIZED,
+            HttpStatus.BAD_REQUEST,
             ex.getMessage()
         );
     }
