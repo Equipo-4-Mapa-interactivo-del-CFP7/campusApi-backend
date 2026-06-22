@@ -18,10 +18,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.cfp.mapa.dto.usuario.UsuarioChangePasswordDTO;
 import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioNewRolRequestDTO;
+import com.cfp.mapa.dto.usuario.UsuarioOwnerRecoveryRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
 import com.cfp.mapa.exception.AccionInvalidaException;
 import com.cfp.mapa.exception.AccionNoPermitidaException;
 import com.cfp.mapa.exception.DniDuplicadoException;
+import com.cfp.mapa.exception.DniNotFoundException;
 import com.cfp.mapa.exception.PasswordIncorrectaException;
 import com.cfp.mapa.exception.RolInvalidoException;
 import com.cfp.mapa.exception.UsuarioNotFoundException;
@@ -1263,6 +1265,122 @@ public class UsuarioControllerTest {
   // =========================================================================
   // ENDPOINT: POST /api/usuarios/recuperar-owner
   // =========================================================================
+
+  // ÉXITO 204 NO CONTENT: OWNER recupera su contraseña usando credenciales válidas
+  @Test
+  void recuperarPasswordOwner_ConCredencialesValidas_DebeDevolver204NoContent() throws Exception {
+    // GIVEN
+    UsuarioOwnerRecoveryRequestDTO request = new UsuarioOwnerRecoveryRequestDTO("12345678", "ClaveEmergenciaReal", "NuevaClave123");
+    doNothing().when(usuarioService).recuperarPasswordOwner(any(), any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/recuperar-owner")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isNoContent());
+  }
+
+  // ERROR 400 BAD REQUEST: El cuerpo de la petición rompe las validaciones del DTO (@NotBlank, @ValidDni o @ValidPassword)
+  @Test
+  void recuperarPasswordOwner_ConCamposVaciosOInvalidos_DebeDevolver400BadRequest() throws Exception {
+    // GIVEN: DNI vacío y contraseñas que no cumplen con los constraints
+    UsuarioOwnerRecoveryRequestDTO request = new UsuarioOwnerRecoveryRequestDTO("", "", "corta");
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/recuperar-owner")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isBadRequest());
+  }
+
+  // ERROR 400 BAD REQUEST: La nueva contraseña es exactamente igual al DNI del OWNER
+  @Test
+  void recuperarPasswordOwner_ConNuevaPasswordIgualAlDni_DebeDevolver400BadRequest() throws Exception {
+    // GIVEN
+    UsuarioOwnerRecoveryRequestDTO request = new UsuarioOwnerRecoveryRequestDTO("12345678", "ClaveEmergenciaReal", "12345678");
+    doThrow(new PasswordIncorrectaException("No puedes usar esta contraseña"))
+        .when(usuarioService).recuperarPasswordOwner(any(), any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/recuperar-owner")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("No puedes usar esta contraseña"));
+  }
+
+  // ERROR 400 BAD REQUEST: La nueva contraseña es igual a la estructura por defecto (cfp + DNI)
+  @Test
+  void recuperarPasswordOwner_ConNuevaPasswordIgualAlPatronDefault_DebeDevolver400BadRequest() throws Exception {
+    // GIVEN
+    UsuarioOwnerRecoveryRequestDTO request = new UsuarioOwnerRecoveryRequestDTO("12345678", "ClaveEmergenciaReal", "cfp12345678");
+    doThrow(new PasswordIncorrectaException("No puedes usar esta contraseña"))
+        .when(usuarioService).recuperarPasswordOwner(any(), any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/recuperar-owner")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("No puedes usar esta contraseña"));
+  }
+
+  // ERROR 403 FORBIDDEN: El DNI ingresado pertenece a un usuario existente, pero no es un OWNER (Intrusión)
+  @Test
+  void recuperarPasswordOwner_ConDniDeUsuarioQueNoEsOwner_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    UsuarioOwnerRecoveryRequestDTO request = new UsuarioOwnerRecoveryRequestDTO("87654321", "ClaveEmergenciaReal", "NuevaClave123");
+    doThrow(new AccionInvalidaException("No tienes permiso de realizar esta acción"))
+        .when(usuarioService).recuperarPasswordOwner(any(), any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/recuperar-owner")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("No tienes permiso de realizar esta acción"))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: El DNI es de un OWNER válido, pero la clave de recuperación maestra es incorrecta
+  @Test
+  void recuperarPasswordOwner_ConClaveRecuperacionIncorrecta_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    UsuarioOwnerRecoveryRequestDTO request = new UsuarioOwnerRecoveryRequestDTO("12345678", "ClaveEmergenciaErronea", "NuevaClave123");
+    doThrow(new AccionInvalidaException("Contraseña de recuperación incorrecta"))
+        .when(usuarioService).recuperarPasswordOwner(any(), any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/recuperar-owner")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("Contraseña de recuperación incorrecta"))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 404 NOT FOUND: Se ingresa un DNI que no existe en el sistema
+  @Test
+  void recuperarPasswordOwner_ConDniInexistente_DebeDevolver404NotFound() throws Exception {
+    // GIVEN
+    UsuarioOwnerRecoveryRequestDTO request = new UsuarioOwnerRecoveryRequestDTO("99999999", "ClaveEmergenciaReal", "NuevaClave123");
+    doThrow(new DniNotFoundException("99999999"))
+        .when(usuarioService).recuperarPasswordOwner(any(), any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/recuperar-owner")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isNotFound());
+  }
 
   // =========================================================================
   // ENDPOINT: POST /api/usuarios/{id}/transferir-owner

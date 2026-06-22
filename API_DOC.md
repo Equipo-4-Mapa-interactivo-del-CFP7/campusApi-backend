@@ -708,3 +708,57 @@ si no existe un usuario registrado con el `id` solicitado.
 
 </td></tr></table>
 </details>
+
+## 🟢 Recuperar contraseña del OWNER [acceso público]
+
+`POST /api/usuarios/recuperar-owner`
+
+Permite que un `OWNER` pueda recuperar su contraseña utilizando una clave secreta que se encuentra
+oculta en las variables de entorno, por lo que debe tenerla anotada en forma física.
+
+- La nueva contraseña no puede ser su propio `dni`.
+- La nueva contraseña no puede ser la default `cfp + dni` (ejemplo: `cfp12345678`).
+
+<details>
+<summary><b>📦 Cuerpo de la petición</b></summary>
+<table><tr><td>
+
+`dni` String, requerido, entre 7 y 20 caracteres alfanuméricos.
+
+`recoveryPassword` String, requerido, entre 8 y 60 caracteres.
+
+`nuevaPassword` String, requerido, entre 8 y 60 caracteres.
+
+```JSON
+{
+  "dni": "12345678",
+  "recoveryPassword": "contraseña secreta de recuperacion",
+  "nuevaPassword": "nueva_password"
+}
+```
+
+</td></tr></table>
+</details> 
+
+<details>
+<summary><b>🔄 Respuesta del servidor</b></summary>
+<table><tr><td>
+
+🟢 `204 NO CONTENT` (sin body).
+
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+- Si el cuerpo de la petición no cumple las restricciones.
+- Si la nueva contraseña es el `dni` o `cfp + dni`.
+
+🔴 `403 FORBIDDEN` +
+[JSON error](#formato-general-de-errores)
+- Si la `recoveryPassword` es incorrecta.
+- Si el `dni` no pertenece a un `OWNER`.
+
+🔴 `404 NOT FOUND` +
+[JSON error](#formato-general-de-errores)
+si no existe un usuario registrado con el `dni` solicitado.
+
+</td></tr></table>
+</details> 

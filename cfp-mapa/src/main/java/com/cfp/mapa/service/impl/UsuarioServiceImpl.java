@@ -344,6 +344,12 @@ public class UsuarioServiceImpl implements UsuarioService {
       throw new AccionInvalidaException("Contraseña de recuperación incorrecta");
     }
 
+    if (nuevaPassword.equalsIgnoreCase(usuario.getDni()) ||
+        nuevaPassword.equalsIgnoreCase("cfp" + usuario.getDni())) {
+
+      throw new PasswordIncorrectaException("No puedes usar esta contraseña");
+    }
+
     // Si el dni pertenece a un OWNER y la recovery password es correcta
     String passwordEncoded = passwordEncoder.encode(nuevaPassword);
     usuario.setPassword(passwordEncoded);
