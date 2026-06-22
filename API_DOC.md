@@ -555,15 +555,22 @@ si no existe un usuario con el `id` solicitado.
 </td></tr></table>
 </details>
 
-## 🟢 Obtener mi propio perfil
+## 🟢 Obtener mi propio perfil [usuario logueado]
 
 `GET /api/usuarios/me`
 
 Permite que únicamente un usuario logueado pueda ver su propio perfil.
 
-🔑 Encabezados (Headers)
+- Los usuarios con el rol `CHANGE_PASSWORD` tendrán error 403 al intentar usar el endpoint.
 
-* `Authorization`: `Bearer <token_de_usuario_logueado>`
+<details>
+<summary><b>🔑 Encabezados válidos (Headers)</b></summary>
+
+* `Authorization`: `Bearer <token_de_usuario_owner>`
+* `Authorization`: `Bearer <token_de_usuario_admin>`
+* `Authorization`: `Bearer <token_de_usuario_personal>`
+
+</details>
 
 <details>
 <summary><b>🔄 Respuesta del servidor</b></summary>
@@ -575,12 +582,14 @@ del usuario logueado.
 
 🔴 `401 UNAUTHORIZED` +
 [JSON error](#formato-general-de-errores)
-si el token es inválido.
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
 
-🔴 `404 NOT FOUND` +
+🔴 `403 FORBIDDEN` +
 [JSON error](#formato-general-de-errores)
-(Raro que ocurra) Ocurre si el usuario fue eliminado de la base de datos mientras
-su token JWT aún seguía activo.
+- Si el usuario tiene rol `CHANGE_PASSWORD`.
+- Si la sesión fue revocada en base de datos. Retorna el JSON de error con
+`"errorCode": "SESSION_INVALIDATED"`.
 
 </td></tr></table>
 </details>

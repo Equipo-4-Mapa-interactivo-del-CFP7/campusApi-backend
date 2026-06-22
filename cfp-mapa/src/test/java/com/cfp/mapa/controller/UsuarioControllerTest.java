@@ -64,8 +64,8 @@ public class UsuarioControllerTest {
   private AuthenticationManager authenticationManager;
 
   private UsuarioResponseDTO usuarioOwnerResponse;
-  private UsuarioResponseDTO usuarioAdminReponse;
-  private UsuarioResponseDTO usuarioPersonalReponse;
+  private UsuarioResponseDTO usuarioAdminResponse;
+  private UsuarioResponseDTO usuarioPersonalResponse;
   private UsuarioResponseDTO usuarioChangePasswordResponse;
 
   private UsuarioCreateRequestDTO createDtoAdminValido;
@@ -77,11 +77,11 @@ public class UsuarioControllerTest {
         1L, "11111111", Rol.OWNER, "Perfil Ow", "Owner", true
     );
 
-    usuarioAdminReponse = new UsuarioResponseDTO(
+    usuarioAdminResponse = new UsuarioResponseDTO(
         2L, "22222222", Rol.ADMIN, "Perfil Ad", "Admin", true
     );
 
-    usuarioPersonalReponse = new UsuarioResponseDTO(
+    usuarioPersonalResponse = new UsuarioResponseDTO(
         3L, "33333333", Rol.PERSONAL, "Perfil Pe", "Personal", true
     );
 
@@ -220,7 +220,7 @@ public class UsuarioControllerTest {
   void listarUsuarios_ComoOwner_DebeDevolver200OKConPagina() throws Exception {
     // GIVEN
     Page<UsuarioResponseDTO> paginaSimulada = new PageImpl<>(
-        List.of(usuarioOwnerResponse, usuarioAdminReponse));
+        List.of(usuarioOwnerResponse, usuarioAdminResponse));
     when(usuarioService.listarUsuariosConFiltro(any(), any(), any(), any(), any(), any(Pageable.class)))
         .thenReturn(paginaSimulada);
 
@@ -239,7 +239,8 @@ public class UsuarioControllerTest {
   @WithMockUser(roles = "ADMIN")
   void listarUsuarios_ComoAdmin_DebeDevolver200OKConPagina() throws Exception {
     // GIVEN
-    Page<UsuarioResponseDTO> paginaSimulada = new PageImpl<>(List.of(usuarioAdminReponse, usuarioPersonalReponse));
+    Page<UsuarioResponseDTO> paginaSimulada = new PageImpl<>(List.of(usuarioAdminResponse,
+        usuarioPersonalResponse));
     when(usuarioService.listarUsuariosConFiltro(any(), any(), any(), any(), any(), any(Pageable.class)))
         .thenReturn(paginaSimulada);
 
@@ -255,7 +256,7 @@ public class UsuarioControllerTest {
   @WithMockUser(roles = "ADMIN")
   void listarUsuarios_ConFiltroNombre_DebeDevolver200OKConPaginaFiltrada() throws Exception {
     // GIVEN
-    Page<UsuarioResponseDTO> paginaFiltrada = new PageImpl<>(List.of(usuarioAdminReponse));
+    Page<UsuarioResponseDTO> paginaFiltrada = new PageImpl<>(List.of(usuarioAdminResponse));
     when(usuarioService.listarUsuariosConFiltro(eq(null), eq("Perfil Ad"), eq(null), eq(null), eq(null), any(Pageable.class)))
         .thenReturn(paginaFiltrada);
 
@@ -487,7 +488,7 @@ public class UsuarioControllerTest {
   @WithMockUser(roles = "OWNER")
   void cambiarEstadoActivo_ComoOwnerAAdmin_DebeDevolver200OK() throws Exception {
     // GIVEN: El servicio realiza el toggle del estado activo
-    when(usuarioService.cambiarEstadoActivo(2L)).thenReturn(usuarioAdminReponse);
+    when(usuarioService.cambiarEstadoActivo(2L)).thenReturn(usuarioAdminResponse);
 
     // WHEN & THEN
     mockMvc.perform(put("/api/usuarios/{id}/cambiar-activo", 2L))
@@ -500,7 +501,7 @@ public class UsuarioControllerTest {
   @WithMockUser(roles = "ADMIN")
   void cambiarEstadoActivo_ComoAdminAPersonal_DebeDevolver200OK() throws Exception {
     // GIVEN
-    when(usuarioService.cambiarEstadoActivo(3L)).thenReturn(usuarioPersonalReponse);
+    when(usuarioService.cambiarEstadoActivo(3L)).thenReturn(usuarioPersonalResponse);
 
     // WHEN & THEN
     mockMvc.perform(put("/api/usuarios/{id}/cambiar-activo", 3L))
@@ -760,7 +761,7 @@ public class UsuarioControllerTest {
   void cambiarRol_ComoOwnerAAdmin_DebeDevolver200OK() throws Exception {
     // GIVEN
     UsuarioNewRolRequestDTO request = new UsuarioNewRolRequestDTO("ADMIN");
-    when(usuarioService.cambiarRol(2L, "ADMIN")).thenReturn(usuarioAdminReponse);
+    when(usuarioService.cambiarRol(2L, "ADMIN")).thenReturn(usuarioAdminResponse);
 
     // WHEN & THEN
     mockMvc.perform(put("/api/usuarios/{id}/cambiar-rol", 2L)
@@ -975,6 +976,77 @@ public class UsuarioControllerTest {
   // =========================================================================
   // ENDPOINT: GET /api/usuarios/me
   // =========================================================================
+
+  // ÉXITO 200 OK: Un usuario activo (ej. PERSONAL) obtiene su propio perfil correctamente
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void obtenerMiPerfil_ConUsuarioValido_DebeDevolver200OkYPerfil() throws Exception {
+    // GIVEN
+    when(usuarioService.obtenerMiPerfil(any())).thenReturn(usuarioPersonalResponse);
+
+    // WHEN & THEN
+    mockMvc.perform(get("/api/usuarios/me")
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(usuarioPersonalResponse.id()))
+        .andExpect(jsonPath("$.nombre").value(usuarioPersonalResponse.nombre()));
+  }
+
+  // ERROR 401 UNAUTHORIZED: Se intenta acceder al endpoint sin token de autenticación
+  @Test
+  void obtenerMiPerfil_SinAutenticacion_DebeDevolver401Unauthorized() throws Exception {
+    // WHEN & THEN
+    mockMvc.perform(get("/api/usuarios/me")
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isUnauthorized());
+  }
+
+  // ERROR 401 UNAUTHORIZED: El token es estructuralmente válido pero el usuario fue desactivado en los filtros de entrada
+  @Test
+  void obtenerMiPerfil_ConUsuarioDesactivadoEnFiltro_DebeDevolver401Unauthorized() throws Exception {
+    // WHEN & THEN
+    mockMvc.perform(get("/api/usuarios/me")
+            .header("Authorization", "Bearer token_desactivado_ejemplo")
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isUnauthorized());
+  }
+
+  // ERROR 403 FORBIDDEN: El usuario tiene el rol CHANGE_PASSWORD y se le rechaza con el mensaje custom
+  @Test
+  @WithMockUser(roles = "CHANGE_PASSWORD")
+  void obtenerMiPerfil_ConRolChangePassword_DebeDevolver403ForbiddenConMensajeCustom() throws Exception {
+    // GIVEN
+    doThrow(new AccionInvalidaException("Debes cambiar tu contraseña para acceder a tu perfil"))
+        .when(usuarioService).obtenerMiPerfil(any());
+
+    // WHEN & THEN
+    mockMvc.perform(get("/api/usuarios/me")
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("Debes cambiar tu contraseña para acceder a tu perfil"))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: La sesión del usuario fue revocada o modificada en la base de datos en tiempo real (validarUsuarioActivoYRoles)
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void obtenerMiPerfil_ConSesionRevocadaEnBD_DebeDevolver403ForbiddenYSessionInvalidated() throws Exception {
+    // GIVEN
+    doThrow(new AccionNoPermitidaException(
+        "Su sesión ya no es válida. Sus permisos han cambiado o su cuenta fue desactivada."
+    )).when(usuarioService).obtenerMiPerfil(any());
+
+    // WHEN & THEN
+    mockMvc.perform(get("/api/usuarios/me")
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value("SESSION_INVALIDATED"));
+  }
 
   // =========================================================================
   // ENDPOINT: GET /api/usuarios/{id}

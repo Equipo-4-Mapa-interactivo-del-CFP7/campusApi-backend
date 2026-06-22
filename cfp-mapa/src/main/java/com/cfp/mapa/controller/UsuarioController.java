@@ -119,6 +119,7 @@ public class UsuarioController {
   }
 
   @GetMapping("/me")
+  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<UsuarioResponseDTO> obtenerMiPerfil (
       @AuthenticationPrincipal UsuarioAutenticadoDTO usuario
   ) {
