@@ -648,3 +648,63 @@ si no existe un usuario registrado con el `id` solicitado.
 
 </td></tr></table>
 </details>
+
+## 🟢 Eliminar un usuario (ofuscar) [solo para OWNER]
+
+`POST /api/usuarios/{id}/eliminar`
+
+Permite que únicamente usuarios con el rol `OWNER` puedan "eliminar" un usuario.
+
+- El usuario eliminado no es borrado de la base de datos para conservar su historial.
+- Es imposible recuperar los datos del usuario eliminado para cumplir con la **Ley 25.326 de
+Protección de Datos Personales** de Argentina. 
+- Al usuario eliminado se le ofuscan los datos da la siguiente manera:
+  - `dni` = `00000000`.
+  - `nombre` = `USUARIO`.
+  - `apellido` = `ELIMINADO`.
+  - `activo` = `false`.
+  - `eliminado` = `true`.
+
+<details>
+<summary><b>🔑 Encabezado (Header)</b></summary>
+
+* `Authorization`: `Bearer <token_de_owner>`
+
+</details>
+
+<details>
+<summary><b>🔎 Path variable</b></summary>
+
+* `id` Long, requerido. <br>
+  ID del usuario que se quiere eliminar.
+
+</details>
+
+<details>
+<summary><b>🔄 Respuesta del servidor</b></summary>
+<table><tr><td>
+
+🟢 `204 NO CONTENT` (sin body).
+
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+si el `id` enviado en el path variable no tiene un formato numérico válido.
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
+
+🔴 `403 FORBIDDEN` +
+[JSON error](#formato-general-de-errores)
+- Si el usuario logueado no posee el rol `OWNER`.
+- Si se intenta eliminar un usuario con el rol `OWNER`.
+- Si la sesión fue revocada en base de datos. Retorna el JSON de error con
+`"errorCode": "SESSION_INVALIDATED"`.
+
+🔴 `404 NOT FOUND` +
+[JSON error](#formato-general-de-errores)
+si no existe un usuario registrado con el `id` solicitado.
+
+</td></tr></table>
+</details>

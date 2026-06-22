@@ -1126,7 +1126,8 @@ public class UsuarioControllerTest {
             .contentType(MediaType.APPLICATION_JSON))
         .andDo(print())
         .andExpect(status().isForbidden())
-        .andExpect(jsonPath("$.message").value("No tienes permitido ver el perfil de este usuario"));
+        .andExpect(jsonPath("$.message").value("No tienes permitido ver el perfil de este usuario"))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
   }
 
   // ERROR 403 FORBIDDEN: La sesión de quien consulta fue revocada/modificada en BD (validarUsuarioActivoYRoles)
@@ -1163,6 +1164,101 @@ public class UsuarioControllerTest {
   // =========================================================================
   // ENDPOINT: POST /api/usuarios/{id}/eliminar
   // =========================================================================
+
+  // ÉXITO 204 NO CONTENT: OWNER elimina exitosamente a un usuario (ADMIN o PERSONAL)
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void eliminarUsuario_ComoOwnerAUnUsuarioValido_DebeDevolver204NoContent() throws Exception {
+    // GIVEN
+    doNothing().when(usuarioService).eliminarUsuario(2L);
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/{id}/eliminar", 2L)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isNoContent());
+  }
+
+  // ERROR 400 BAD REQUEST: Se envía un ID alfanumérico inválido en la URL
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void eliminarUsuario_ConIdAlfanumericoInvalido_DebeDevolver400BadRequest() throws Exception {
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/{id}/eliminar", "ID_ERRONEO")
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isBadRequest());
+  }
+
+  // ERROR 401 UNAUTHORIZED: Intento de acceso sin token
+  @Test
+  void eliminarUsuario_SinAutenticacion_DebeDevolver401Unauthorized() throws Exception {
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/2/eliminar")
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isUnauthorized());
+  }
+
+  // ERROR 403 FORBIDDEN: Un usuario con rol ADMIN intenta eliminar (Permiso periférico denegado)
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void eliminarUsuario_ComoAdmin_DebeDevolver403Forbidden() throws Exception {
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/2/eliminar")
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: OWNER intenta eliminarse a sí mismo (Restricción de Jerarquía/Negocio)
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void eliminarUsuario_ASiMismo_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    doThrow(new AccionInvalidaException("Un OWNER no puede eliminarse a sí mismo del sistema."))
+        .when(usuarioService).eliminarUsuario(any());
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/{id}/eliminar", 1L)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("Un OWNER no puede eliminarse a sí mismo del sistema."))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: La sesión del OWNER fue revocada o modificada en BD en tiempo real
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void eliminarUsuario_ConSesionRevocadaEnBD_DebeDevolver403ForbiddenYSessionInvalidated() throws Exception {
+    // GIVEN
+    doThrow(new AccionNoPermitidaException(
+        "Su sesión ya no es válida. Sus permisos han cambiado o su cuenta fue desactivada."
+    )).when(usuarioService).eliminarUsuario(any());
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/{id}/eliminar", 2L)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value("SESSION_INVALIDATED"));
+  }
+
+  // ERROR 404 NOT FOUND: Se intenta borrar un usuario con un ID numérico que no existe
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void eliminarUsuario_ConUsuarioInexistente_DebeDevolver404NotFound() throws Exception {
+    // GIVEN
+    doThrow(new UsuarioNotFoundException(99L)).when(usuarioService).eliminarUsuario(any());
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/{id}/eliminar", 99L)
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isNotFound());
+  }
 
   // =========================================================================
   // ENDPOINT: POST /api/usuarios/recuperar-owner
