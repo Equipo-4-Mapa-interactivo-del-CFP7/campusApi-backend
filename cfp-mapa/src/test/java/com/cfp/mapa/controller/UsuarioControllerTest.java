@@ -19,6 +19,7 @@ import com.cfp.mapa.dto.usuario.UsuarioChangePasswordDTO;
 import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioNewRolRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioOwnerRecoveryRequestDTO;
+import com.cfp.mapa.dto.usuario.UsuarioOwnerTransferRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
 import com.cfp.mapa.exception.AccionInvalidaException;
 import com.cfp.mapa.exception.AccionNoPermitidaException;
@@ -1385,4 +1386,172 @@ public class UsuarioControllerTest {
   // =========================================================================
   // ENDPOINT: POST /api/usuarios/{id}/transferir-owner
   // =========================================================================
+
+  // ÉXITO 200 OK: OWNER transfiere su rol con éxito a un usuario válido (pasa a ser ADMIN y el otro OWNER)
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void transferirOwner_ConCredencialesYUsuarioValidos_DebeDevolver200Ok() throws Exception {
+    // GIVEN
+    UsuarioOwnerTransferRequestDTO request = new UsuarioOwnerTransferRequestDTO("ClaveOwnerActual123");
+    doNothing().when(usuarioService).transferirOwner(any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/{id}/transferir-owner", 2L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isOk());
+  }
+
+  // ERROR 400 BAD REQUEST: El cuerpo de la petición rompe las validaciones del DTO (ej. contraseña en blanco)
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void transferirOwner_ConPasswordVacia_DebeDevolver400BadRequest() throws Exception {
+    // GIVEN
+    UsuarioOwnerTransferRequestDTO request = new UsuarioOwnerTransferRequestDTO("");
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/{id}/transferir-owner", 2L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isBadRequest());
+  }
+
+  // ERROR 400 BAD REQUEST: Se envía un ID alfanumérico inválido en el Path Variable
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void transferirOwner_ConIdInvalido_DebeDevolver400BadRequest() throws Exception {
+    // GIVEN
+    UsuarioOwnerTransferRequestDTO request = new UsuarioOwnerTransferRequestDTO("ClaveOwnerActual123");
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/{id}/transferir-owner", "ID_ERRONEO")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isBadRequest());
+  }
+
+  // ERROR 401 UNAUTHORIZED: Intento de acceso sin token de autenticación
+  @Test
+  void transferirOwner_SinAutenticacion_DebeDevolver401Unauthorized() throws Exception {
+    // GIVEN
+    UsuarioOwnerTransferRequestDTO request = new UsuarioOwnerTransferRequestDTO("ClaveOwnerActual123");
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/2/transferir-owner")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isUnauthorized());
+  }
+
+  // ERROR 403 FORBIDDEN: Un usuario con rol ADMIN intenta realizar la transferencia (Falta rol OWNER en periferia)
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void transferirOwner_ComoAdmin_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    UsuarioOwnerTransferRequestDTO request = new UsuarioOwnerTransferRequestDTO("ClaveOwnerActual123");
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/2/transferir-owner")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: OWNER intenta transferirse el rol a sí mismo
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void transferirOwner_ASiMismo_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    UsuarioOwnerTransferRequestDTO request = new UsuarioOwnerTransferRequestDTO("ClaveOwnerActual123");
+    doThrow(new AccionInvalidaException("No puedes transferirte el rol a ti mismo"))
+        .when(usuarioService).transferirOwner(any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/{id}/transferir-owner", 1L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("No puedes transferirte el rol a ti mismo"))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: La contraseña del OWNER es incorrecta (Lanza AccionNoPermitidaException para forzar deslogueo)
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void transferirOwner_ConPasswordIncorrecta_DebeDevolver403ForbiddenConErrorCode() throws Exception {
+    // GIVEN
+    UsuarioOwnerTransferRequestDTO request = new UsuarioOwnerTransferRequestDTO("ClaveErronea123");
+    doThrow(new AccionNoPermitidaException("No tienes permiso de realizar esta acción"))
+        .when(usuarioService).transferirOwner(any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/{id}/transferir-owner", 2L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("No tienes permiso de realizar esta acción"))
+        .andExpect(jsonPath("$.errorCode").value("SESSION_INVALIDATED"));
+  }
+
+  // ERROR 403 FORBIDDEN: El usuario destino existe pero se encuentra en estado temporal CHANGE_PASSWORD
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void transferirOwner_AUnUsuarioConChangePassword_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    UsuarioOwnerTransferRequestDTO request = new UsuarioOwnerTransferRequestDTO("ClaveOwnerActual123");
+    doThrow(new AccionInvalidaException("El usuario debe tener rol válido"))
+        .when(usuarioService).transferirOwner(any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/{id}/transferir-owner", 2L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("El usuario debe tener rol válido"))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: La sesión del OWNER fue revocada o cambiada en BD en tiempo real (validarUsuarioActivoYRoles)
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void transferirOwner_ConSesionRevocadaEnBD_DebeDevolver403ForbiddenYSessionInvalidated() throws Exception {
+    // GIVEN
+    UsuarioOwnerTransferRequestDTO request = new UsuarioOwnerTransferRequestDTO("ClaveOwnerActual123");
+    doThrow(new AccionNoPermitidaException(
+        "Su sesión ya no es válida. Sus permisos han cambiado o su cuenta fue desactivada."
+    )).when(usuarioService).transferirOwner(any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/{id}/transferir-owner", 2L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value("SESSION_INVALIDATED"));
+  }
+
+  // ERROR 404 NOT FOUND: El ID del usuario destino no existe en el sistema
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void transferirOwner_ConUsuarioDestinoInexistente_DebeDevolver404NotFound() throws Exception {
+    // GIVEN
+    UsuarioOwnerTransferRequestDTO request = new UsuarioOwnerTransferRequestDTO("ClaveOwnerActual123");
+    doThrow(new UsuarioNotFoundException(99L)).when(usuarioService).transferirOwner(any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/usuarios/{id}/transferir-owner", 99L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isNotFound());
+  }
 }

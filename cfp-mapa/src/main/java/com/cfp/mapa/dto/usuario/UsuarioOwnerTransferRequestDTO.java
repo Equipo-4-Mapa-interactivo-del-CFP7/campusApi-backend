@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public record UsuarioOwnerTransferRequestDTO (
 
-    @NotBlank
+    @NotBlank(message = "La contraseña es obligatorio")
     @ValidPassword
     String password
 ){

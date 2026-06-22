@@ -762,3 +762,76 @@ si no existe un usuario registrado con el `dni` solicitado.
 
 </td></tr></table>
 </details> 
+
+## 🟢 Transferir OWNER [solo para OWNER]
+
+`POST /api/usuarios/{id}/transferir-owner`
+
+Permite que un `OWNER` pueda transferir su rol a otro usuario registrado en el sistema.
+
+- El usuario objetivo no debe tener rol `CHANGE_PASSWORD`.
+- El `OWNER` que transfiere su rol pasa a ser tener rol `ADMIN`.
+- Para realizar la acción, el `OWNER` debe escribir su propia `password` para verificar que es él.
+
+<details>
+<summary><b>🔑 Encabezado (Header)</b></summary>
+
+* `Authorization`: `Bearer <token_de_owner>`
+
+</details>
+
+<details>
+<summary><b>🔎 Path variable</b></summary>
+
+* `id` Long, requerido. <br>
+ID del usuario que se le quiere asignar el rol `OWNER`.
+
+</details>
+
+<details>
+<summary><b>📦 Cuerpo de la petición</b></summary>
+<table><tr><td>
+
+`password` String, requerido, entre 8 y 60 caracteres.
+
+```JSON
+{
+  "password": "contraseña"
+}
+```
+
+</td></tr></table>
+</details>
+
+<details>
+<summary><b>🔄 Respuesta del servidor</b></summary>
+<table><tr><td>
+
+🟢 `200 OK` (sin body).
+
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+- Si el cuerpo de la petición no cumple las restricciones.
+- Si el `id` enviado en el path variable no tiene un formato numérico válido.
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
+
+🔴 `403 FORBIDDEN` +
+[JSON error](#formato-general-de-errores)
+- Si el usuario logueado no posee el rol `OWNER`.
+- Si el usuario objetivo tiene el rol `CHANGE_PASSWORD`.
+- Si se intenta transferirse el rol a sí mismo.
+- Si la `password` en el cuerpo de la petición es incorrecta. Retorna el JSON de error con
+`"errorCode": "SESSION_INVALIDATED"`.
+- Si la sesión fue revocada en base de datos. Retorna el JSON de error con
+`"errorCode": "SESSION_INVALIDATED"`.
+
+🔴 `404 NOT FOUND` +
+[JSON error](#formato-general-de-errores)
+si no existe un usuario registrado con el `id` solicitado.
+
+</td></tr></table>
+</details>

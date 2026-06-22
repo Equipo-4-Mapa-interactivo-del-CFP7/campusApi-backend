@@ -6,15 +6,15 @@ import jakarta.validation.constraints.NotBlank;
 
 public record UsuarioOwnerRecoveryRequestDTO(
 
-    @NotBlank
+    @NotBlank(message = "El DNI es obligatorio")
     @ValidDni
     String dni,
 
-    @NotBlank
+    @NotBlank(message = "La contraseña de recuperación es obligatoria")
     @ValidPassword
     String recoveryPassword,
 
-    @NotBlank
+    @NotBlank(message = "La nueva contraseña es obligatorio")
     @ValidPassword
     String nuevaPassword
 ) {
