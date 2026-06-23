@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.cfp.mapa.dto.usuario.UsuarioChangeDniRequestDTO;
+import com.cfp.mapa.dto.usuario.UsuarioChangeNombreApellidoRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioChangePasswordDTO;
 import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioNewRolRequestDTO;
@@ -1791,6 +1792,248 @@ public class UsuarioControllerTest {
 
     // WHEN & THEN
     mockMvc.perform(put("/api/usuarios/{id}/cambiar-dni", 99L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isNotFound());
+  }
+
+  // =========================================================================
+  // ENDPOINT: PUT /api/usuarios/{id}/cambiar-nombre-apellido
+  // =========================================================================
+
+  // ÉXITO 200 OK: Un usuario con rol PERSONAL edita con éxito su propio nombre y/o apellido
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void cambiarNombreApellido_AutoEdicionExitosa_DebeDevolver200Ok() throws Exception {
+    // GIVEN
+    UsuarioChangeNombreApellidoRequestDTO request = new UsuarioChangeNombreApellidoRequestDTO("Juan Carlos", "Pérez");
+    when(usuarioService.cambiarNombreApellido(any(), any(), any())).thenReturn(usuarioPersonalResponse);
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-nombre-apellido", 3L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isOk());
+  }
+
+  // ÉXITO 200 OK: Un OWNER modifica exitosamente el nombre y apellido de un usuario con rol ADMIN
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void cambiarNombreApellido_ComoOwnerAUnAdmin_DebeDevolver200Ok() throws Exception {
+    // GIVEN
+    UsuarioChangeNombreApellidoRequestDTO request = new UsuarioChangeNombreApellidoRequestDTO("Andrés", "Gómez");
+    when(usuarioService.cambiarNombreApellido(any(), any(), any())).thenReturn(usuarioAdminResponse);
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-nombre-apellido", 2L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isOk());
+  }
+
+  // ÉXITO 200 OK: Un ADMIN modifica exitosamente el nombre y apellido de un usuario con rol PERSONAL
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void cambiarNombreApellido_ComoAdminAPersonal_DebeDevolver200Ok() throws Exception {
+    // GIVEN
+    UsuarioChangeNombreApellidoRequestDTO request = new UsuarioChangeNombreApellidoRequestDTO("Luis", "Martínez");
+    when(usuarioService.cambiarNombreApellido(any(), any(), any())).thenReturn(usuarioPersonalResponse);
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-nombre-apellido", 3L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isOk());
+  }
+
+  // ERROR 400 BAD REQUEST: El cuerpo de la petición rompe las validaciones estructurales del DTO (campos vacíos o nulos)
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void cambiarNombreApellido_ConCuerpoInvalido_DebeDevolver400BadRequest() throws Exception {
+    // GIVEN
+    UsuarioChangeNombreApellidoRequestDTO request = new UsuarioChangeNombreApellidoRequestDTO("", null);
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-nombre-apellido", 3L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isBadRequest());
+  }
+
+  // ERROR 400 BAD REQUEST: Se envía un ID alfanumérico inválido en el Path Variable
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void cambiarNombreApellido_ConIdAlfanumericoInvalido_DebeDevolver400BadRequest() throws Exception {
+    // GIVEN
+    UsuarioChangeNombreApellidoRequestDTO request = new UsuarioChangeNombreApellidoRequestDTO("Juan", "Pérez");
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-nombre-apellido", "ID_ERRONEO")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isBadRequest());
+  }
+
+  // ERROR 401 UNAUTHORIZED: Intento de acceso al endpoint sin token de autenticación
+  @Test
+  void cambiarNombreApellido_SinAutenticacion_DebeDevolver401Unauthorized() throws Exception {
+    // GIVEN
+    UsuarioChangeNombreApellidoRequestDTO request = new UsuarioChangeNombreApellidoRequestDTO("Juan", "Pérez");
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/3/cambiar-nombre-apellido")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isUnauthorized());
+  }
+
+  // ERROR 403 FORBIDDEN: Se intenta asignar un nombre y apellido idénticos a los actuales en conjunto (Fail-Fast)
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void cambiarNombreApellido_MismoNombreYApellidoActual_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    UsuarioChangeNombreApellidoRequestDTO request = new UsuarioChangeNombreApellidoRequestDTO("Juan", "Pérez");
+    doThrow(new AccionInvalidaException("No puedes asignarle el mismo nombre y apellido que ya posee"))
+        .when(usuarioService).cambiarNombreApellido(any(), any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-nombre-apellido", 3L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("No puedes asignarle el mismo nombre y apellido que ya posee"))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: Un ADMIN intenta modificar a un tercero que tiene estado temporal CHANGE_PASSWORD
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void cambiarNombreApellido_ComoAdminAUnChangePassword_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    UsuarioChangeNombreApellidoRequestDTO request = new UsuarioChangeNombreApellidoRequestDTO("Juan", "Pérez");
+    doThrow(new AccionInvalidaException("No puedes modificar a un usuario con rol pendiente"))
+        .when(usuarioService).cambiarNombreApellido(any(), any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-nombre-apellido", 4L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("No puedes modificar a un usuario con rol pendiente"))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: Un OWNER intenta modificar el perfil de otro usuario con el rol OWNER
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void cambiarNombreApellido_ComoOwnerAOtroOwner_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    UsuarioChangeNombreApellidoRequestDTO request = new UsuarioChangeNombreApellidoRequestDTO("Juan", "Pérez");
+    doThrow(new AccionInvalidaException("No puedes modificar a otro dueño del sistema"))
+        .when(usuarioService).cambiarNombreApellido(any(), any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-nombre-apellido", 9L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("No puedes modificar a otro dueño del sistema"))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: Un ADMIN intenta modificar el perfil de otro ADMIN (Restricción Horizontal)
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void cambiarNombreApellido_ComoAdminAOtroAdmin_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    UsuarioChangeNombreApellidoRequestDTO request = new UsuarioChangeNombreApellidoRequestDTO("Juan", "Pérez");
+    doThrow(new AccionInvalidaException("No tienes permisos para modificar a este usuario"))
+        .when(usuarioService).cambiarNombreApellido(any(), any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-nombre-apellido", 5L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("No tienes permisos para modificar a este usuario"))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: Un usuario con rol PERSONAL intenta modificar el perfil de un tercero
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void cambiarNombreApellido_ComoPersonalAUnTercero_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    UsuarioChangeNombreApellidoRequestDTO request = new UsuarioChangeNombreApellidoRequestDTO("Juan", "Pérez");
+    doThrow(new AccionInvalidaException("No tienes permitido modificar perfiles ajenos"))
+        .when(usuarioService).cambiarNombreApellido(any(), any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-nombre-apellido", 2L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("No tienes permitido modificar perfiles ajenos"))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: Un usuario con rol CHANGE_PASSWORD intenta consumir el endpoint (Filtro Security)
+  @Test
+  @WithMockUser(roles = "CHANGE_PASSWORD")
+  void cambiarNombreApellido_ComoChangePassword_DebeDevolver403ForbiddenPorSecurity() throws Exception {
+    // GIVEN
+    UsuarioChangeNombreApellidoRequestDTO request = new UsuarioChangeNombreApellidoRequestDTO("Juan", "Pérez");
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/3/cambiar-nombre-apellido")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: La sesión del operador fue revocada o cambiada en BD en tiempo real (validarUsuarioActivoYRoles)
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void cambiarNombreApellido_ConSesionRevocadaEnBD_DebeDevolver403ForbiddenYSessionInvalidated() throws Exception {
+    // GIVEN
+    UsuarioChangeNombreApellidoRequestDTO request = new UsuarioChangeNombreApellidoRequestDTO("Juan", "Pérez");
+    doThrow(new AccionNoPermitidaException(
+        "Su sesión ya no es válida. Sus permisos han cambiado o su cuenta fue desactivada."
+    )).when(usuarioService).cambiarNombreApellido(any(), any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-nombre-apellido", 3L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value("SESSION_INVALIDATED"));
+  }
+
+  // ERROR 404 NOT FOUND: Se intenta cambiar los datos de un usuario con un ID numérico que no existe
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void cambiarNombreApellido_ConUsuarioDestinoInexistente_DebeDevolver404NotFound() throws Exception {
+    // GIVEN
+    UsuarioChangeNombreApellidoRequestDTO request = new UsuarioChangeNombreApellidoRequestDTO("Juan", "Pérez");
+    doThrow(new UsuarioNotFoundException(99L)).when(usuarioService).cambiarNombreApellido(any(), any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-nombre-apellido", 99L)
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
         .andDo(print())

@@ -2,6 +2,7 @@ package com.cfp.mapa.controller;
 
 import com.cfp.mapa.dto.usuario.UsuarioAutenticadoDTO;
 import com.cfp.mapa.dto.usuario.UsuarioChangeDniRequestDTO;
+import com.cfp.mapa.dto.usuario.UsuarioChangeNombreApellidoRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioChangePasswordDTO;
 import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioNewRolRequestDTO;
@@ -194,6 +195,22 @@ public class UsuarioController {
   ) {
 
     UsuarioResponseDTO response = usuarioService.cambiarDni(id, request.dni());
+
+    return ResponseEntity
+        .status(HttpStatus.OK)
+        .body(response);
+  }
+
+  @PutMapping("/{id}/cambiar-nombre-apellido")
+  @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PERSONAL')")
+  public ResponseEntity<UsuarioResponseDTO> cambiarNombreApellido (
+      @PathVariable Long id,
+      @Valid @RequestBody UsuarioChangeNombreApellidoRequestDTO request
+  ) {
+
+    UsuarioResponseDTO response = usuarioService.cambiarNombreApellido(
+        id, request.nombre(), request.apellido()
+    );
 
     return ResponseEntity
         .status(HttpStatus.OK)

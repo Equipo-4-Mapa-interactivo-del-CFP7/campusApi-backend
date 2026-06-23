@@ -770,7 +770,7 @@ si no existe un usuario registrado con el `dni` solicitado.
 Permite que un `OWNER` pueda transferir su rol a otro usuario registrado en el sistema.
 
 - El usuario objetivo no debe tener rol `CHANGE_PASSWORD`.
-- El `OWNER` que transfiere su rol pasa a ser tener rol `ADMIN`.
+- El `OWNER` que transfiere su rol pasa a tener rol `ADMIN`.
 - Para realizar la acción, el `OWNER` debe escribir su propia `password` para verificar que es él.
 
 <details>
@@ -840,7 +840,7 @@ si no existe un usuario registrado con el `id` solicitado.
 
 `PUT /api/usuarios/{id}/cambiar-dni`
 
-Permite que usuarios con el rol `OWNER`, `ADMIN` o `PERSONAL` puedan cambiar el `dni` de si mismos u
+Permite que usuarios con el rol `OWNER`, `ADMIN` o `PERSONAL` puedan cambiar el `dni` de sí mismos u
 otros:
 
 - `OWNER` puede cambiar su propio `dni`, el de `ADMIN` y el de `PERSONAL`.
@@ -905,7 +905,94 @@ del usuario al que se le cambió el `dni`.
 - Si el usuario logueado no posee los roles permitidos (`OWNER`/`ADMIN`/`PERSONAL`).
 - Si se intenta asignar el mismo `dni` que el usuario ya tiene.
 - Si se intenta modificar a un usuario con el rol `CHANGE_PASSWORD`.
-- Si alguien que no es `OWNER` intenta modificar a uno.
+- Si alguien que no es `OWNER` intenta modificar a un usuario con rol `OWNER`.
+- Si un `ADMIN` intenta modificar a otro con el mismo rol.
+- Si un `PERSONAL` intenta modificar a alguien que no sea sí mismo.
+- Si la sesión fue revocada en base de datos. Retorna el JSON de error con
+`"errorCode": "SESSION_INVALIDATED"`.
+
+🔴 `404 NOT FOUND` +
+[JSON error](#formato-general-de-errores)
+si no existe un usuario registrado con el `id` solicitado.
+
+</td></tr></table>
+</details>
+
+## 🟢 Cambiar nombre y apellido [Solo OWNER, ADMIN o PERSONAL]
+
+`PUT /api/usuarios/{id}/cambiar-nombre-apellido`
+
+Permite que usuarios con el rol `OWNER`, `ADMIN` o `PERSONAL` puedan cambiar el `nombre` y `apellido`
+de sí mismos u otros:
+
+- `OWNER` puede cambiar su propio `nombre` y `apellido`, el de `ADMIN` y el de `PERSONAL`.
+- `ADMIN` puede cambiar su propio `nombre` y `apellido` pero no el de otro `ADMIN`, también puede
+cambiar el de `PERSONAL`.
+- `PERSONAL` solo puede cambiar su propio `nombre` y `apellido`.
+- Nadie puede cambiar el `nombre` y `apellido` de usuarios con el rol `CHANGE_PASSWORD`.
+- El nuevo `nombre` y `apellido` no pueden ser ambos al mismo tiempo los mismos que ya poseía.
+- El `nombre` y `apellido` será normalizado poniendo la primera letra de cada palabra en mayúscula y
+quitando los espacios adicionales.
+
+<details>
+<summary><b>🔑 Encabezados válidos (Header)</b></summary>
+
+* `Authorization`: `Bearer <token_de_owner>`
+* `Authorization`: `Bearer <token_de_admin>`
+* `Authorization`: `Bearer <token_de_personal>`
+
+</details>
+
+<details>
+<summary><b>🔎 Path variable</b></summary>
+
+* `id` Long, requerido. <br>
+ID del usuario que se le quiere cambiar el `nombre` y `apellido`.
+
+</details>
+
+<details>
+<summary><b>📦 Cuerpo de la petición</b></summary>
+<table><tr><td>
+
+`nombre`: String, requerido, 2 a 50 caracteres (solo letras, espacios, `-` y `'`), debe contener al menos una letra.
+
+`apellido`: String, requerido, 2 a 50 caracteres (solo letras, espacios, `-` y `'`), debe contener al menos una letra.
+
+```JSON
+{
+  "nombre": "Nombre Persona",
+  "apellido": "Apellido De La Misma"
+}
+```
+
+</td></tr></table>
+</details>
+
+<details>
+<summary><b>🔄 Respuesta del servidor</b></summary>
+<table><tr><td>
+
+🟢 `200 OK` +
+[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios)
+del usuario al que se le cambió el `nombre` y `apellido`.
+
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+- Si el cuerpo de la petición no cumple las restricciones.
+- Si el `id` enviado en el path variable no tiene un formato numérico válido.
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
+
+🔴 `403 FORBIDDEN` +
+[JSON error](#formato-general-de-errores)
+- Si el usuario logueado no posee los roles permitidos (`OWNER`/`ADMIN`/`PERSONAL`).
+- Si se intenta asignar el mismo `nombre` y `apellido` (ambos) que el usuario ya tiene.
+- Si se intenta modificar a un usuario con el rol `CHANGE_PASSWORD`.
+- Si alguien que no es `OWNER` intenta modificar a un usuario con rol `OWNER`.
 - Si un `ADMIN` intenta modificar a otro con el mismo rol.
 - Si un `PERSONAL` intenta modificar a alguien que no sea sí mismo.
 - Si la sesión fue revocada en base de datos. Retorna el JSON de error con

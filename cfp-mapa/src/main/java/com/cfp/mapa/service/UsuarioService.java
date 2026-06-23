@@ -37,4 +37,6 @@ public interface UsuarioService {
   void transferirOwner(String password, Long id);
 
   UsuarioResponseDTO cambiarDni(Long id, String nuevoDni);
+
+  UsuarioResponseDTO cambiarNombreApellido(Long id, String nombre, String apellido);
 }

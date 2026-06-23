@@ -18,6 +18,7 @@ import com.cfp.mapa.repository.UsuarioRepository;
 import com.cfp.mapa.security.SecurityUtils;
 import com.cfp.mapa.service.AuditoriaService;
 import com.cfp.mapa.service.UsuarioService;
+import com.cfp.mapa.util.StringUtils;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -420,37 +421,9 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     Usuario usuarioLogueado = usuarioLogueado();
-    Rol rolOperador = usuarioLogueado.getRol();
-    Rol rolAfectado = usuario.getRol();
 
-    boolean esSiMismo = usuarioLogueado.getId().equals(usuario.getId());
-
-    // Solo pueden editarse a si mismos o un rol menor
-    // Filtros en caso que intenten editar a otro usuario
-    if (!esSiMismo) {
-
-      // Nadie puede modificar a CHANGE_PASSWORD
-      if (rolAfectado.equals(Rol.CHANGE_PASSWORD)) {
-        throw new AccionInvalidaException("No puedes modificar a un usuario con rol pendiente");
-      }
-
-      // OWNER es unico y puede editar a cualquiera
-      if (rolOperador.equals(Rol.OWNER)) {
-        if (rolAfectado.equals(Rol.OWNER)) {
-          throw new AccionInvalidaException("No puedes modificar a otro dueño del sistema");
-        }
-      }
-      // ADMIN solo puede editar a personal
-      else if (rolOperador.equals(Rol.ADMIN)) {
-        if (!rolAfectado.equals(Rol.PERSONAL)) {
-          throw new AccionInvalidaException("No tienes permisos para modificar a este usuario");
-        }
-      }
-      // PERSONAL no puede editar a otros usuarios
-      else if (rolOperador.equals(Rol.PERSONAL)) {
-        throw new AccionInvalidaException("No tienes permitido modificar perfiles ajenos");
-      }
-    }
+    // Solo pueden editarse a si mismo o a un rol menor
+    validarPermisosEdicion(usuario, usuarioLogueado);
 
     // Si supera los filtros es porque es su propio perfil o el de un rol permitido
     usuario.setDni(nuevoDni);
@@ -466,7 +439,48 @@ public class UsuarioServiceImpl implements UsuarioService {
     return usuarioMapper.usuarioToResponse(usuarioGuardado);
   }
 
-  // TODO: cambiar nombre y apellido
+  @Transactional
+  @Override
+  public UsuarioResponseDTO cambiarNombreApellido(Long id, String nombre, String apellido) {
+
+    validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN, Rol.PERSONAL);
+
+    Usuario usuario = usuarioRepository.findById(id).orElseThrow(
+        () -> new UsuarioNotFoundException(id)
+    );
+
+    // Se normaliza el nombre y apellido para quitar espacios extra
+    // y dejar la primera letra de cada uno en mayuscula
+    nombre = StringUtils.normalizarNombre(nombre);
+    apellido = StringUtils.normalizarNombre(apellido);
+
+    // El nombre y apellido no pueden ser exactamente iguales a los que ya posee
+    if (usuario.getNombre().equalsIgnoreCase(nombre) &&
+        usuario.getApellido().equalsIgnoreCase(apellido)
+    ) {
+
+      throw new AccionInvalidaException("No puedes asignarle el mismo nombre y apellido que ya posee");
+    }
+
+    Usuario usuarioLogueado = usuarioLogueado();
+
+    // Solo pueden editarse a si mismo o a un rol menor
+    validarPermisosEdicion(usuario, usuarioLogueado);
+
+    // Si supera los filtros es porque el nombre y apellido son validos
+    usuario.setNombre(nombre);
+    usuario.setApellido(apellido);
+
+    Usuario usuarioGuardado = usuarioRepository.save(usuario);
+
+    auditoriaService.registrarAccion(
+        usuarioLogueado,
+        usuarioGuardado,
+        TipoAccionAuditoria.NOMBRE_APELLIDO_EDITADO
+    );
+
+    return usuarioMapper.usuarioToResponse(usuarioGuardado);
+  }
 
   // ======================================
   // FUNCIONES PRIVADAS
@@ -525,5 +539,40 @@ public class UsuarioServiceImpl implements UsuarioService {
     );
 
     return usuarioLogueado;
+  }
+
+  private void validarPermisosEdicion(Usuario usuarioAfectado, Usuario usuarioLogueado) {
+
+    Rol rolOperador = usuarioLogueado.getRol();
+    Rol rolAfectado = usuarioAfectado.getRol();
+
+    boolean esSiMismo = usuarioLogueado.getId().equals(usuarioAfectado.getId());
+
+    // Solo pueden editarse a si mismos o un rol menor
+    // Filtros en caso que intenten editar a otro usuario
+    if (!esSiMismo) {
+
+      // Nadie puede modificar a CHANGE_PASSWORD
+      if (rolAfectado.equals(Rol.CHANGE_PASSWORD)) {
+        throw new AccionInvalidaException("No puedes modificar a un usuario con rol pendiente");
+      }
+
+      // OWNER es unico y puede editar a cualquiera
+      if (rolOperador.equals(Rol.OWNER)) {
+        if (rolAfectado.equals(Rol.OWNER)) {
+          throw new AccionInvalidaException("No puedes modificar a otro dueño del sistema");
+        }
+      }
+      // ADMIN solo puede editar a personal
+      else if (rolOperador.equals(Rol.ADMIN)) {
+        if (!rolAfectado.equals(Rol.PERSONAL)) {
+          throw new AccionInvalidaException("No tienes permisos para modificar a este usuario");
+        }
+      }
+      // PERSONAL no puede editar a otros usuarios
+      else if (rolOperador.equals(Rol.PERSONAL)) {
+        throw new AccionInvalidaException("No tienes permitido modificar perfiles ajenos");
+      }
+    }
   }
 }
