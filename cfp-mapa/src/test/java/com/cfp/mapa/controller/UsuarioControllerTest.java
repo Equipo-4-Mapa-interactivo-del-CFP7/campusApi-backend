@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.cfp.mapa.dto.usuario.UsuarioChangeDniRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioChangePasswordDTO;
 import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioNewRolRequestDTO;
@@ -1549,6 +1550,247 @@ public class UsuarioControllerTest {
 
     // WHEN & THEN
     mockMvc.perform(post("/api/usuarios/{id}/transferir-owner", 99L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isNotFound());
+  }
+
+  // =========================================================================
+  // ENDPOINT: PUT /api/usuarios/{id}/cambiar-dni
+  // =========================================================================
+
+  // ÉXITO 200 OK: Un usuario con rol PERSONAL realiza con éxito la auto-edición de su propio DNI
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void cambiarDni_AutoEdicionExitosa_DebeDevolver200Ok() throws Exception {
+    // GIVEN
+    UsuarioChangeDniRequestDTO request = new UsuarioChangeDniRequestDTO("99887766");
+    when(usuarioService.cambiarDni(any(), any())).thenReturn(usuarioPersonalResponse);
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-dni", 3L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isOk());
+  }
+
+  // ÉXITO 200 OK: Un OWNER modifica exitosamente el DNI de un usuario con rol ADMIN
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void cambiarDni_ComoOwnerAUnAdmin_DebeDevolver200Ok() throws Exception {
+    // GIVEN
+    UsuarioChangeDniRequestDTO request = new UsuarioChangeDniRequestDTO("99887766");
+    when(usuarioService.cambiarDni(any(), any())).thenReturn(usuarioAdminResponse);
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-dni", 2L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isOk());
+  }
+
+  // ÉXITO 200 OK: Un ADMIN modifica exitosamente el DNI de un usuario con rol PERSONAL
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void cambiarDni_ComoAdminAPersonal_DebeDevolver200Ok() throws Exception {
+    // GIVEN
+    UsuarioChangeDniRequestDTO request = new UsuarioChangeDniRequestDTO("99887766");
+    when(usuarioService.cambiarDni(any(), any())).thenReturn(usuarioPersonalResponse);
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-dni", 3L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isOk());
+  }
+
+  // ERROR 400 BAD REQUEST: El cuerpo de la petición rompe las validaciones estructurales del DTO
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void cambiarDni_ConCuerpoInvalido_DebeDevolver400BadRequest() throws Exception {
+    // GIVEN
+    UsuarioChangeDniRequestDTO request = new UsuarioChangeDniRequestDTO("");
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-dni", 3L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isBadRequest());
+  }
+
+  // ERROR 400 BAD REQUEST: Se envía un ID alfanumérico inválido en el Path Variable
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void cambiarDni_ConIdAlfanumericoInvalido_DebeDevolver400BadRequest() throws Exception {
+    // GIVEN
+    UsuarioChangeDniRequestDTO request = new UsuarioChangeDniRequestDTO("99887766");
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-dni", "ID_INVALIDO")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isBadRequest());
+  }
+
+  // ERROR 401 UNAUTHORIZED: Intento de acceso al endpoint sin token de autenticación
+  @Test
+  void cambiarDni_SinAutenticacion_DebeDevolver401Unauthorized() throws Exception {
+    // GIVEN
+    UsuarioChangeDniRequestDTO request = new UsuarioChangeDniRequestDTO("99887766");
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/3/cambiar-dni")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isUnauthorized());
+  }
+
+  // ERROR 403 FORBIDDEN: Se intenta asignar un DNI que es idéntico al que el usuario ya posee (Fail-Fast)
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void cambiarDni_MismoDniActual_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    UsuarioChangeDniRequestDTO request = new UsuarioChangeDniRequestDTO("12345678");
+    doThrow(new AccionInvalidaException("No puedes asignarle el mismo DNI que ya posee"))
+        .when(usuarioService).cambiarDni(any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-dni", 3L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("No puedes asignarle el mismo DNI que ya posee"))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+
+  }
+
+  // ERROR 403 FORBIDDEN: Un ADMIN intenta modificar a un tercero que tiene estado temporal CHANGE_PASSWORD
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void cambiarDni_ComoAdminAUnChangePassword_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    UsuarioChangeDniRequestDTO request = new UsuarioChangeDniRequestDTO("99887766");
+    doThrow(new AccionInvalidaException("No puedes modificar a un usuario con rol pendiente"))
+        .when(usuarioService).cambiarDni(any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-dni", 4L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("No puedes modificar a un usuario con rol pendiente"));
+  }
+
+  // ERROR 403 FORBIDDEN: Un OWNER intenta modificar el perfil de otro usuario con el rol OWNER
+  @Test
+  @WithMockUser(roles = "OWNER")
+  void cambiarDni_ComoOwnerAOtroOwner_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    UsuarioChangeDniRequestDTO request = new UsuarioChangeDniRequestDTO("99887766");
+    doThrow(new AccionInvalidaException("No puedes modificar a otro dueño del sistema"))
+        .when(usuarioService).cambiarDni(any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-dni", 9L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("No puedes modificar a otro dueño del sistema"))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: Un ADMIN intenta modificar el perfil de otro ADMIN (Restricción Horizontal)
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void cambiarDni_ComoAdminAOtroAdmin_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    UsuarioChangeDniRequestDTO request = new UsuarioChangeDniRequestDTO("99887766");
+    doThrow(new AccionInvalidaException("No tienes permisos para modificar a este usuario"))
+        .when(usuarioService).cambiarDni(any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-dni", 5L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("No tienes permisos para modificar a este usuario"))
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: Un usuario con rol PERSONAL intenta modificar el perfil de un tercero (Restricción Vertical/Horizontal)
+  @Test
+  @WithMockUser(roles = "PERSONAL")
+  void cambiarDni_ComoPersonalAUnTercero_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    UsuarioChangeDniRequestDTO request = new UsuarioChangeDniRequestDTO("99887766");
+    doThrow(new AccionInvalidaException("No tienes permitido modificar perfiles ajenos"))
+        .when(usuarioService).cambiarDni(any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-dni", 2L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("No tienes permitido modificar perfiles ajenos"));
+  }
+
+  // ERROR 403 FORBIDDEN: Un usuario con rol CHANGE_PASSWORD intenta consumir el endpoint (Filtro Security)
+  @Test
+  @WithMockUser(roles = "CHANGE_PASSWORD")
+  void cambiarDni_ComoChangePassword_DebeDevolver403ForbiddenPorSecurity() throws Exception {
+    // GIVEN
+    UsuarioChangeDniRequestDTO request = new UsuarioChangeDniRequestDTO("99887766");
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/3/cambiar-dni")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
+  }
+
+  // ERROR 403 FORBIDDEN: La sesión del operador fue revocada o cambiada en BD en tiempo real (validarUsuarioActivoYRoles)
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void cambiarDni_ConSesionRevocadaEnBD_DebeDevolver403ForbiddenYSessionInvalidated() throws Exception {
+    // GIVEN
+    UsuarioChangeDniRequestDTO request = new UsuarioChangeDniRequestDTO("99887766");
+    doThrow(new AccionNoPermitidaException(
+        "Su sesión ya no es válida. Sus permisos han cambiado o su cuenta fue desactivada."
+    )).when(usuarioService).cambiarDni(any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-dni", 3L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value("SESSION_INVALIDATED"));
+  }
+
+  // ERROR 404 NOT FOUND: Se intenta cambiar el DNI de un usuario con un ID numérico que no existe
+  @Test
+  @WithMockUser(roles = "ADMIN")
+  void cambiarDni_ConUsuarioDestinoInexistente_DebeDevolver404NotFound() throws Exception {
+    // GIVEN
+    UsuarioChangeDniRequestDTO request = new UsuarioChangeDniRequestDTO("99887766");
+    doThrow(new UsuarioNotFoundException(99L)).when(usuarioService).cambiarDni(any(), any());
+
+    // WHEN & THEN
+    mockMvc.perform(put("/api/usuarios/{id}/cambiar-dni", 99L)
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
         .andDo(print())

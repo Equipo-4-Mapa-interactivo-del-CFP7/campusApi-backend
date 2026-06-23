@@ -35,4 +35,6 @@ public interface UsuarioService {
   void recuperarPasswordOwner(String dni, String recoveryPassword, String nuevaPassword);
 
   void transferirOwner(String password, Long id);
+
+  UsuarioResponseDTO cambiarDni(Long id, String nuevoDni);
 }

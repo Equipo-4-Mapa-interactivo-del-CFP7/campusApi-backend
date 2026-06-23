@@ -404,11 +404,69 @@ public class UsuarioServiceImpl implements UsuarioService {
     usuarioRepository.save(nuevoOwner);
   }
 
-  // TODO: cambiar dni
+  @Transactional
+  @Override
+  public UsuarioResponseDTO cambiarDni(Long id, String nuevoDni) {
 
-  // TODO: cambiar nombre
+    validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN, Rol.PERSONAL);
 
-  // TODO: cambiar apellido
+    Usuario usuario = usuarioRepository.findById(id).orElseThrow(
+        () -> new UsuarioNotFoundException(id)
+    );
+
+    // El dni nuevo no puede ser el mismo que ya tiene el usuario
+    if (usuario.getDni().equalsIgnoreCase(nuevoDni)) {
+      throw new AccionInvalidaException("No puedes asignarle el mismo DNI que ya posee");
+    }
+
+    Usuario usuarioLogueado = usuarioLogueado();
+    Rol rolOperador = usuarioLogueado.getRol();
+    Rol rolAfectado = usuario.getRol();
+
+    boolean esSiMismo = usuarioLogueado.getId().equals(usuario.getId());
+
+    // Solo pueden editarse a si mismos o un rol menor
+    // Filtros en caso que intenten editar a otro usuario
+    if (!esSiMismo) {
+
+      // Nadie puede modificar a CHANGE_PASSWORD
+      if (rolAfectado.equals(Rol.CHANGE_PASSWORD)) {
+        throw new AccionInvalidaException("No puedes modificar a un usuario con rol pendiente");
+      }
+
+      // OWNER es unico y puede editar a cualquiera
+      if (rolOperador.equals(Rol.OWNER)) {
+        if (rolAfectado.equals(Rol.OWNER)) {
+          throw new AccionInvalidaException("No puedes modificar a otro dueño del sistema");
+        }
+      }
+      // ADMIN solo puede editar a personal
+      else if (rolOperador.equals(Rol.ADMIN)) {
+        if (!rolAfectado.equals(Rol.PERSONAL)) {
+          throw new AccionInvalidaException("No tienes permisos para modificar a este usuario");
+        }
+      }
+      // PERSONAL no puede editar a otros usuarios
+      else if (rolOperador.equals(Rol.PERSONAL)) {
+        throw new AccionInvalidaException("No tienes permitido modificar perfiles ajenos");
+      }
+    }
+
+    // Si supera los filtros es porque es su propio perfil o el de un rol permitido
+    usuario.setDni(nuevoDni);
+
+    Usuario usuarioGuardado = usuarioRepository.save(usuario);
+
+    auditoriaService.registrarAccion(
+        usuarioLogueado,
+        usuarioGuardado,
+        TipoAccionAuditoria.DNI_EDITADO
+    );
+
+    return usuarioMapper.usuarioToResponse(usuarioGuardado);
+  }
+
+  // TODO: cambiar nombre y apellido
 
   // ======================================
   // FUNCIONES PRIVADAS

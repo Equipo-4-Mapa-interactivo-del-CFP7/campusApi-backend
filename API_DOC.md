@@ -835,3 +835,85 @@ si no existe un usuario registrado con el `id` solicitado.
 
 </td></tr></table>
 </details>
+
+## 🟢 Cambiar DNI [Solo OWNER, ADMIN o PERSONAL]
+
+`PUT /api/usuarios/{id}/cambiar-dni`
+
+Permite que usuarios con el rol `OWNER`, `ADMIN` o `PERSONAL` puedan cambiar el `dni` de si mismos u
+otros:
+
+- `OWNER` puede cambiar su propio `dni`, el de `ADMIN` y el de `PERSONAL`.
+- `ADMIN` puede cambiar su propio `DNI` pero no el de otro `ADMIN`, también puede cambiar el de
+`PERSONAL`.
+- `PERSONAL` solo puede cambiar su propio `dni`.
+- Nadie puede cambiar el `dni` de usuarios con rol `CHANGE_PASSWORD`.
+- El nuevo `dni` no puede ser el mismo que ya tiene el usuario.
+
+<details>
+<summary><b>🔑 Encabezados válidos (Header)</b></summary>
+
+* `Authorization`: `Bearer <token_de_owner>`
+* `Authorization`: `Bearer <token_de_admin>`
+* `Authorization`: `Bearer <token_de_personal>`
+
+</details>
+
+<details>
+<summary><b>🔎 Path variable</b></summary>
+
+* `id` Long, requerido. <br>
+ID del usuario que se le quiere cambiar el `dni`.
+
+</details>
+
+<details>
+<summary><b>📦 Cuerpo de la petición</b></summary>
+<table><tr><td>
+
+`dni` String, requerido, entre 7 y 20 caracteres alfanuméricos.
+
+```JSON
+{
+  "dni": "12345678"
+}
+```
+
+</td></tr></table>
+</details>
+
+<details>
+<summary><b>🔄 Respuesta del servidor</b></summary>
+<table><tr><td>
+
+🟢 `200 OK` +
+[JSON respuesta de usuario](#formato-de-respuesta-de-usuarios)
+del usuario al que se le cambió el `dni`.
+
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+- Si el cuerpo de la petición no cumple las restricciones.
+- Si el `id` enviado en el path variable no tiene un formato numérico válido.
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
+
+🔴 `403 FORBIDDEN` +
+[JSON error](#formato-general-de-errores)
+- Si el usuario logueado no posee los roles permitidos (`OWNER`/`ADMIN`/`PERSONAL`).
+- Si se intenta asignar el mismo `dni` que el usuario ya tiene.
+- Si se intenta modificar a un usuario con el rol `CHANGE_PASSWORD`.
+- Si alguien que no es `OWNER` intenta modificar a uno.
+- Si un `ADMIN` intenta modificar a otro con el mismo rol.
+- Si un `PERSONAL` intenta modificar a alguien que no sea sí mismo.
+- Si la sesión fue revocada en base de datos. Retorna el JSON de error con
+`"errorCode": "SESSION_INVALIDATED"`.
+
+🔴 `404 NOT FOUND` +
+[JSON error](#formato-general-de-errores)
+si no existe un usuario registrado con el `id` solicitado.
+
+</td></tr></table>
+</details>
