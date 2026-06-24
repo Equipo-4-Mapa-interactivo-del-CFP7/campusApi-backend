@@ -122,6 +122,8 @@ El JSON de respuesta de usuario sigue este patrón:
 
 `POST /api/usuarios/registrar`
 
+📋 [Genera Auditoria](#formato-respuesta-de-auditoria) | `accion`: `USUARIO_CREADO`
+
 Permite que usuarios con el rol `OWNER` o `ADMIN` puedan registrar un usuario nuevo en el sistema.
 
 - Para registrarlo se ingresará su `dni`, `nombre`, `apellido` y `rol`.
@@ -242,6 +244,9 @@ Se añaden a la URL (ej. `?nombre=Juan&size=5`).
 Cada usuario tendrá el formato del
 [JSON respuesta de usuario](#formato-de-respuesta-de-usuarios).
 
+<details>
+<summary><b>🧾 JSON de estructura de página de Spring</b></summary>
+
 ```JSON
 {
   "content": [
@@ -290,6 +295,8 @@ Cada usuario tendrá el formato del
 }
 ```
 
+</details>
+
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
 si los tipos de datos enviados en los parámetros son incompatibles (ejemplo: `?activo=hola`).
@@ -311,6 +318,8 @@ si los tipos de datos enviados en los parámetros son incompatibles (ejemplo: `?
 ## 🟢 Restablecer contraseña de otro usuario [solo para OWNER o ADMIN]
 
 `PUT /api/usuarios/{id}/restablecer`
+
+📋 [Genera Auditoria](#formato-respuesta-de-auditoria) | `accion`: `PASSWORD_RESTABLECIDA`
 
 Permite que usuarios con el rol `OWNER` o `ADMIN` puedan restablecer la contraseña de otro usuario
 a `cfp + dni` (ejemplo: usuario con `dni=12345678` obtiene contraseña `cfp12345678`) y le asigna el
@@ -370,6 +379,8 @@ si no existe un usuario registrado con el `id` solicitado.
 
 `PUT /api/usuarios/{id}/cambiar-activo`
 
+📋 [Genera Auditoria](#formato-respuesta-de-auditoria) | `accion`: `ESTADO_ACTIVO_MODIFICADO`
+
 Permite que usuarios con el rol `OWNER` o `ADMIN` puedan cambiar el flag `activo` de otra cuenta.
 
 - Un usuario con rol `OWNER` puede cambiar el estado `activo` de `ADMIN` y `PERSONAL`.
@@ -425,6 +436,8 @@ si no existe un usuario registrado con el `id` solicitado.
 ## 🟢 Cambiar contraseña propia [usuarios logueados]
 
 `PUT /api/usuarios/me/password`
+
+📋 [Genera Auditoria](#formato-respuesta-de-auditoria) | `accion`: `PASSWORD_CAMBIADA`
 
 Permite que únicamente un usuario logueado pueda cambiar su propia contraseña. Si el usuario tenía
 el rol `CHANGE_PASSWORD` entonces recuperará su rol normal.
@@ -485,6 +498,8 @@ si la sesión fue revocada en base de datos. Retorna el JSON de error con
 ## 🟢 Cambiar rol de otro usuario [solo para OWNER]
 
 `PUT /api/usuarios/{id}/cambiar-rol`
+
+📋 [Genera Auditoria](#formato-respuesta-de-auditoria) | `accion`: `ROL_MODIFICADO`
 
 Permite que únicamente usuarios con el rol `OWNER` puedan cambiar el `rol` de otro usuario.
 
@@ -653,6 +668,8 @@ si no existe un usuario registrado con el `id` solicitado.
 
 `POST /api/usuarios/{id}/eliminar`
 
+📋 [Genera Auditoria](#formato-respuesta-de-auditoria) | `accion`: `USUARIO_ELIMINADO`
+
 Permite que únicamente usuarios con el rol `OWNER` puedan "eliminar" un usuario.
 
 - El usuario eliminado no es borrado de la base de datos para conservar su historial.
@@ -664,6 +681,7 @@ Protección de Datos Personales** de Argentina.
   - `apellido` = `ELIMINADO`.
   - `activo` = `false`.
   - `eliminado` = `true`.
+- En los registros de la auditoría, el `dni`, `nombre` y `apellido` del usuario pasan a estar ofuscados.
 
 <details>
 <summary><b>🔑 Encabezado (Header)</b></summary>
@@ -712,6 +730,9 @@ si no existe un usuario registrado con el `id` solicitado.
 ## 🟢 Recuperar contraseña del OWNER [acceso público]
 
 `POST /api/usuarios/recuperar-owner`
+
+
+📋 [Genera Auditoria](#formato-respuesta-de-auditoria) | `accion`: `PASSWORD_OWNER_RECUPERADA`
 
 Permite que un `OWNER` pueda recuperar su contraseña utilizando una clave secreta que se encuentra
 oculta en las variables de entorno, por lo que debe tenerla anotada en forma física.
@@ -766,6 +787,8 @@ si no existe un usuario registrado con el `dni` solicitado.
 ## 🟢 Transferir OWNER [solo para OWNER]
 
 `POST /api/usuarios/{id}/transferir-owner`
+
+📋 [Genera Auditoria](#formato-respuesta-de-auditoria) | `accion`: `OWNER_TRANSFERIDO`
 
 Permite que un `OWNER` pueda transferir su rol a otro usuario registrado en el sistema.
 
@@ -839,6 +862,8 @@ si no existe un usuario registrado con el `id` solicitado.
 ## 🟢 Cambiar DNI [Solo OWNER, ADMIN o PERSONAL]
 
 `PUT /api/usuarios/{id}/cambiar-dni`
+
+📋 [Genera Auditoria](#formato-respuesta-de-auditoria) | `accion`: `DNI_EDITADO`
 
 Permite que usuarios con el rol `OWNER`, `ADMIN` o `PERSONAL` puedan cambiar el `dni` de sí mismos u
 otros:
@@ -922,6 +947,8 @@ si no existe un usuario registrado con el `id` solicitado.
 
 `PUT /api/usuarios/{id}/cambiar-nombre-apellido`
 
+📋 [Genera Auditoria](#formato-respuesta-de-auditoria) | `accion`: `NOMBRE_APELLIDO_EDITADO`
+
 Permite que usuarios con el rol `OWNER`, `ADMIN` o `PERSONAL` puedan cambiar el `nombre` y `apellido`
 de sí mismos u otros:
 
@@ -1004,3 +1031,196 @@ si no existe un usuario registrado con el `id` solicitado.
 
 </td></tr></table>
 </details>
+
+---
+
+# 📓 Auditoría
+
+#### Formato respuesta de auditoria
+
+Los JSON de respuesta de auditoría están estandarizados con este formato:
+
+```JSON
+{
+  "id": Long,
+  "fechaAccion": String ("2026-06-10T15:46:08.0424397"),
+  "operadorId": Long,
+  "operadorNombre": String,
+  "operadorDni": String,
+  "operadorRol": String,
+  "afectadoId": Long,
+  "afectadoNombre": String,
+  "afectadoDni": String,
+  "accion": String
+}
+```
+`operadorNombre` y  `afectadoNombre` están compuestos por `nombre + apellido` de los usuarios.
+
+<details>
+<summary><b>Ejemplo cuando afecta a otro usuario</b></summary>
+
+```JSON
+{
+  "id": 12,
+  "fechaAccion": "2026-06-10T15:46:08.0424397",
+  "operadorId": 1,
+  "operadorNombre": "Usuario Operador",
+  "operadorDni": "12345678",
+  "operadorRol": "OWNER",
+  "afectadoId": 2,
+  "afectadoNombre": "Nombre Y Apellido Usuario",
+  "afectadoDni": "23456789",
+  "accion": "cambió el rol de un usuario"
+}
+```
+</details>
+
+<details>
+<summary><b>Ejemplo cuando se afecta a sí mismo</b></summary>
+
+Cuando un usuario realiza una acción sobre sí mismo, los parámetros `afectadoId`, `afectadoNombre` y
+`afectadoDni` pasan a tener valores default.
+
+```JSON
+{
+  "id": 12,
+  "fechaAccion": "2026-06-10T15:46:08.0424397",
+  "operadorId": 1,
+  "operadorNombre": "Usuario Operador",
+  "operadorDni": "12345678",
+  "operadorRol": "ADMIN",
+  "afectadoId": null,
+  "afectadoNombre": "N/A (Auto-acción)",
+  "afectadoDni": "N/A",
+  "accion": "actualizó el número de DNI"
+}
+```
+</details>
+
+## 🟢 Listar historial de acciones [solo OWNER]
+
+`GET /api/auditorias`
+
+Permite que únicamente usuarios con el rol `OWNER` puedan ver el historial de actividad de los
+usuarios.
+
+- Podrá ordenarlos por `fechaAccion` (`desc` / `asc`).
+- Podrá filtrarlos por `usuarioId` y por `accion`.
+- Valores de `accion` válidos:
+  - `USUARIO_CREADO`.
+  - `PASSWORD_RESTABLECIDA`.
+  - `ESTADO_ACTIVO_MODIFICADO`.
+  - `PASSWORD_CAMBIADA`.
+  - `ROL_MODIFICADO`.
+  - `USUARIO_ELIMINADO`.
+  - `PASSWORD_OWNER_RECUPERADA`.
+  - `OWNER_TRANSFERIDO`.
+  - `DNI_EDITADO`.
+  - `NOMBRE_APELLIDO_EDITADO`.
+  - `REPORTE_ATENDIDO`.
+  - `REPORTE_CREADO`.
+
+<details>
+<summary><b>🔑 Encabezado (Header)</b></summary>
+
+* `Authorization`: `Bearer <token_de_owner>`
+
+</details>
+
+<details>
+<summary><b>❓ Parámetros de Consulta (Query Parameters)</b></summary>
+
+**Todos los filtros son opcionales**.
+Se añaden a la URL (ej. `?usuarioId=2&size=5`).
+* `usuarioId` int - Filtro exacto (`id` del usuario del cual se busca el historial).
+* `accion` String - Filtro exacto (solo acepta los valores listados).
+* `page` int - Número de página, empieza en 0 (Por defecto: 0).
+* `size` int - Cantidad de registros por página (Por defecto: 20).
+* `sort` String - Orden de la lista, si no se añade `asc` (ascendente) siempre será por defecto
+`desc` (descendente).
+
+</details> 
+
+<details>
+<summary><b>🔄 Respuesta del servidor</b></summary>
+<table><tr><td>
+
+🟢 `200 OK` + JSON de estructura de página de Spring.
+
+Cada acción tendrá el formato del 
+[JSON respuesta de auditoria](#formato-respuesta-de-auditoria)
+
+<details>
+<summary><b>🧾 JSON de estructura de página de Spring</b></summary>
+
+```JSON
+{
+  "content": [
+    {
+      "id": 1,
+      "fechaAccion": "2026-06-24T00:22:08.719435",
+      "operadorId": 2,
+      "operadorNombre": "Pato Merlín",
+      "operadorDni": "12345678",
+      "operadorRol": "ADMIN",
+      "afectadoId": null,
+      "afectadoNombre": "N/A (Auto-acción)",
+      "afectadoDni": "N/A",
+      "accion": "actualizó los datos de nombre y apellido"
+    }
+  ],
+  "empty": false,
+  "first": true,
+  "last": true,
+  "number": 0,
+  "numberOfElements": 1,
+  "pageable": {
+    "offset": 0,
+    "pageNumber": 0,
+    "pageSize": 20,
+    "paged": true,
+    "sort": {
+      "empty": false,
+      "sorted": true,
+      "unsorted": false
+    },
+    "unpaged": false
+  },
+  "size": 20,
+  "sort": {
+    "empty": false,
+    "sorted": true,
+    "unsorted": false
+  },
+  "totalElements": 1,
+  "totalPages": 1
+}
+```
+
+</details>
+
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+si los tipos de datos enviados en los parámetros son incompatibles (ejemplo: `?usuarioId=alfanumerico`).
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
+
+🔴 `403 FORBIDDEN` +
+[JSON error](#formato-general-de-errores)
+- Si el usuario logueado no posee el rol `OWNER`.
+- Si la sesión fue revocada en base de datos. Retorna el JSON de error con
+`"errorCode": "SESSION_INVALIDATED"`.
+
+</td></tr></table>
+</details>
+
+# ⚠️ Reportes
+
+- En desarrollo.
+
+# 🗺️ Recorrido
+
+- En desarrollo.

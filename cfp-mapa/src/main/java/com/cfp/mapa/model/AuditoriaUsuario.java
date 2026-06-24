@@ -2,13 +2,10 @@ package com.cfp.mapa.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.Getter;
@@ -16,7 +13,9 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "auditorias_usuarios", indexes = {
-    @Index(name = "idx_auditoria_fecha", columnList = "fechaAccion")
+    @Index(name = "idx_auditoria_fecha", columnList = "fechaAccion"),
+    @Index(name = "idx_auditoria_operador", columnList = "operadorId"),
+    @Index(name = "idx_auditoria_afectado", columnList = "usuarioAfectadoId")
 })
 @Getter
 @NoArgsConstructor
@@ -29,25 +28,58 @@ public class AuditoriaUsuario {
   @Column(nullable = false, updatable = false)
   private LocalDateTime fechaAccion;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "operador_id", nullable = false, updatable = false)
-  private Usuario operador;
-
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "usuario_afectado_id", nullable = false, updatable = false)
-  private Usuario usuarioAfectado;
-
   @Column(nullable = false, updatable = false)
-  private String accion;
+  private Long operadorId;
+
+  @Column(nullable = false)
+  private String operadorNombreCompleto;
+
+  @Column(nullable = false)
+  private String operadorDni;
 
   @Column(nullable = false, updatable = false)
   private String operadorRol;
 
+  @Column(updatable = false)
+  private Long usuarioAfectadoId;
+
+  @Column
+  private String usuarioAfectadoNombreCompleto;
+
+  @Column
+  private String usuarioAfectadoDni;
+
+  @Column(nullable = false, updatable = false)
+  private String accion;
+
+  // Constructor optimizado para capturar los datos del momento
   public AuditoriaUsuario(Usuario operador, Usuario usuarioAfectado, String accion) {
     this.fechaAccion = LocalDateTime.now();
-    this.operador = operador;
-    this.usuarioAfectado = usuarioAfectado;
-    this.accion = accion;
+    this.operadorId = operador.getId();
+    this.operadorNombreCompleto = operador.getNombre() + " " + operador.getApellido();
+    this.operadorDni = operador.getDni();
     this.operadorRol = operador.getRol().name();
+    this.accion = accion;
+
+    if (usuarioAfectado != null) {
+      this.usuarioAfectadoId = usuarioAfectado.getId();
+      this.usuarioAfectadoNombreCompleto = usuarioAfectado.getNombre() + " " + usuarioAfectado.getApellido();
+      this.usuarioAfectadoDni = usuarioAfectado.getDni();
+    } else {
+      this.usuarioAfectadoId = null;
+      this.usuarioAfectadoNombreCompleto = "N/A (Auto-acción)";
+      this.usuarioAfectadoDni = "N/A";
+    }
+  }
+
+  // Metodos setters específicos para el proceso de anonimizacion posterior
+  public void cambiarDatosOperadorAnonimo(String nuevoNombre, String nuevoDni) {
+    this.operadorNombreCompleto = nuevoNombre;
+    this.operadorDni = nuevoDni;
+  }
+
+  public void cambiarDatosAfectadoAnonimo(String nuevoNombre, String nuevoDni) {
+    this.usuarioAfectadoNombreCompleto = nuevoNombre;
+    this.usuarioAfectadoDni = nuevoDni;
   }
 }

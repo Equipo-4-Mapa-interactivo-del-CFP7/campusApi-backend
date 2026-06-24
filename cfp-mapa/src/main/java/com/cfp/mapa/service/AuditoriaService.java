@@ -7,7 +7,9 @@ import org.springframework.data.domain.Page;
 
 public interface AuditoriaService {
 
-  Page<AuditoriaResponseDTO> listarHistorialPaginado(int pagina, int tamaño, String direccion);
+  Page<AuditoriaResponseDTO> listarHistorialPaginado(Long usuarioId, String accionStr, int page, int size, String order);
 
   void registrarAccion(Usuario operador, Usuario afectado, TipoAccionAuditoria accion);
+
+  void anonimizarUsuario(Long usuarioId, String textoAnonimo, String dniAnonimo);
 }

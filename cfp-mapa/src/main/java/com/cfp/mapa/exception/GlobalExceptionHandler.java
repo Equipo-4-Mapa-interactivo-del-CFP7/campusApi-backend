@@ -84,6 +84,15 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(ParametroAccionInvalidoException.class)
+    public ResponseEntity<ErrorResponse> handleParametroAccionInvalidoException(ParametroAccionInvalidoException ex) {
+
+        return buildErrorResponse(
+            HttpStatus.BAD_REQUEST,
+            ex.getMessage()
+        );
+    }
+
     @ExceptionHandler(EspacioNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleEspacioNotFound(EspacioNotFoundException ex) {
 

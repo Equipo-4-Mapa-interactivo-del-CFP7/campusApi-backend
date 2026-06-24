@@ -1,6 +1,5 @@
 package com.cfp.mapa.service.impl;
 
-import com.cfp.mapa.dto.usuario.UsuarioAutenticadoDTO;
 import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
 import com.cfp.mapa.exception.AccionInvalidaException;
@@ -18,8 +17,8 @@ import com.cfp.mapa.repository.UsuarioRepository;
 import com.cfp.mapa.security.SecurityUtils;
 import com.cfp.mapa.service.AuditoriaService;
 import com.cfp.mapa.service.UsuarioService;
+import com.cfp.mapa.util.SecurityValidator;
 import com.cfp.mapa.util.StringUtils;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -37,6 +36,7 @@ public class UsuarioServiceImpl implements UsuarioService {
   private final PasswordEncoder passwordEncoder;
   private final SecurityUtils securityUtils;
   private final AuditoriaService auditoriaService;
+  private final SecurityValidator securityValidator;
 
   @Value("${app.ownerPasswordRecovery}")
   String emergencyPassword;
@@ -45,7 +45,7 @@ public class UsuarioServiceImpl implements UsuarioService {
   @Override
   public UsuarioResponseDTO crearUsuario(UsuarioCreateRequestDTO request) {
 
-    validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
+    securityValidator.validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
 
     String rolRequest = request.rol().toUpperCase().trim();
 
@@ -91,7 +91,7 @@ public class UsuarioServiceImpl implements UsuarioService {
       Pageable pageable
   ) {
 
-    validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
+    securityValidator.validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
 
     String dniParam = (dni != null && !dni.isBlank()) ?
         "%" + dni.toLowerCase().trim() + "%" : null;
@@ -127,7 +127,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     if (usuario.getRol().equals(Rol.CHANGE_PASSWORD)) {
 
-      validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
+      securityValidator.validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
 
       throw new AccionInvalidaException(
           "El usuario ya tiene un restablecimiento de contraseña pendiente."
@@ -164,15 +164,22 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     // OWNER y ADMIN pueden modificar a alguien que deba cambiar su clave
     if (usuario.getRol().equals(Rol.CHANGE_PASSWORD)) {
-      validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
+      securityValidator.validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
     }
 
     usuario.setActivo(!usuario.isActivo());
     Usuario usuarioGuardado = usuarioRepository.save(usuario);
 
+
+    // Verificar si es el mismo usuario
+    Usuario usuarioLogueado = usuarioLogueado();
+
+    Usuario usuarioAfectado = usuarioLogueado.getId().equals(usuarioGuardado.getId()) ?
+        null : usuarioGuardado;
+
     auditoriaService.registrarAccion(
-        usuarioLogueado(),
-        usuarioGuardado,
+        usuarioLogueado,
+        usuarioAfectado,
         TipoAccionAuditoria.ESTADO_ACTIVO_MODIFICADO
     );
 
@@ -183,7 +190,7 @@ public class UsuarioServiceImpl implements UsuarioService {
   @Override
   public void cambiarPassword(Long id, String oldPassword, String newPassword) {
 
-    validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN, Rol.PERSONAL, Rol.CHANGE_PASSWORD);
+    securityValidator.validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN, Rol.PERSONAL, Rol.CHANGE_PASSWORD);
 
     Usuario usuario = usuarioRepository.findById(id).orElseThrow(
         () -> new UsuarioNotFoundException(id)
@@ -208,9 +215,10 @@ public class UsuarioServiceImpl implements UsuarioService {
     usuario.setPassword(passwordEncoder.encode(newPassword));
     Usuario usuarioGuardado = usuarioRepository.save(usuario);
 
+    // El usuario afectado siempre es si mismo
     auditoriaService.registrarAccion(
         usuarioLogueado(),
-        usuarioGuardado,
+        null,
         TipoAccionAuditoria.PASSWORD_CAMBIADA
     );
   }
@@ -219,7 +227,7 @@ public class UsuarioServiceImpl implements UsuarioService {
   @Override
   public UsuarioResponseDTO cambiarRol(Long id, String newRol) {
 
-    validarUsuarioActivoYRoles(Rol.OWNER);
+    securityValidator.validarUsuarioActivoYRoles(Rol.OWNER);
 
     Usuario usuario = usuarioRepository.findById(id).orElseThrow(
         () -> new UsuarioNotFoundException(id)
@@ -260,7 +268,7 @@ public class UsuarioServiceImpl implements UsuarioService {
   @Override
   public UsuarioResponseDTO obtenerMiPerfil(Long id) {
 
-    validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN, Rol.PERSONAL, Rol.CHANGE_PASSWORD);
+    securityValidator.validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN, Rol.PERSONAL, Rol.CHANGE_PASSWORD);
 
     Usuario usuario = usuarioRepository.findById(id).orElseThrow(
         () -> new UsuarioNotFoundException(id)
@@ -277,7 +285,7 @@ public class UsuarioServiceImpl implements UsuarioService {
   @Override
   public UsuarioResponseDTO obtenerPerfil(Long id) {
 
-    validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
+    securityValidator.validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
 
     Rol rolLogueado = securityUtils.getUsuarioLogueadoDto().getRol();
 
@@ -302,7 +310,7 @@ public class UsuarioServiceImpl implements UsuarioService {
   @Override
   public void eliminarUsuario(Long id) {
 
-    validarUsuarioActivoYRoles(Rol.OWNER);
+    securityValidator.validarUsuarioActivoYRoles(Rol.OWNER);
 
     Usuario usuario = usuarioRepository.findById(id).orElseThrow(
         () -> new UsuarioNotFoundException(id)
@@ -320,13 +328,19 @@ public class UsuarioServiceImpl implements UsuarioService {
     usuario.setActivo(false);
     usuario.setEliminado(true);
 
-    Usuario UsuarioGuardado = usuarioRepository.save(usuario);
+    Usuario usuarioGuardado = usuarioRepository.save(usuario);
 
     auditoriaService.registrarAccion(
         usuarioLogueado(),
-        UsuarioGuardado,
+        usuarioGuardado,
         TipoAccionAuditoria.USUARIO_ELIMINADO
     );
+
+    // Ofuscar el usuario en toda la auditoria
+    auditoriaService.anonimizarUsuario(
+        usuarioGuardado.getId(),
+        "USUARIO ELIMINADO",
+        "00000000");
   }
 
   @Transactional
@@ -357,9 +371,10 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     Usuario usuarioGuardado = usuarioRepository.save(usuario);
 
+    // El usuario afectado siempre es si mismo
     auditoriaService.registrarAccion(
         usuarioGuardado,
-        usuarioGuardado,
+        null,
         TipoAccionAuditoria.PASSWORD_OWNER_RECUPERADA
     );
   }
@@ -368,7 +383,7 @@ public class UsuarioServiceImpl implements UsuarioService {
   @Override
   public void transferirOwner(String password, Long id) {
 
-    validarUsuarioActivoYRoles(Rol.OWNER);
+    securityValidator.validarUsuarioActivoYRoles(Rol.OWNER);
 
     Usuario antiguoOwner = usuarioLogueado();
 
@@ -390,26 +405,25 @@ public class UsuarioServiceImpl implements UsuarioService {
       throw new AccionInvalidaException("El usuario debe tener rol válido");
     }
 
-    // Se hace la auditoria antes que cambien los roles
-    auditoriaService.registrarAccion(
-        antiguoOwner,
-        nuevoOwner,
-        TipoAccionAuditoria.OWNER_TRANSFERIDO
-    );
-
     // El OWNER pasa a ser ADMIN, el usuario seleccionado pasa a ser OWNER
     antiguoOwner.setRol(Rol.ADMIN);
     nuevoOwner.setRol(Rol.OWNER);
 
     usuarioRepository.save(antiguoOwner);
     usuarioRepository.save(nuevoOwner);
+
+    auditoriaService.registrarAccion(
+        antiguoOwner,
+        nuevoOwner,
+        TipoAccionAuditoria.OWNER_TRANSFERIDO
+    );
   }
 
   @Transactional
   @Override
   public UsuarioResponseDTO cambiarDni(Long id, String nuevoDni) {
 
-    validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN, Rol.PERSONAL);
+    securityValidator.validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN, Rol.PERSONAL);
 
     Usuario usuario = usuarioRepository.findById(id).orElseThrow(
         () -> new UsuarioNotFoundException(id)
@@ -430,9 +444,13 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     Usuario usuarioGuardado = usuarioRepository.save(usuario);
 
+    // Verificar si es el mismo usuario
+    Usuario usuarioAfectado = usuarioLogueado.getId().equals(usuarioGuardado.getId()) ?
+        null : usuarioGuardado;
+
     auditoriaService.registrarAccion(
         usuarioLogueado,
-        usuarioGuardado,
+        usuarioAfectado,
         TipoAccionAuditoria.DNI_EDITADO
     );
 
@@ -443,7 +461,7 @@ public class UsuarioServiceImpl implements UsuarioService {
   @Override
   public UsuarioResponseDTO cambiarNombreApellido(Long id, String nombre, String apellido) {
 
-    validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN, Rol.PERSONAL);
+    securityValidator.validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN, Rol.PERSONAL);
 
     Usuario usuario = usuarioRepository.findById(id).orElseThrow(
         () -> new UsuarioNotFoundException(id)
@@ -473,9 +491,13 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     Usuario usuarioGuardado = usuarioRepository.save(usuario);
 
+    // Verificar si es el mismo usuario
+    Usuario usuarioAfectado = usuarioLogueado.getId().equals(usuarioGuardado.getId()) ?
+        null : usuarioGuardado;
+
     auditoriaService.registrarAccion(
         usuarioLogueado,
-        usuarioGuardado,
+        usuarioAfectado,
         TipoAccionAuditoria.NOMBRE_APELLIDO_EDITADO
     );
 
@@ -492,27 +514,12 @@ public class UsuarioServiceImpl implements UsuarioService {
     return passwordEncoder.encode("cfp" + dni);
   }
 
-  private void validarUsuarioActivoYRoles(Rol... rolesPermitidos) {
-
-    UsuarioAutenticadoDTO usuarioLogueado = securityUtils.getUsuarioLogueadoDto();
-
-    List<Rol> listaRolesPermitidos = List.of(rolesPermitidos);
-
-    if (!usuarioRepository.existsByIdAndActivoTrueAndEliminadoFalseAndRolIn(
-        usuarioLogueado.id(), listaRolesPermitidos)) {
-
-      throw new AccionNoPermitidaException(
-          "Su sesión ya no es válida. Sus permisos han cambiado o su cuenta fue desactivada."
-      );
-    }
-  }
-
   private void validarJerarquias(Rol rolAfectado, String mensajeCasoOwner) {
 
     // Nadie puede modificar a OWNER
     if (rolAfectado.equals(Rol.OWNER)) {
 
-      validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
+      securityValidator.validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
 
       throw new AccionInvalidaException(
           mensajeCasoOwner
@@ -521,12 +528,12 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     // OWNER puede modificar a ADMIN
     if (rolAfectado.equals(Rol.ADMIN)) {
-      validarUsuarioActivoYRoles(Rol.OWNER);
+      securityValidator.validarUsuarioActivoYRoles(Rol.OWNER);
     }
 
     // OWNER y ADMIN pueden modificar a PERSONAL
     if (rolAfectado.equals(Rol.PERSONAL)) {
-      validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
+      securityValidator.validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN);
     }
   }
 

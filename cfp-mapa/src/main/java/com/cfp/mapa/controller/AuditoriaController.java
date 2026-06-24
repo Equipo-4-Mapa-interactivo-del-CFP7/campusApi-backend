@@ -4,6 +4,7 @@ import com.cfp.mapa.dto.auditoria.AuditoriaResponseDTO;
 import com.cfp.mapa.service.AuditoriaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,11 +22,17 @@ public class AuditoriaController {
   @GetMapping
   @PreAuthorize("hasRole('OWNER')")
   public ResponseEntity<Page<AuditoriaResponseDTO>> listarHistorial(
+      @RequestParam(required = false) Long usuarioId,
+      @RequestParam(required = false) String accion,
       @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "50") int size,
+      @RequestParam(defaultValue = "20") int size,
       @RequestParam(defaultValue = "desc") String sort
   ) {
-    Page<AuditoriaResponseDTO> historial = auditoriaService.listarHistorialPaginado(page, size, sort);
-    return ResponseEntity.ok(historial);
+
+    Page<AuditoriaResponseDTO> historial = auditoriaService.listarHistorialPaginado(usuarioId, accion, page, size, sort);
+
+    return ResponseEntity
+        .status(HttpStatus.OK)
+        .body(historial);
   }
 }

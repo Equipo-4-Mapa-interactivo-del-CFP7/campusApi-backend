@@ -5,8 +5,6 @@ import com.cfp.mapa.validation.ValidDni;
 import com.cfp.mapa.validation.ValidNombre;
 import com.cfp.mapa.validation.ValidRol;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 
 public record UsuarioCreateRequestDTO(
 

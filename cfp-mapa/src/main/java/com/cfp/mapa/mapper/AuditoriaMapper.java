@@ -7,20 +7,21 @@ import org.springframework.stereotype.Component;
 @Component
 public class AuditoriaMapper {
 
+  // AuditoriaUsuario -> AuditoriaResponseDTO
   public AuditoriaResponseDTO toDTO(AuditoriaUsuario auditoria) {
-
-    String operadorNombre = auditoria.getOperador().getNombre() + " " + auditoria.getOperador().getApellido();
-    String afectadoNombre = auditoria.getUsuarioAfectado().getNombre() + " " + auditoria.getUsuarioAfectado().getApellido();
 
     return new AuditoriaResponseDTO(
         auditoria.getId(),
         auditoria.getFechaAccion(),
-        auditoria.getOperador().getId(),
-        operadorNombre,
+        auditoria.getOperadorId(),
+        auditoria.getOperadorNombreCompleto(),
+        auditoria.getOperadorDni(),
         auditoria.getOperadorRol(),
-        auditoria.getUsuarioAfectado().getId(),
-        afectadoNombre,
+        auditoria.getUsuarioAfectadoId(),
+        auditoria.getUsuarioAfectadoNombreCompleto(),
+        auditoria.getUsuarioAfectadoDni(),
         auditoria.getAccion()
     );
   }
+
 }

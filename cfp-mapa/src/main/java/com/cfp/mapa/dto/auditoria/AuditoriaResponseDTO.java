@@ -7,8 +7,10 @@ public record AuditoriaResponseDTO(
     LocalDateTime fechaAccion,
     Long operadorId,
     String operadorNombre,
+    String operadorDni,
     String operadorRol,
     Long afectadoId,
     String afectadoNombre,
+    String afectadoDni,
     String accion
 ) {}

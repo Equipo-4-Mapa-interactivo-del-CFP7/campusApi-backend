@@ -1,5 +1,6 @@
 package com.cfp.mapa.controller;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -16,12 +17,15 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(AuthController.class)
+@EnableMethodSecurity
 public class AuthControllerTest {
 
   @Autowired
@@ -172,6 +176,22 @@ public class AuthControllerTest {
         .andExpect(status().isUnauthorized())
         .andExpect(jsonPath("$.message")
             .value("Tu cuenta se encuentra temporalmente desactivada"));
+  }
+
+  // ERROR 403 FORBIDDEN: Un usuario ya logueado (con sesion activa) intenta volver a loguearse
+  @Test
+  @WithMockUser
+  void authenticateUser_ComoUsuarioYaAutenticado_DebeDevolver403Forbidden() throws Exception {
+    // GIVEN
+    UsuarioLoginDTO loginDTO = new UsuarioLoginDTO("12345678", "administrador");
+
+    // WHEN & THEN
+    mockMvc.perform(post("/api/auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(loginDTO)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.errorCode").value(nullValue()));
   }
 }
 

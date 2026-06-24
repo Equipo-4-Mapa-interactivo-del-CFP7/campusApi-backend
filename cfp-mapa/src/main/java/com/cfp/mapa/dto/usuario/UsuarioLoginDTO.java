@@ -3,8 +3,6 @@ package com.cfp.mapa.dto.usuario;
 import com.cfp.mapa.validation.ValidDni;
 import com.cfp.mapa.validation.ValidPassword;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 
 public record UsuarioLoginDTO(
 

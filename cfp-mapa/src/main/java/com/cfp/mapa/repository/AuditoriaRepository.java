@@ -5,14 +5,18 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.repository.query.Param;
 
-@Repository
 public interface AuditoriaRepository extends JpaRepository<AuditoriaUsuario, Long> {
 
-  @Query(value = "SELECT a FROM AuditoriaUsuario a " +
-      "JOIN FETCH a.operador " +
-      "JOIN FETCH a.usuarioAfectado",
-      countQuery = "SELECT COUNT(a) FROM AuditoriaUsuario a")
-  Page<AuditoriaUsuario> findAllCompleto(Pageable pageable);
+  Page<AuditoriaUsuario> findByOperadorIdOrUsuarioAfectadoId(Long operadorId, Long usuarioAfectadoId, Pageable pageable);
+
+  @Query("SELECT a FROM AuditoriaUsuario a WHERE " +
+      "(:usuarioId IS NULL OR a.operadorId = :usuarioId OR a.usuarioAfectadoId = :usuarioId) AND " +
+      "(:accion IS NULL OR a.accion = :accion)")
+  Page<AuditoriaUsuario> buscarConFiltrosDinamicos(
+      @Param("usuarioId") Long usuarioId,
+      @Param("accion") String accion,
+      Pageable pageable
+  );
 }
