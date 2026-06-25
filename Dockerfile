@@ -1,4 +1,4 @@
-FROM maven:3.9.9-eclipse-temurin-21 AS build
+FROM maven:3.9.9-amazoncorretto-25-al2023 AS build
 WORKDIR /app
 COPY cfp-mapa /app/cfp-mapa
 WORKDIR /app/cfp-mapa
