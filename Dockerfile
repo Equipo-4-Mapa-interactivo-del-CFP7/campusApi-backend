@@ -1,6 +1,9 @@
-# Paso 1: Compilar la aplicación usando Maven y el JDK 25
-FROM maven:3.9.9-eclipse-temurin-21 AS build
+# Paso 1: Compilar la aplicación usando Java 25
+FROM openjdk:25-rc-jdk AS extractor
 WORKDIR /app
+
+# Instalar Maven manualmente dentro de la imagen de Java 25
+RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
 
 # Copiamos la subcarpeta con tu código
 COPY cfp-mapa /app/cfp-mapa
@@ -9,11 +12,12 @@ WORKDIR /app/cfp-mapa
 # Compilamos omitiendo tests
 RUN mvn clean package -DskipTests
 
-# Paso 2: Ejecutar usando la imagen exacta de Java 25
+# Paso 2: Ejecutar usando la imagen limpia de Java 25
+FROM openjdk:25-rc-jdk
 WORKDIR /app
 
-# Copiamos el archivo .jar generado en el paso anterior
-COPY --from=build /app/cfp-mapa/target/*.jar app.jar
+# Copiamos el archivo .jar generado apuntando a la etapa 'extractor'
+COPY --from=extractor /app/cfp-mapa/target/*.jar app.jar
 
 EXPOSE 8080
 
