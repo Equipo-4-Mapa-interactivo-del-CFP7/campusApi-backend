@@ -15,6 +15,8 @@ public record ReporteCreateRequestDTO(
         String descripcion,
 
         @NotNull(message = "El espacio es obligatorio")
-        Long espacioId
+        Long espacioId,
+
+        String imagenURL
 
 ) {}

@@ -34,9 +34,8 @@ public class Reporte {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "espacio_id", nullable = false)
-    private Espacio espacio;
+    @Column(name = "espacio_id", nullable = false)
+    private Long espacioId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "atendido_por_id")

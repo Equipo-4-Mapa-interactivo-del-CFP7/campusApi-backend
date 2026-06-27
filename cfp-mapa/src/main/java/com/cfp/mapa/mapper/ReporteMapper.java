@@ -15,6 +15,7 @@ public class ReporteMapper {
 
         return new ReporteResponseDTO(
                 reporte.getId(),
+                reporte.getEspacioId(),
                 reporte.getDescripcion(),
                 reporte.getEstado(),
                 reporte.getTipo(),
@@ -28,30 +29,16 @@ public class ReporteMapper {
                 .tipo(request.tipoReporte())
                 .descripcion(request.descripcion())
                 .estado(EstadoReporte.PENDIENTE)
+                .espacioId(request.espacioId())
+                .urlImagen(request.imagenURL())
                 .build();
     }
 
     public EstadoReporte strToEstadoReporte(String estado) {
-        estado.toUpperCase();
-        if (estado == "PENDIENTE")
-            return EstadoReporte.PENDIENTE;
-        else if (estado == "EN_REVISION")
-            return EstadoReporte.EN_REVISION;
-        else if (estado == "RESUELTO")
-            return EstadoReporte.RESUELTO;
-        return null;
+        return EstadoReporte.valueOf(estado.toUpperCase());
     }
 
     public TipoReporte strToTipoReporte(String tipo) {
-        tipo.toUpperCase();
-        if (tipo == "ACCESO_BLOQUEADO")
-            return TipoReporte.ACCESO_BLOQUEADO;
-        else if (tipo == "PROBLEMA_SENALETICA")
-            return TipoReporte.PROBLEMA_SENALETICA;
-        else if (tipo == "BARRERA_FISICA")
-            return TipoReporte.BARRERA_FISICA;
-        else if (tipo == "DIFICULTAD_ORIENTACION")
-            return TipoReporte.DIFICULTAD_ORIENTACION;
-        return null;
+        return TipoReporte.valueOf(tipo.toUpperCase());
     }
 }

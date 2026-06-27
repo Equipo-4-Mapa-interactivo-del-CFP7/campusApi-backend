@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public record ReporteUpdateRequestDTO(
 
-        @NotBlank
+        @NotBlank(message = "El estado es obligatorio")
         String estado,
 
         @Min(1)
