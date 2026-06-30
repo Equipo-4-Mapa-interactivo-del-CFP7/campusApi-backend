@@ -5,6 +5,7 @@ import com.cfp.mapa.model.enums.TipoReporte;
 
 public record ReporteResponseDTO(
         Long id,
+        Long espacioId,
         String descripcion,
         EstadoReporte estadoReporte,
         TipoReporte tipoReporte,

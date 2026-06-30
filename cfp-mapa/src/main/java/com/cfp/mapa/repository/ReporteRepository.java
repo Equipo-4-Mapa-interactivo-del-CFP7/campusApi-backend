@@ -29,4 +29,5 @@ public interface ReporteRepository extends JpaRepository<Reporte, Long> {
         Pageable pageable
     );
 
+    boolean existByIdEspacioAndTipo(Long espacioId, TipoReporte tipoReporte);
 }

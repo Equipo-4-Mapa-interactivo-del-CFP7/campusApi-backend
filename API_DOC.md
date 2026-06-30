@@ -1219,7 +1219,173 @@ si los tipos de datos enviados en los parámetros son incompatibles (ejemplo: `?
 
 # ⚠️ Reportes
 
-- En desarrollo.
+#### Formato de respuesta de reporte
+
+El JSON de respuesta de reporte sigue este patrón:
+
+```JSON
+{
+  "id": Long,
+  "espacioId": Long,
+  "descripcion": String,
+  "estadoReporte": String,
+  "tipoReporte": String,
+  "urlFoto": String
+}
+```
+
+<details>
+<summary><b>Ejemplo</b></summary>
+
+```JSON
+{
+  "id": 1,
+  "espacioId": 12,
+  "descripcion": "La puerta de acceso al aula está bloqueada",
+  "estadoReporte": "PENDIENTE",
+  "tipoReporte": "ACCESO_BLOQUEADO",
+  "urlFoto": "https://i.ibb.co/xyz/imagen.jpg"
+}
+```
+</details>
+
+---
+
+## 🟢 Crear un reporte [acceso público]
+
+`POST /api/reportes/reportar`
+
+Permite que cualquier usuario, registrado o no, pueda crear un reporte de incidencia sobre un espacio.
+
+- El reporte se creará con estado `PENDIENTE` automáticamente.
+- La foto es opcional. Si no se adjunta, `urlFoto` tendrá valor `null` en la respuesta.
+- No puede existir más de un reporte activo del mismo tipo para el mismo espacio. Un reporte se
+  considera activo si su estado no es `RESUELTO`.
+
+<details>
+<summary><b>📦 Cuerpo de la petición</b></summary>
+<table><tr><td>
+
+`tipoReporte` String, requerido. Valores válidos:
+- `ACCESO_BLOQUEADO`
+- `PROBLEMA_SENALETICA`
+- `BARRERA_FISICA`
+- `DIFICULTAD_ORIENTACION`
+
+`descripcion` String, requerido, máximo 100 caracteres.
+
+`espacioId` Long, requerido. ID del espacio donde ocurre la incidencia.
+
+`imagenURL` String, opcional. URL de la imagen subida previamente a un servicio externo (imgbb).
+
+```JSON
+{
+  "tipoReporte": "ACCESO_BLOQUEADO",
+  "descripcion": "La puerta de acceso al aula está bloqueada",
+  "espacioId": 12,
+  "imagenURL": "https://i.ibb.co/xyz/imagen.jpg"
+}
+```
+
+</td></tr></table>
+</details>
+
+<details>
+<summary><b>🔄 Respuesta del servidor</b></summary>
+<table><tr><td>
+
+🟢 `201 CREATED` +
+[JSON respuesta de reporte](#formato-de-respuesta-de-reporte)
+con la información del reporte creado.
+
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+- Si el cuerpo JSON no cumple las restricciones estructurales (descripción vacía, tipoReporte inválido, etc.).
+
+🔴 `404 NOT FOUND` +
+[JSON error](#formato-general-de-errores)
+si no existe un espacio registrado con el `espacioId` solicitado.
+
+🔴 `409 CONFLICT` +
+[JSON error](#formato-general-de-errores)
+si ya existe un reporte activo del mismo tipo para el espacio indicado.
+
+</td></tr></table>
+</details>
+
+---
+
+## 🟢 Actualizar estado de un reporte [solo para ADMIN]
+
+`PATCH /api/reportes/{id}/estado`
+
+Permite que usuarios con el rol `ADMIN` puedan actualizar el estado de un reporte existente.
+
+- Los estados válidos son `PENDIENTE`, `EN_REVISION` y `RESUELTO`.
+
+<details>
+<summary><b>🔑 Encabezado válido (Header)</b></summary>
+
+* `Authorization`: `Bearer <token_de_admin>`
+
+</details>
+
+<details>
+<summary><b>🔎 Path variable</b></summary>
+
+* `id` Long, requerido.
+  ID del reporte al que se le quiere actualizar el estado.
+
+</details>
+
+<details>
+<summary><b>📦 Cuerpo de la petición</b></summary>
+<table><tr><td>
+
+`estado` String, requerido. Valores válidos:
+- `PENDIENTE`
+- `EN_REVISION`
+- `RESUELTO`
+
+```JSON
+{
+  "estado": "EN_REVISION"
+}
+```
+
+</td></tr></table>
+</details>
+
+<details>
+<summary><b>🔄 Respuesta del servidor</b></summary>
+<table><tr><td>
+
+🟢 `200 OK` +
+[JSON respuesta de reporte](#formato-de-respuesta-de-reporte)
+con la información actualizada del reporte.
+
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+- Si el cuerpo JSON no cumple las restricciones (estado vacío o valor inválido).
+- Si el `id` enviado en el path variable no tiene un formato numérico válido.
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
+
+🔴 `403 FORBIDDEN` +
+[JSON error](#formato-general-de-errores)
+- Si el usuario logueado no posee el rol `ADMIN`.
+- Si la sesión fue revocada en base de datos. Retorna el JSON de error con
+  `"errorCode": "SESSION_INVALIDATED"`.
+
+🔴 `404 NOT FOUND` +
+[JSON error](#formato-general-de-errores)
+si no existe un reporte registrado con el `id` solicitado.
+
+</td></tr></table>
+</details>
 
 # 🗺️ Recorrido
 
