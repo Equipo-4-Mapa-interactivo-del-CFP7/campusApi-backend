@@ -1,8 +1,10 @@
 package com.cfp.mapa.model.enums;
 
 public enum TipoTransito {
-  PASILLO_LLANO,
+  PASILLO,
   RAMPA,
   ESCALERA,
-  ASCENSOR
+  ASCENSOR,
+  RIPIO,
+  EXTERIOR
 }

@@ -1,10 +1,16 @@
 package com.cfp.mapa.service.impl;
 
-import com.cfp.mapa.dto.conexion.ConexionDTO;
-import com.cfp.mapa.dto.conexion.RutaResponseDTO;
+
+import com.cfp.mapa.dto.conexion.ConexionResponseDTO;
+import com.cfp.mapa.dto.conexion.ConexionUpdateDTO;
+import com.cfp.mapa.exception.ConexionNotFoundException;
+import com.cfp.mapa.mapper.ConexionMapper;
+import com.cfp.mapa.model.Conexion;
+import com.cfp.mapa.repository.ConexionRepository;
 import com.cfp.mapa.service.ConexionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -12,17 +18,70 @@ import java.util.List;
 @Service
 public class ConexionServiceImpl implements ConexionService {
 
-    @Override
-    public List<ConexionDTO> obtenerConexiones() {
+    private final ConexionRepository conexionRepository;
+    private final ConexionMapper conexionMapper;
 
-        // TODO: Lógica
-        return null;
+    @Override
+    @Transactional(readOnly = true)
+    public List<ConexionResponseDTO> listarConexiones() {
+
+        return conexionRepository.findAll()
+                .stream()
+                .map(conexionMapper::conexionToResponse)
+                .toList();
     }
 
     @Override
-    public RutaResponseDTO calcularRuta(Long origenId, Long destinoId,Boolean soloAccesible) {
+    @Transactional
+    public ConexionResponseDTO actualizarConexion(Long id, ConexionUpdateDTO dto) {
 
-        // TODO: Lógica del recorrido
-        return null;
+        Conexion conexion = conexionRepository.findById(id).orElseThrow(() ->
+                new ConexionNotFoundException(id));
+
+        conexion.setTipoTransito(dto.tipoTransito());
+        conexion.setDistancia(dto.distancia());
+        conexion.setAncho(dto.ancho());
+        conexion.setCumpleLey962(dto.cumpleLey962());
+        conexion.setAccesible(dto.accesible());
+
+        Conexion actualizada = conexionRepository.save(conexion);
+
+        return conexionMapper.conexionToResponse(actualizada);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ConexionResponseDTO obtenerConexionPorId(Long id) {
+
+        Conexion conexion = conexionRepository.findById(id)
+                .orElseThrow(() -> new ConexionNotFoundException(id));
+
+        return conexionMapper.conexionToResponse(conexion);
+    }
+
+
+    @Override
+    @Transactional
+    public void desactivarConexion(Long id) {
+
+        Conexion conexion = conexionRepository.findById(id)
+                .orElseThrow(() -> new ConexionNotFoundException(id));
+
+        conexion.setActiva(false);
+
+        conexionRepository.save(conexion);
+    }
+
+
+    @Override
+    @Transactional
+    public void activarConexion(Long id) {
+
+        Conexion conexion = conexionRepository.findById(id)
+                .orElseThrow(() -> new ConexionNotFoundException(id));
+
+        conexion.setActiva(true);
+
+        conexionRepository.save(conexion);
     }
 }

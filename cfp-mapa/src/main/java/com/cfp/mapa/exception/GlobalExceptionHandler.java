@@ -64,6 +64,22 @@ public class GlobalExceptionHandler {
             EspacioNotFoundException ex
     ) {
 
+        log.error(ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ex.getMessage());
+    }
+
+    //------------------------
+    //----- Conexiones -------
+    //------------------------
+
+    @ExceptionHandler(ConexionNotFoundException.class)
+    public ResponseEntity<?> conexionNotFound(ConexionNotFoundException ex){
+
+        log.error(ex.getMessage());
+
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ex.getMessage());

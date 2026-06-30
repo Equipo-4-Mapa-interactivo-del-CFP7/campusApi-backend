@@ -44,6 +44,12 @@ public class Conexion {
   @Column(nullable = false)
   private Double distancia;
 
+  @Column//(nullable = false)
+  private Double ancho;
+
+  @Column//(nullable = false)
+  private Boolean cumpleLey962;
+
   @Column(nullable = false)
   private Boolean accesible;
 

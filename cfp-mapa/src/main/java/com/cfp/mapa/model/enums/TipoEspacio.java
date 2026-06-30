@@ -5,6 +5,10 @@ public enum TipoEspacio {
     OFICINA,
     SECRETARIA,
 
+    TALLER,
+    LABORATORIO,
+    PATIO,
+
     BANIO_MASCULINO,
     BANIO_FEMENINO,
     BANIO_ACCESIBLE,
@@ -12,6 +16,5 @@ public enum TipoEspacio {
 
     ENTRADA_PRINCIPAL,
     ACCESO_SECUNDARIO,
-    PUNTO_DE_PASO,
-    ASCENSOR
+    PUNTO_DE_PASO
 }

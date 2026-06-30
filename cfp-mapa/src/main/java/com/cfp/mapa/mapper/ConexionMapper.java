@@ -1,15 +1,16 @@
 package com.cfp.mapa.mapper;
 
-import com.cfp.mapa.dto.conexion.ConexionDTO;
+import com.cfp.mapa.dto.conexion.ConexionResponseDTO;
 import com.cfp.mapa.model.Conexion;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ConexionMapper {
 
-    public ConexionDTO conexionToDTO(Conexion conexion) {
+    public ConexionResponseDTO conexionToResponse(Conexion conexion) {
 
-        return new ConexionDTO(
+        return new ConexionResponseDTO(
+
                 conexion.getId(),
                 conexion.getOrigen().getId(),
                 conexion.getOrigen().getNombre(),
@@ -17,6 +18,8 @@ public class ConexionMapper {
                 conexion.getDestino().getNombre(),
                 conexion.getTipoTransito(),
                 conexion.getDistancia(),
+                conexion.getAncho(),
+                conexion.getCumpleLey962(),
                 conexion.getAccesible(),
                 conexion.getActiva()
         );
