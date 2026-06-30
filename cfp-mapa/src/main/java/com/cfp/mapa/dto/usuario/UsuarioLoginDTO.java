@@ -1,16 +1,17 @@
 package com.cfp.mapa.dto.usuario;
 
+import com.cfp.mapa.validation.ValidDni;
+import com.cfp.mapa.validation.ValidPassword;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 public record UsuarioLoginDTO(
 
-    @Size(min = 6, max = 15)
-    @NotBlank
+    @NotBlank(message = "El DNI es obligatorio")
+    @ValidDni
     String dni,
 
-    @Size(min = 8, max = 60)
-    @NotBlank
+    @NotBlank(message = "La contraseña es obligatorio")
+    @ValidPassword
     String password
 ) {
 

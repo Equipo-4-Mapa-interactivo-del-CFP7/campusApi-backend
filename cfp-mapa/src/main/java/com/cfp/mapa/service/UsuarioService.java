@@ -7,25 +7,36 @@ import org.springframework.data.domain.Pageable;
 
 public interface UsuarioService {
 
-  UsuarioResponseDTO crearUsuarioPorAdmin(UsuarioCreateRequestDTO request);
+  UsuarioResponseDTO crearUsuario(UsuarioCreateRequestDTO request);
 
   Page<UsuarioResponseDTO> listarUsuariosConFiltro(
       String dni,
       String nombre,
       String apellido,
       Boolean activo,
+      String rol,
       Pageable pageable
   );
 
-  UsuarioResponseDTO restablecerPasswordPorAdmin(String dni);
+  UsuarioResponseDTO restablecerPassword(Long id);
 
-  UsuarioResponseDTO cambiarEstadoActivoPorAdmin(String dni);
+  UsuarioResponseDTO cambiarEstadoActivo(Long id);
 
-  void cambiarPassword(String dni, String oldPassword, String newPassword);
+  void cambiarPassword(Long id, String oldPassword, String newPassword);
 
-  UsuarioResponseDTO cambiarRolPorAdmin(String dni);
+  UsuarioResponseDTO cambiarRol(Long id, String rol);
 
-  UsuarioResponseDTO obtenerMiPerfil(String dni);
+  UsuarioResponseDTO obtenerMiPerfil(Long id);
 
-  UsuarioResponseDTO obtenerPerfilPorAdmin(String dni);
+  UsuarioResponseDTO obtenerPerfil(Long id);
+
+  void eliminarUsuario(Long id);
+
+  void recuperarPasswordOwner(String dni, String recoveryPassword, String nuevaPassword);
+
+  void transferirOwner(String password, Long id);
+
+  UsuarioResponseDTO cambiarDni(Long id, String nuevoDni);
+
+  UsuarioResponseDTO cambiarNombreApellido(Long id, String nombre, String apellido);
 }

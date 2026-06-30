@@ -1,12 +1,16 @@
 package com.cfp.mapa.controller;
 
 import com.cfp.mapa.dto.usuario.UsuarioAutenticadoDTO;
+import com.cfp.mapa.dto.usuario.UsuarioChangeDniRequestDTO;
+import com.cfp.mapa.dto.usuario.UsuarioChangeNombreApellidoRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioChangePasswordDTO;
 import com.cfp.mapa.dto.usuario.UsuarioCreateRequestDTO;
+import com.cfp.mapa.dto.usuario.UsuarioNewRolRequestDTO;
+import com.cfp.mapa.dto.usuario.UsuarioOwnerRecoveryRequestDTO;
+import com.cfp.mapa.dto.usuario.UsuarioOwnerTransferRequestDTO;
 import com.cfp.mapa.dto.usuario.UsuarioResponseDTO;
 import com.cfp.mapa.service.UsuarioService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,12 +36,12 @@ public class UsuarioController {
   private final UsuarioService usuarioService;
 
   @PostMapping("/registrar")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<UsuarioResponseDTO> crearUsuarioPorAdmin(
+  @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+  public ResponseEntity<UsuarioResponseDTO> crearUsuario(
       @Valid @RequestBody UsuarioCreateRequestDTO request
   ) {
 
-    UsuarioResponseDTO response = usuarioService.crearUsuarioPorAdmin(request);
+    UsuarioResponseDTO response = usuarioService.crearUsuario(request);
 
     return ResponseEntity
         .status(HttpStatus.CREATED)
@@ -45,17 +49,18 @@ public class UsuarioController {
   }
 
   @GetMapping
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
   public ResponseEntity<Page<UsuarioResponseDTO>> listarUsuariosConFiltro (
       @RequestParam(required = false) String dni,
       @RequestParam(required = false) String nombre,
       @RequestParam(required = false) String apellido,
       @RequestParam(required = false) Boolean activo,
+      @RequestParam(required = false) String rol,
       @PageableDefault(page = 0, size = 10) Pageable pageable
   ) {
 
     Page<UsuarioResponseDTO> usuarios = usuarioService.listarUsuariosConFiltro(
-        dni, nombre, apellido, activo, pageable
+        dni, nombre, apellido, activo, rol, pageable
     );
 
     return ResponseEntity
@@ -63,29 +68,25 @@ public class UsuarioController {
         .body(usuarios);
   }
 
-  @PutMapping("/{dni}/restablecer")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<UsuarioResponseDTO> restablecerPasswordPorAdmin(
-      @PathVariable
-      @Size(min = 6, max = 15)
-      String dni) {
+  @PutMapping("/{id}/restablecer")
+  @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+  public ResponseEntity<UsuarioResponseDTO> restablecerPassword(
+      @PathVariable Long id) {
 
-    UsuarioResponseDTO response = usuarioService.restablecerPasswordPorAdmin(dni);
+    UsuarioResponseDTO response = usuarioService.restablecerPassword(id);
 
     return ResponseEntity
         .status(HttpStatus.OK)
         .body(response);
   }
 
-  @PutMapping("/{dni}/cambiar-activo")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<UsuarioResponseDTO> cambiarEstadoActivoPorAdmin (
-      @PathVariable
-      @Size(min = 6, max = 15)
-      String dni
+  @PutMapping("/{id}/cambiar-activo")
+  @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+  public ResponseEntity<UsuarioResponseDTO> cambiarEstadoActivo (
+      @PathVariable Long id
   ) {
 
-    UsuarioResponseDTO response = usuarioService.cambiarEstadoActivoPorAdmin(dni);
+    UsuarioResponseDTO response = usuarioService.cambiarEstadoActivo(id);
 
     return ResponseEntity
         .status(HttpStatus.OK)
@@ -93,26 +94,26 @@ public class UsuarioController {
   }
 
   @PutMapping("/me/password")
+  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<Void> cambiarPassword(
       @AuthenticationPrincipal UsuarioAutenticadoDTO usuario,
       @Valid @RequestBody UsuarioChangePasswordDTO request) {
 
-    usuarioService.cambiarPassword(usuario.dni(), request.oldPassword(), request.newPassword());
+    usuarioService.cambiarPassword(usuario.id(), request.oldPassword(), request.newPassword());
 
     return ResponseEntity
         .status(HttpStatus.OK)
         .build();
   }
 
-  @PutMapping("/{dni}/cambiar-rol")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<UsuarioResponseDTO> cambiarRolPorAdmin (
-      @PathVariable
-      @Size(min = 6, max = 15)
-      String dni
+  @PutMapping("/{id}/cambiar-rol")
+  @PreAuthorize("hasRole('OWNER')")
+  public ResponseEntity<UsuarioResponseDTO> cambiarRol (
+      @PathVariable Long id,
+      @Valid @RequestBody UsuarioNewRolRequestDTO request
   ) {
 
-    UsuarioResponseDTO response = usuarioService.cambiarRolPorAdmin(dni);
+    UsuarioResponseDTO response = usuarioService.cambiarRol(id, request.rol());
 
     return ResponseEntity
         .status(HttpStatus.OK)
@@ -120,26 +121,96 @@ public class UsuarioController {
   }
 
   @GetMapping("/me")
+  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<UsuarioResponseDTO> obtenerMiPerfil (
       @AuthenticationPrincipal UsuarioAutenticadoDTO usuario
   ) {
 
-    UsuarioResponseDTO response = usuarioService.obtenerMiPerfil(usuario.dni());
+    UsuarioResponseDTO response = usuarioService.obtenerMiPerfil(usuario.id());
 
     return ResponseEntity
         .status(HttpStatus.OK)
         .body(response);
   }
 
-  @GetMapping("/{dni}")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<UsuarioResponseDTO> obtenerPerfilPorAdmin (
-      @PathVariable
-      @Size(min = 6, max = 15)
-      String dni
+  @GetMapping("/{id}")
+  @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+  public ResponseEntity<UsuarioResponseDTO> obtenerPerfil (
+      @PathVariable Long id
   ) {
 
-    UsuarioResponseDTO response = usuarioService.obtenerPerfilPorAdmin(dni);
+    UsuarioResponseDTO response = usuarioService.obtenerPerfil(id);
+
+    return ResponseEntity
+        .status(HttpStatus.OK)
+        .body(response);
+  }
+
+  @PostMapping("/{id}/eliminar")
+  @PreAuthorize("hasRole('OWNER')")
+  public ResponseEntity<Void> eliminarUsuario (
+      @PathVariable Long id
+  ) {
+
+    usuarioService.eliminarUsuario(id);
+
+    return ResponseEntity
+        .status(HttpStatus.NO_CONTENT)
+        .build();
+  }
+
+  @PostMapping("/recuperar-owner")
+  public ResponseEntity<Void> recuperarPasswordOwner (
+      @Valid @RequestBody UsuarioOwnerRecoveryRequestDTO request
+  ) {
+
+    usuarioService.recuperarPasswordOwner(
+        request.dni(), request.recoveryPassword(),  request.nuevaPassword()
+    );
+
+    return ResponseEntity
+        .status(HttpStatus.NO_CONTENT)
+        .build();
+  }
+
+  @PostMapping("/{id}/transferir-owner")
+  @PreAuthorize("hasRole('OWNER')")
+  public ResponseEntity<Void> transferirOwner (
+      @Valid @RequestBody UsuarioOwnerTransferRequestDTO request,
+      @PathVariable Long id
+  ) {
+
+    usuarioService.transferirOwner(request.password(), id);
+
+    return ResponseEntity
+        .status(HttpStatus.OK)
+        .build();
+  }
+
+  @PutMapping("/{id}/cambiar-dni")
+  @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PERSONAL')")
+  public ResponseEntity<UsuarioResponseDTO> cambiarDni (
+      @PathVariable Long id,
+      @Valid @RequestBody UsuarioChangeDniRequestDTO request
+  ) {
+
+    UsuarioResponseDTO response = usuarioService.cambiarDni(id, request.dni());
+
+    return ResponseEntity
+        .status(HttpStatus.OK)
+        .body(response);
+  }
+
+  @PutMapping("/{id}/cambiar-nombre-apellido")
+  @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PERSONAL')")
+  public ResponseEntity<UsuarioResponseDTO> cambiarNombreApellido (
+      @PathVariable Long id,
+      @Valid @RequestBody UsuarioChangeNombreApellidoRequestDTO request
+  ) {
+
+    UsuarioResponseDTO response = usuarioService.cambiarNombreApellido(
+        id, request.nombre(), request.apellido()
+    );
 
     return ResponseEntity
         .status(HttpStatus.OK)

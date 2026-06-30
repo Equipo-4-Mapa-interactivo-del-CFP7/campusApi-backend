@@ -49,6 +49,9 @@ public class Usuario {
     @Column(nullable = false)
     boolean activo;
 
+    @Column(nullable = false)
+    boolean eliminado;
+
     @Enumerated(EnumType.STRING)
     private Rol rolOriginal;
 

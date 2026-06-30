@@ -1,16 +1,16 @@
 package com.cfp.mapa.dto.usuario;
 
+import com.cfp.mapa.validation.ValidPassword;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
-public record UsuarioChangePasswordDTO (
+public record UsuarioChangePasswordDTO(
 
-    @Size(min = 8, max = 60)
-    @NotBlank
+    @NotBlank(message = "La contraseña actual es obligatoria")
+    @ValidPassword
     String oldPassword,
 
-    @Size(min = 8, max = 60)
-    @NotBlank
+    @NotBlank(message = "La contraseña nueva es obligatoria")
+    @ValidPassword
     String newPassword
 ) {
 
