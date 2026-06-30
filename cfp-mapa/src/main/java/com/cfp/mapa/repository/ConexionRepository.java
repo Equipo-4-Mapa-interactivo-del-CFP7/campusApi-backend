@@ -9,7 +9,4 @@ public interface ConexionRepository extends JpaRepository<Conexion, Long> {
 
     List<Conexion> findByActivaTrue();
 
-    List<Conexion> findByOrigenIdAndActivaTrue(Long origenId);
-
-    List<Conexion> findByActivaTrueAndAccesibleTrue();
 }

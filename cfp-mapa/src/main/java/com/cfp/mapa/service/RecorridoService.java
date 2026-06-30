@@ -1,12 +1,11 @@
 package com.cfp.mapa.service;
 
-import com.cfp.mapa.model.Recorrido;
-import java.util.List;
+import com.cfp.mapa.dto.recorrido.RutaResponseDTO;
 
 public interface RecorridoService {
-//    List<Recorrido> listarTodos();
-//    Recorrido obtenerPorId(Long id);
-//    List<Recorrido> listarAccesibles();
-//    Recorrido crear(Recorrido recorrido);
-//    void eliminar(Long id);
+    RutaResponseDTO calcularRuta(
+            Long origenId,
+            Long destinoId,
+            Boolean soloAccesible
+    );
 }
