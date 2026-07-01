@@ -62,13 +62,15 @@ public class UsuarioServiceImpl implements UsuarioService {
           Rol.ADMIN.name(), Rol.PERSONAL.name()));
     }
 
-    if (usuarioRepository.existsByDni(request.dni())) {
+    String dniNormalizado = StringUtils.normalizarDni(request.dni());
+
+    if (usuarioRepository.existsByDni(dniNormalizado)) {
       throw new DniDuplicadoException(request.dni());
     }
 
-    String encodedPassword = dniToPasswordEncoded(request.dni());
+    String encodedPassword = dniToPasswordEncoded(dniNormalizado);
 
-    Usuario usuarioGuardado = usuarioMapper.createToUsuario(request, encodedPassword);
+    Usuario usuarioGuardado = usuarioMapper.createToUsuario(request, dniNormalizado, encodedPassword);
     usuarioRepository.save(usuarioGuardado);
 
     auditoriaService.registrarAccion(
@@ -196,14 +198,38 @@ public class UsuarioServiceImpl implements UsuarioService {
         () -> new UsuarioNotFoundException(id)
     );
 
-    if (newPassword.equalsIgnoreCase(usuario.getDni()) ||
-        newPassword.equalsIgnoreCase("cfp" + usuario.getDni())) {
+    String dni = usuario.getDni();
+    String dniSinCero = dni.startsWith("0") ? dni.substring(1) : dni;
+
+    // La nueva password no puede ser el dni o cfp+dni
+    // Se verifican los casos especiales de dni de 7 caracteres
+    if (newPassword.equalsIgnoreCase(dni) ||
+        newPassword.equalsIgnoreCase(dniSinCero) ||
+        newPassword.equalsIgnoreCase("cfp" + dni) ||
+        newPassword.equalsIgnoreCase("cfp" + dniSinCero)) {
 
       throw new PasswordIncorrectaException("No puedes usar esta contraseña");
     }
 
-    if (!passwordEncoder.matches(oldPassword, usuario.getPassword())) {
-      throw new PasswordIncorrectaException();
+    // Verificar que la password actual ingresada sea correcta
+    // En caso de ser la default cfp+dni del rol CHANGE_PASSWORD se hace una revision con las
+    // variantes del dni con y sin 0 (cero) al comienzo
+    if (usuario.getRol().equals(Rol.CHANGE_PASSWORD)) {
+
+      boolean matchesConCero = passwordEncoder.matches("cfp" + dni, usuario.getPassword());
+      boolean matchesSinCero = passwordEncoder.matches("cfp" + dniSinCero, usuario.getPassword());
+
+      if (!oldPassword.equals("cfp" + dni) && !oldPassword.equals("cfp" + dniSinCero)) {
+        throw new PasswordIncorrectaException();
+      }
+
+      if (!matchesConCero && !matchesSinCero) {
+        throw new PasswordIncorrectaException();
+      }
+    } else {
+      if (!passwordEncoder.matches(oldPassword, usuario.getPassword())) {
+        throw new PasswordIncorrectaException();
+      }
     }
 
     // Si su rol era CHANGE_PASSWORD pasa a recuperar su rol real
@@ -347,7 +373,9 @@ public class UsuarioServiceImpl implements UsuarioService {
   @Override
   public void recuperarPasswordOwner(String dni, String recoveryPassword, String nuevaPassword) {
 
-    Usuario usuario = usuarioRepository.findByDni(dni).orElseThrow(
+    String dniNormalizado = StringUtils.normalizarDni(dni);
+
+    Usuario usuario = usuarioRepository.findByDni(dniNormalizado).orElseThrow(
         () -> new DniNotFoundException(dni)
     );
 
@@ -428,6 +456,8 @@ public class UsuarioServiceImpl implements UsuarioService {
     Usuario usuario = usuarioRepository.findById(id).orElseThrow(
         () -> new UsuarioNotFoundException(id)
     );
+
+    nuevoDni = StringUtils.normalizarDni(nuevoDni);
 
     // El dni nuevo no puede ser el mismo que ya tiene el usuario
     if (usuario.getDni().equalsIgnoreCase(nuevoDni)) {

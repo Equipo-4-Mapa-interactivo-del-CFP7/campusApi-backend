@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidDni {
 
-  String message() default "El DNI debe ser alfanumérico y tener entre 7 y 20 caracteres";
+  String message() default "El DNI debe ser numérico y tener entre 7 y 9 caracteres";
 
   Class<?>[] groups() default {};
 

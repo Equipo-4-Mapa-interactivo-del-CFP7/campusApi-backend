@@ -39,11 +39,29 @@ Los JSON de error están estandarizados con este formato:
 
 Permite a los usuarios autenticarse en el sistema mediante su DNI y contraseña.
 
+- En caso de que el `dni` sea de 7 caracteres, podrá ingresar usando tanto el `dni` de forma normal
+como con el `0` (cero) al comienzo. Ejemplo: `dni 1234567`, formas de ingresarlo aceptadas:
+`1234567` o `01234567`.
+
+**En caso de loguear un usuario con `dni` de 7 caracteres con contraseña `cfp+dni` (únicamente cuando se tiene
+el rol `CHANGE_PASSWORD`) podrá usar las siguientes
+formas:**
+
+| `dni`      | `password`    |
+|------------|---------------|
+| `1234567`  | `cfp1234567`  |
+| `1234567`  | `cfp01234567` |
+| `01234567` | `cfp1234567`  |
+| `01234567` | `cfp01234567` |
+
+Estas combinaciones aceptadas con y sin `0` (cero) al inicio son para que el usuario no tenga
+dificultades a la hora de loguear si no sabe qué `dni` usar, si el suyo o el que viene con `0`.
+
 <details>
 <summary><b>📦 Cuerpo de la petición</b></summary>
 <table><tr><td>
 
-`dni` String, requerido, entre 7 y 20 caracteres alfanuméricos.
+`dni` String, requerido, entre 7 y 9 caracteres numéricos.
 
 `password` String, requerido, entre 8 y 60 caracteres.
 
@@ -127,8 +145,10 @@ El JSON de respuesta de usuario sigue este patrón:
 Permite que usuarios con el rol `OWNER` o `ADMIN` puedan registrar un usuario nuevo en el sistema.
 
 - Para registrarlo se ingresará su `dni`, `nombre`, `apellido` y `rol`.
-- El nombre y apellido será normalizado poniendo la primera letra de cada palabra en mayúscula y
+- El `nombre` y `apellido` serán normalizados poniendo la primera letra de cada palabra en mayúscula y
 quitando los espacios adicionales.
+- El `dni` será normalizado en caso de tener 7 caracteres y se le asignará un `0` (cero) al comienzo.
+Ejemplo: `01234567`.
 - El usuario creado tendrá rol `CHANGE_PASSWORD` y no obtendrá su rol real hasta que cambie su
 contraseña.
 - Al usuario creado se le asignará como contraseña `cfp + dni`. Ejemplo: `cfp12345678`.
@@ -147,7 +167,7 @@ contraseña.
 <summary><b>📦 Cuerpo de la petición</b></summary>
 <table><tr><td>
 
-`dni` String, requerido, entre 7 y 20 caracteres alfanuméricos.
+`dni` String, requerido, entre 7 y 9 caracteres numéricos.
 
 `nombre` String, requerido, 2 a 50 caracteres (solo letras, espacios, `-` y `'`), debe contener al
 menos una letra.
@@ -225,7 +245,7 @@ por página (`page`).
 
 **Todos los filtros son opcionales**.
 Se añaden a la URL (ej. `?nombre=Juan&size=5`).
-* `dni` String - Filtro por coincidencia parcial (no distingue mayúsculas/minúsculas).
+* `dni` String - Filtro por coincidencia parcial.
 * `nombre` String - Filtro por coincidencia parcial (no distingue mayúsculas/minúsculas).
 * `apellido` String - Filtro por coincidencia parcial (no distingue mayúsculas/minúsculas).
 * `activo` Boolean - Filtro exacto (`true` o `false`).
@@ -443,7 +463,11 @@ Permite que únicamente un usuario logueado pueda cambiar su propia contraseña.
 el rol `CHANGE_PASSWORD` entonces recuperará su rol normal.
 
 - La nueva contraseña no puede ser su `dni`.
-- La nueva contraseña no puede ser la contraseña por defecto `cfp + dni`.
+- La nueva contraseña no puede ser la contraseña por defecto `cfp + dni`. En caso de que el `dni`
+sea de 7 caracteres, esta restricción aplica tanto para la versión con el `0` (cero) al comienzo 
+como sin él (ejemplo: se prohíbe tanto `cfp1234567` como `cfp01234567`).
+- Si el usuario tiene rol `CHANGE_PASSWORD` entonces en su contraseña actual `cfp+dni` podrá
+ingresar el `dni` con o sin `0` al comienzo (ejemplo: `cfp1234567` / `cfp01234567`).
 
 <details>
 <summary><b>🔑 Encabezados válidos (Headers)</b></summary>
@@ -737,6 +761,8 @@ si no existe un usuario registrado con el `id` solicitado.
 Permite que un `OWNER` pueda recuperar su contraseña utilizando una clave secreta que se encuentra
 oculta en las variables de entorno, por lo que debe tenerla anotada en forma física.
 
+- Al ingresar su `dni`, si este tiene 7 caracteres, podrá ingresarlo con los 7 o con un `0` (cero) al
+comienzo. Ejemplo de valores válidos: `1234567`/`01234567`.
 - La nueva contraseña no puede ser su propio `dni`.
 - La nueva contraseña no puede ser la default `cfp + dni` (ejemplo: `cfp12345678`).
 
@@ -744,7 +770,7 @@ oculta en las variables de entorno, por lo que debe tenerla anotada en forma fí
 <summary><b>📦 Cuerpo de la petición</b></summary>
 <table><tr><td>
 
-`dni` String, requerido, entre 7 y 20 caracteres alfanuméricos.
+`dni` String, requerido, entre 7 y 9 caracteres numéricos.
 
 `recoveryPassword` String, requerido, entre 8 y 60 caracteres.
 
@@ -874,6 +900,8 @@ otros:
 - `PERSONAL` solo puede cambiar su propio `dni`.
 - Nadie puede cambiar el `dni` de usuarios con rol `CHANGE_PASSWORD`.
 - El nuevo `dni` no puede ser el mismo que ya tiene el usuario.
+- Si el nuevo `dni` es de 7 caracteres, podrá ingresarlo tanto en su forma normal como con el
+`0` (cero) al comienzo. Ejemplo: `1234567`/`01234567`.
 
 <details>
 <summary><b>🔑 Encabezados válidos (Header)</b></summary>
@@ -896,7 +924,7 @@ ID del usuario que se le quiere cambiar el `dni`.
 <summary><b>📦 Cuerpo de la petición</b></summary>
 <table><tr><td>
 
-`dni` String, requerido, entre 7 y 20 caracteres alfanuméricos.
+`dni` String, requerido, entre 7 y 9 caracteres numéricos.
 
 ```JSON
 {
