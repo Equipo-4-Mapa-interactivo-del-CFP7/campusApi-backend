@@ -5,7 +5,6 @@ import com.cfp.mapa.model.enums.EstadoReporte;
 import com.cfp.mapa.model.enums.TipoReporte;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
@@ -29,5 +28,5 @@ public interface ReporteRepository extends JpaRepository<Reporte, Long> {
         Pageable pageable
     );
 
-    boolean existByIdEspacioAndTipo(Long espacioId, TipoReporte tipoReporte);
+    boolean existsByEspacioIdAndTipo(Long espacioId, TipoReporte tipoReporte);
 }

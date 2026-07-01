@@ -3,6 +3,7 @@ package com.cfp.mapa.service.impl;
 import com.cfp.mapa.dto.reporte.ReporteCreateRequestDTO;
 import com.cfp.mapa.dto.reporte.ReporteResponseDTO;
 import com.cfp.mapa.dto.reporte.ReporteUpdateRequestDTO;
+import com.cfp.mapa.exception.ReporteNotFoundException;
 import com.cfp.mapa.exception.ResourceNotFoundException;
 import com.cfp.mapa.exception.ReporteConflictException;
 import com.cfp.mapa.model.Espacio;
@@ -41,7 +42,7 @@ public class ReporteServiceImpl implements ReporteService {
         }
 
         // Busca si ya existe el reporte
-        boolean existe = reporteRepository.existByIdEspacioAndTipo(request.espacioId(), request.tipoReporte());
+        boolean existe = reporteRepository.existsByEspacioIdAndTipo(request.espacioId(), request.tipoReporte());
         if(existe) {
             Espacio espacio = espacioRepository.findById(request.espacioId())
                     .orElseThrow(() -> new ResourceNotFoundException("Espacio no encontrado"));
@@ -83,17 +84,7 @@ public class ReporteServiceImpl implements ReporteService {
     @Override
     public ReporteResponseDTO actualizarEstado(Long id, ReporteUpdateRequestDTO request) {
         Reporte reporte = reporteRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Reporte no encontrado con id: " + id));
-        reporte.setEstado(reporteMapper.strToEstadoReporte(request.estado()));
-        reporteRepository.save(reporte);
-        return reporteMapper.ReporteToResponse(reporte);
-    }
-
-    @Override
-    public ReporteResponseDTO actualizarEstado(Long id, ReporteUpdateRequestDTO request) {
-        Reporte reporte = reporteRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Reporte no encontrado con id: " + id));
+                .orElseThrow(() -> new ReporteNotFoundException(id));
 
         reporte.setEstado(reporteMapper.strToEstadoReporte(request.estado()));
         reporteRepository.save(reporte);
