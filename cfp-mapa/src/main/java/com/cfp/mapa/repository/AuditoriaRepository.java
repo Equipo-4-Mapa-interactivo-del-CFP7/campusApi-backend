@@ -13,10 +13,12 @@ public interface AuditoriaRepository extends JpaRepository<AuditoriaUsuario, Lon
 
   @Query("SELECT a FROM AuditoriaUsuario a WHERE " +
       "(:usuarioId IS NULL OR a.operadorId = :usuarioId OR a.usuarioAfectadoId = :usuarioId) AND " +
-      "(:accion IS NULL OR a.accion = :accion)")
+      "(:accion IS NULL OR a.accion = :accion) AND " +
+      "(:reporteId IS NULL OR a.reporteId = :reporteId)")
   Page<AuditoriaUsuario> buscarConFiltrosDinamicos(
       @Param("usuarioId") Long usuarioId,
       @Param("accion") String accion,
+      @Param("reporteId") Long reporteId,
       Pageable pageable
   );
 }

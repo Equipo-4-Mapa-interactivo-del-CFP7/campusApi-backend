@@ -18,6 +18,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
   @Query("SELECT u FROM Usuario u WHERE " +
       "u.eliminado = false AND " +
+      "u.dni != 'SYSTEM01' AND " +
       "(:dni IS NULL OR u.dni LIKE :dni) AND " +
       "(:nombre IS NULL OR u.nombre LIKE :nombre) AND " +
       "(:apellido IS NULL OR u.apellido LIKE :apellido) AND " +
@@ -34,4 +35,5 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
   );
 
   boolean existsByIdAndActivoTrueAndEliminadoFalseAndRolIn(Long id, Collection<Rol> roles);
+
 }

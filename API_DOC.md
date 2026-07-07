@@ -107,6 +107,14 @@ si el cuerpo JSON no cumple las restricciones estructurales (dni vacío, etc.).
 
 # 👥 Control de Usuarios
 
+#### Nombres y apellidos reservadados por el sistema
+
+| `nombre`  | `apellido`  |
+|-----------|-------------|
+| `USUARIO` | `ELIMINADO` |
+| `SISTEMA` | `PROCESO`   |
+
+
 #### Formato de respuesta de usuarios
 
 El JSON de respuesta de usuario sigue este patrón:
@@ -200,7 +208,7 @@ con la información del usuario creado.
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
 - Si el cuerpo JSON no cumple las restricciones estructurales (dni vacío, etc.).
-- Si se intenta enviar en el campo `rol` los valores `OWNER` o `CHANGE_PASSWORD`.
+- Si se intenta enviar en el campo `rol` los valores `OWNER`, `CHANGE_PASSWORD` o `SYSTEM`.
 
 🔴 `401 UNAUTHORIZED` +
 [JSON error](#formato-general-de-errores)
@@ -211,12 +219,14 @@ con la información del usuario creado.
 [JSON error](#formato-general-de-errores)
 - Si el usuario logueado no posee los roles permitidos (`OWNER` / `ADMIN`).
 - Si un `ADMIN` intenta registrar a otro `ADMIN` u `OWNER`.
+- [nombre o apellido](#nombres-y-apellidos-reservadados-por-el-sistema)
+está reservado por el sistema.
 - Si la sesión fue revocada en base de datos. Retorna el JSON de error con 
 `"errorCode": "SESSION_INVALIDATED"`.
 
 🔴 `409 CONFLICT` +
 [JSON error](#formato-general-de-errores)
-si el DNI ya se encuentra registrado en el sistema.
+si el `dni` ya se encuentra registrado en el sistema.
 
 </td></tr></table>
 </details>
@@ -374,7 +384,9 @@ con la información del usuario al que se le cambió la contraseña.
 
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
-si el `id` en el path variable no cumple con las restricciones.
+- Si el `id` en el path variable no cumple con las restricciones.
+- Si se intenta modificar a un usuario `eliminado` (ofuscado).
+- Si se intenta modificar al usuario con rol `SYSTEM`.
 
 🔴 `401 UNAUTHORIZED` +
 [JSON error](#formato-general-de-errores)
@@ -390,7 +402,8 @@ si el `id` en el path variable no cumple con las restricciones.
 
 🔴 `404 NOT FOUND` +
 [JSON error](#formato-general-de-errores)
-si no existe un usuario registrado con el `id` solicitado.
+- Si no existe un usuario registrado con el `id` solicitado.
+- Si se intenta modificar al usuario con rol `SYSTEM`.
 
 </td></tr></table>
 </details>
@@ -432,7 +445,8 @@ del usuario al que se le cambió el flag `activo`.
 
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
-si el `id` en el path variable no cumple con las restricciones.
+- Si el `id` en el path variable no cumple con las restricciones.
+- Si se intenta modificar a un usuario `eliminado` (ofuscado).
 
 🔴 `401 UNAUTHORIZED` +
 [JSON error](#formato-general-de-errores)
@@ -448,7 +462,8 @@ si el `id` en el path variable no cumple con las restricciones.
 
 🔴 `404 NOT FOUND` +
 [JSON error](#formato-general-de-errores)
-si no existe un usuario registrado con el `id` solicitado.
+- Si no existe un usuario registrado con el `id` solicitado.
+- Si se intenta modificar al usuario con rol `SYSTEM`.
 
 </td></tr></table>
 </details> 
@@ -573,6 +588,7 @@ del usuario al que se le cambió el rol.
 [JSON error](#formato-general-de-errores)
 - Si el `id` enviado en el path variable no tiene un formato numérico válido.
 - Si el campo `rol` en el cuerpo está vacío o no es un rol válido del sistema.
+- Si se intenta modificar a un usuario `eliminado` (ofuscado).
 
 🔴 `401 UNAUTHORIZED` +
 [JSON error](#formato-general-de-errores)
@@ -589,7 +605,8 @@ del usuario al que se le cambió el rol.
 
 🔴 `404 NOT FOUND` +
 [JSON error](#formato-general-de-errores)
-si no existe un usuario con el `id` solicitado.
+- Si no existe un usuario con el `id` solicitado.
+- Si se intenta modificar al usuario con rol `SYSTEM`.
 
 </td></tr></table>
 </details>
@@ -730,7 +747,8 @@ Protección de Datos Personales** de Argentina.
 
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
-si el `id` enviado en el path variable no tiene un formato numérico válido.
+- Si el `id` enviado en el path variable no tiene un formato numérico válido.
+- Si se intenta modificar a un usuario `eliminado` (ofuscado).
 
 🔴 `401 UNAUTHORIZED` +
 [JSON error](#formato-general-de-errores)
@@ -746,7 +764,8 @@ si el `id` enviado en el path variable no tiene un formato numérico válido.
 
 🔴 `404 NOT FOUND` +
 [JSON error](#formato-general-de-errores)
-si no existe un usuario registrado con el `id` solicitado.
+- Si no existe un usuario registrado con el `id` solicitado.
+- Si se intenta modificar al usuario con rol `SYSTEM`.
 
 </td></tr></table>
 </details>
@@ -862,6 +881,8 @@ ID del usuario que se le quiere asignar el rol `OWNER`.
 [JSON error](#formato-general-de-errores)
 - Si el cuerpo de la petición no cumple las restricciones.
 - Si el `id` enviado en el path variable no tiene un formato numérico válido.
+- Si se intenta modificar a un usuario `eliminado` (ofuscado).
+- Si se intenta modificar a un usuario con `activo = false`.
 
 🔴 `401 UNAUTHORIZED` +
 [JSON error](#formato-general-de-errores)
@@ -880,7 +901,8 @@ ID del usuario que se le quiere asignar el rol `OWNER`.
 
 🔴 `404 NOT FOUND` +
 [JSON error](#formato-general-de-errores)
-si no existe un usuario registrado con el `id` solicitado.
+- Si no existe un usuario registrado con el `id` solicitado.
+- Si se intenta modificar al usuario con rol `SYSTEM`.
 
 </td></tr></table>
 </details>
@@ -947,6 +969,7 @@ del usuario al que se le cambió el `dni`.
 [JSON error](#formato-general-de-errores)
 - Si el cuerpo de la petición no cumple las restricciones.
 - Si el `id` enviado en el path variable no tiene un formato numérico válido.
+- Si se intenta modificar a un usuario `eliminado` (ofuscado).
 
 🔴 `401 UNAUTHORIZED` +
 [JSON error](#formato-general-de-errores)
@@ -957,6 +980,7 @@ del usuario al que se le cambió el `dni`.
 [JSON error](#formato-general-de-errores)
 - Si el usuario logueado no posee los roles permitidos (`OWNER`/`ADMIN`/`PERSONAL`).
 - Si se intenta asignar el mismo `dni` que el usuario ya tiene.
+- Si se intenta asignar un `dni` ya registrado en el sistema.
 - Si se intenta modificar a un usuario con el rol `CHANGE_PASSWORD`.
 - Si alguien que no es `OWNER` intenta modificar a un usuario con rol `OWNER`.
 - Si un `ADMIN` intenta modificar a otro con el mismo rol.
@@ -966,7 +990,8 @@ del usuario al que se le cambió el `dni`.
 
 🔴 `404 NOT FOUND` +
 [JSON error](#formato-general-de-errores)
-si no existe un usuario registrado con el `id` solicitado.
+- Si no existe un usuario registrado con el `id` solicitado.
+- Si se intenta modificar al usuario con rol `SYSTEM`.
 
 </td></tr></table>
 </details>
@@ -1036,6 +1061,7 @@ del usuario al que se le cambió el `nombre` y `apellido`.
 [JSON error](#formato-general-de-errores)
 - Si el cuerpo de la petición no cumple las restricciones.
 - Si el `id` enviado en el path variable no tiene un formato numérico válido.
+- Si se intenta modificar a un usuario `eliminado` (ofuscado).
 
 🔴 `401 UNAUTHORIZED` +
 [JSON error](#formato-general-de-errores)
@@ -1050,12 +1076,15 @@ del usuario al que se le cambió el `nombre` y `apellido`.
 - Si alguien que no es `OWNER` intenta modificar a un usuario con rol `OWNER`.
 - Si un `ADMIN` intenta modificar a otro con el mismo rol.
 - Si un `PERSONAL` intenta modificar a alguien que no sea sí mismo.
+- [nombre o apellido](#nombres-y-apellidos-reservadados-por-el-sistema)
+  está reservado por el sistema.
 - Si la sesión fue revocada en base de datos. Retorna el JSON de error con
 `"errorCode": "SESSION_INVALIDATED"`.
 
 🔴 `404 NOT FOUND` +
 [JSON error](#formato-general-de-errores)
-si no existe un usuario registrado con el `id` solicitado.
+- Si no existe un usuario registrado con el `id` solicitado.
+- Si se intenta modificar al usuario con rol `SYSTEM`.
 
 </td></tr></table>
 </details>
@@ -1079,50 +1108,91 @@ Los JSON de respuesta de auditoría están estandarizados con este formato:
   "afectadoId": Long,
   "afectadoNombre": String,
   "afectadoDni": String,
-  "accion": String
+  "reporteId": Long,
+  "accion": String,
+  "detalles": Object (String o JSON dinámico)
 }
 ```
 `operadorNombre` y  `afectadoNombre` están compuestos por `nombre + apellido` de los usuarios.
 
 <details>
-<summary><b>Ejemplo cuando afecta a otro usuario</b></summary>
+<summary><b>Ejemplo cuando afecta a otro usuario - con detalles 'JSON'</b></summary>
+
+- En este ejemplo el `OWNER` le cambia el `nombre` y `apellido` a otro usuario.
+- Se genera un `JSON` con los `detalles` históricos del cambio.
 
 ```JSON
 {
-  "id": 12,
-  "fechaAccion": "2026-06-10T15:46:08.0424397",
-  "operadorId": 1,
-  "operadorNombre": "Usuario Operador",
-  "operadorDni": "12345678",
+  "id": 1,
+  "fechaAccion": "2026-07-06T20:38:39.055161",
+  "operadorId": 2,
+  "operadorNombre": "Dueño Total",
+  "operadorDni": "11112222",
   "operadorRol": "OWNER",
-  "afectadoId": 2,
-  "afectadoNombre": "Nombre Y Apellido Usuario",
+  "afectadoId": 4,
+  "afectadoNombre": "Pepe Ortega",
   "afectadoDni": "23456789",
-  "accion": "cambió el rol de un usuario"
+  "reporteId": null,
+  "accion": "NOMBRE_APELLIDO_EDITADO",
+  "detalles": {
+    "usuarioAfectadoId": 4,
+    "nombreAnterior": "Personal",
+    "nombreNuevo": "Pepe",
+    "apellidoAnterior": "Institucional",
+    "apellidoNuevo": "Ortega"
+  }
 }
 ```
 </details>
 
 <details>
-<summary><b>Ejemplo cuando se afecta a sí mismo</b></summary>
+<summary><b>Ejemplo cuando no afecta a otro usuario - con detalles 'String'</b></summary>
 
-Cuando un usuario realiza una acción sobre sí mismo, los parámetros `afectadoId`, `afectadoNombre` y
-`afectadoDni` pasan a tener valores default.
+- En este ejemplo el `OWNER` crea un reporte con temporizador de cierre automático.
+- Cuando un usuario realiza una acción que no afecta a otro, los parámetros `afectadoId`,
+`afectadoNombre` y `afectadoDni` pasan a tener valores default.
 
 ```JSON
 {
-  "id": 12,
-  "fechaAccion": "2026-06-10T15:46:08.0424397",
-  "operadorId": 1,
-  "operadorNombre": "Usuario Operador",
-  "operadorDni": "12345678",
-  "operadorRol": "ADMIN",
+  "id": 2,
+  "fechaAccion": "2026-07-06T20:44:30.05745",
+  "operadorId": 2,
+  "operadorNombre": "Dueño Total",
+  "operadorDni": "11112222",
+  "operadorRol": "OWNER",
   "afectadoId": null,
   "afectadoNombre": "N/A (Auto-acción)",
   "afectadoDni": "N/A",
-  "accion": "actualizó el número de DNI"
+  "reporteId": 1,
+  "accion": "REPORTE_CREADO",
+  "detalles": "Vence en 1 minutos"
 }
 ```
+</details>
+
+<details>
+<summary><b>Ejemplo cuando no afecta a otro usuario - sin detalles</b></summary>
+
+- En este ejemplo el `SYSTEM` cierra un reporte de forma automática.
+
+
+```JSON
+{
+  "id": 3,
+  "fechaAccion": "2026-07-06T20:46:15.948642",
+  "operadorId": 1,
+  "operadorNombre": "SISTEMA PROCESO",
+  "operadorDni": "SYSTEM01",
+  "operadorRol": "SYSTEM",
+  "afectadoId": null,
+  "afectadoNombre": "N/A (Auto-acción)",
+  "afectadoDni": "N/A",
+  "reporteId": 1,
+  "accion": "REPORTE_CERRADO_AUTOMATICO",
+  "detalles": null
+}
+```
+
 </details>
 
 ## 🟢 Listar historial de acciones [solo OWNER]
@@ -1132,21 +1202,27 @@ Cuando un usuario realiza una acción sobre sí mismo, los parámetros `afectado
 Permite que únicamente usuarios con el rol `OWNER` puedan ver el historial de actividad de los
 usuarios.
 
-- Podrá ordenarlos por `fechaAccion` (`desc` / `asc`).
-- Podrá filtrarlos por `usuarioId` y por `accion`.
+- Podrá ordenarlos por `fechaAccion` con el parámetro `sort` (`desc` / `asc`).
+- Podrá filtrarlos por `usuarioId`, `accion`, `reporteId`.
+
+
 - Valores de `accion` válidos:
-  - `USUARIO_CREADO`.
-  - `PASSWORD_RESTABLECIDA`.
-  - `ESTADO_ACTIVO_MODIFICADO`.
-  - `PASSWORD_CAMBIADA`.
-  - `ROL_MODIFICADO`.
-  - `USUARIO_ELIMINADO`.
-  - `PASSWORD_OWNER_RECUPERADA`.
-  - `OWNER_TRANSFERIDO`.
-  - `DNI_EDITADO`.
-  - `NOMBRE_APELLIDO_EDITADO`.
-  - `REPORTE_ATENDIDO`.
-  - `REPORTE_CREADO`.
+  - `USUARIO_CREADO`
+  - `PASSWORD_RESTABLECIDA`
+  - `ESTADO_ACTIVO_MODIFICADO`
+  - `PASSWORD_CAMBIADA`
+  - `ROL_MODIFICADO`
+  - `USUARIO_ELIMINADO`
+  - `PASSWORD_OWNER_RECUPERADA`
+  - `OWNER_TRANSFERIDO`
+  - `DNI_EDITADO`
+  - `NOMBRE_APELLIDO_EDITADO`
+  - `REPORTE_CREADO`
+  - `REPORTE_ATENDIDO`
+  - `REPORTE_MODIFICADO`
+  - `REPORTE_TIEMPO_ELIMINADO`
+  - `REPORTE_CERRADO`
+  - `REPORTE_CERRADO_AUTOMATICO`
 
 <details>
 <summary><b>🔑 Encabezado (Header)</b></summary>
@@ -1162,6 +1238,7 @@ usuarios.
 Se añaden a la URL (ej. `?usuarioId=2&size=5`).
 * `usuarioId` int - Filtro exacto (`id` del usuario del cual se busca el historial).
 * `accion` String - Filtro exacto (solo acepta los valores listados).
+* `reporteId` Long - Filtro exacto.
 * `page` int - Número de página, empieza en 0 (Por defecto: 0).
 * `size` int - Cantidad de registros por página (Por defecto: 20).
 * `sort` String - Orden de la lista, si no se añade `asc` (ascendente) siempre será por defecto
@@ -1185,23 +1262,59 @@ Cada acción tendrá el formato del
 {
   "content": [
     {
-      "id": 1,
-      "fechaAccion": "2026-06-24T00:22:08.719435",
-      "operadorId": 2,
-      "operadorNombre": "Pato Merlín",
-      "operadorDni": "12345678",
-      "operadorRol": "ADMIN",
+      "id": 3,
+      "fechaAccion": "2026-07-06T20:46:15.948642",
+      "operadorId": 1,
+      "operadorNombre": "SISTEMA PROCESO",
+      "operadorDni": "SYSTEM01",
+      "operadorRol": "SYSTEM",
       "afectadoId": null,
       "afectadoNombre": "N/A (Auto-acción)",
       "afectadoDni": "N/A",
-      "accion": "actualizó los datos de nombre y apellido"
+      "reporteId": 1,
+      "accion": "REPORTE_CERRADO_AUTOMATICO",
+      "detalles": null
+    },
+    {
+      "id": 2,
+      "fechaAccion": "2026-07-06T20:44:30.05745",
+      "operadorId": 2,
+      "operadorNombre": "Dueño Total",
+      "operadorDni": "11112222",
+      "operadorRol": "OWNER",
+      "afectadoId": null,
+      "afectadoNombre": "N/A (Auto-acción)",
+      "afectadoDni": "N/A",
+      "reporteId": 1,
+      "accion": "REPORTE_CREADO",
+      "detalles": "Vence en 1 minutos"
+    },
+    {
+      "id": 1,
+      "fechaAccion": "2026-07-06T20:38:39.055161",
+      "operadorId": 2,
+      "operadorNombre": "Dueño Total",
+      "operadorDni": "11112222",
+      "operadorRol": "OWNER",
+      "afectadoId": 4,
+      "afectadoNombre": "Pepe Ortega",
+      "afectadoDni": "23456789",
+      "reporteId": null,
+      "accion": "NOMBRE_APELLIDO_EDITADO",
+      "detalles": {
+        "usuarioAfectadoId": 4,
+        "nombreAnterior": "Personal",
+        "nombreNuevo": "Pepe",
+        "apellidoAnterior": "Institucional",
+        "apellidoNuevo": "Ortega"
+      }
     }
   ],
   "empty": false,
   "first": true,
   "last": true,
   "number": 0,
-  "numberOfElements": 1,
+  "numberOfElements": 3,
   "pageable": {
     "offset": 0,
     "pageNumber": 0,
@@ -1220,7 +1333,7 @@ Cada acción tendrá el formato del
     "sorted": true,
     "unsorted": false
   },
-  "totalElements": 1,
+  "totalElements": 3,
   "totalPages": 1
 }
 ```
@@ -1245,6 +1358,8 @@ si los tipos de datos enviados en los parámetros son incompatibles (ejemplo: `?
 </td></tr></table>
 </details>
 
+---
+
 # ⚠️ Reportes
 
 #### Formato de respuesta de reporte
@@ -1253,12 +1368,15 @@ El JSON de respuesta de reporte sigue este patrón:
 
 ```JSON
 {
-  "id": Long,
-  "espacioId": Long,
-  "descripcion": String,
-  "estadoReporte": String,
+  "id":  Long,
+  "espacioId":  Long,
+  "nombreEspacio":  String,
+  "descripcion":  String,
+  "estadoReporte":  String,
   "tipoReporte": String,
-  "urlFoto": String
+  "minutosEstimados":  Integer,
+  "fechaVencimiento":  String ("2026-06-10T15:46:08.0424397"),
+  "fechaCreacion": String ("2026-06-10T15:46:08.0424397")
 }
 ```
 
@@ -1268,27 +1386,38 @@ El JSON de respuesta de reporte sigue este patrón:
 ```JSON
 {
   "id": 1,
-  "espacioId": 12,
-  "descripcion": "La puerta de acceso al aula está bloqueada",
-  "estadoReporte": "PENDIENTE",
+  "espacioId": 1,
+  "nombreEspacio": "Laboratorio de Computación 1",
+  "descripcion": "Suelo mojado",
+  "estadoReporte": "RESUELTO",
   "tipoReporte": "ACCESO_BLOQUEADO",
-  "urlFoto": "https://i.ibb.co/xyz/imagen.jpg"
+  "minutosEstimados": null,
+  "fechaVencimiento": null,
+  "fechaCreacion": "2026-07-06T20:44:30.055448"
 }
 ```
 </details>
 
----
+## 🟢 Crear un reporte [Solo OWNER, ADMIN o PERSONAL]
 
-## 🟢 Crear un reporte [acceso público]
+`POST /api/reportes`
 
-`POST /api/reportes/reportar`
+Permite que un usuario logueado como `OWNER`, `ADMIN` o `PERSONAL` pueda crear un reporte de
+incidencia sobre un espacio.
 
-Permite que cualquier usuario, registrado o no, pueda crear un reporte de incidencia sobre un espacio.
-
-- El reporte se creará con estado `PENDIENTE` automáticamente.
-- La foto es opcional. Si no se adjunta, `urlFoto` tendrá valor `null` en la respuesta.
 - No puede existir más de un reporte activo del mismo tipo para el mismo espacio. Un reporte se
-  considera activo si su estado no es `RESUELTO`.
+considera activo si su estado no es `RESUELTO`.
+- El reporte se creará con estado `PENDIENTE` automáticamente, a menos que se cree con minutos de
+cierre, en cuyo caso su estado será `EN_REVISION`.
+
+<details>
+<summary><b>🔑 Encabezados válidos (Header)</b></summary>
+
+- `Authorization`: `Bearer <token_de_owner>`
+- `Authorization`: `Bearer <token_de_admin>`
+- `Authorization`: `Bearer <token_de_personal>`
+
+</details>
 
 <details>
 <summary><b>📦 Cuerpo de la petición</b></summary>
@@ -1300,18 +1429,18 @@ Permite que cualquier usuario, registrado o no, pueda crear un reporte de incide
 - `BARRERA_FISICA`
 - `DIFICULTAD_ORIENTACION`
 
-`descripcion` String, requerido, máximo 100 caracteres.
+`descripcion` String, opcional, máximo 100 caracteres.
 
-`espacioId` Long, requerido. ID del espacio donde ocurre la incidencia.
+`espacioId` Long, requerido. `id` del espacio donde ocurre la incidencia.
 
-`imagenURL` String, opcional. URL de la imagen subida previamente a un servicio externo (imgbb).
+`minutosEstimados` Integer, opcional. Minutos antes que el reporte se cierre solo.
 
 ```JSON
 {
   "tipoReporte": "ACCESO_BLOQUEADO",
   "descripcion": "La puerta de acceso al aula está bloqueada",
   "espacioId": 12,
-  "imagenURL": "https://i.ibb.co/xyz/imagen.jpg"
+  "minutosEstimados": 10
 }
 ```
 
@@ -1328,7 +1457,18 @@ con la información del reporte creado.
 
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
-- Si el cuerpo JSON no cumple las restricciones estructurales (descripción vacía, tipoReporte inválido, etc.).
+si el cuerpo JSON no cumple las restricciones estructurales (descripción vacía, tipoReporte inválido, etc.).
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
+
+🔴 `403 FORBIDDEN` +
+[JSON error](#formato-general-de-errores)
+- Si el usuario logueado no posee el rol `OWNER`, `ADMIN` o `PERSONAL`.
+- Si la sesión fue revocada en base de datos. Retorna el JSON de error con
+`"errorCode": "SESSION_INVALIDATED"`.
 
 🔴 `404 NOT FOUND` +
 [JSON error](#formato-general-de-errores)
@@ -1341,48 +1481,53 @@ si ya existe un reporte activo del mismo tipo para el espacio indicado.
 </td></tr></table>
 </details>
 
----
+## 🟢 Atender un reporte [solo OWNER, ADMIN o PERSONAL]
 
-## 🟢 Actualizar estado de un reporte [solo para ADMIN]
+`POST /api/reportes/{id}/atender`
 
-`PATCH /api/reportes/{id}/estado`
-
-Permite que usuarios con el rol `ADMIN` puedan actualizar el estado de un reporte existente.
-
-- Los estados válidos son `PENDIENTE`, `EN_REVISION` y `RESUELTO`.
+Permite que un usuario logueado como `OWNER`, `ADMIN` o `PERSONAL` pueda atender un reporte. Al
+atender un reporte se puede:
+- Únicamente marcarlo como atendido.
+- Agregarle, quitarle o editarle el tiempo de espera para su cierre automático.
+- Cambiarle la descripción.
 
 <details>
-<summary><b>🔑 Encabezado válido (Header)</b></summary>
+<summary><b>🔑 Encabezados válidos (Header)</b></summary>
 
-* `Authorization`: `Bearer <token_de_admin>`
+- `Authorization`: `Bearer <token_de_owner>`
+- `Authorization`: `Bearer <token_de_admin>`
+- `Authorization`: `Bearer <token_de_personal>`
 
 </details>
 
 <details>
 <summary><b>🔎 Path variable</b></summary>
 
-* `id` Long, requerido.
-  ID del reporte al que se le quiere actualizar el estado.
+- `id` Long, requerido.<br>
+  ID del reporte que se quiere editar.
 
-</details>
+</details> 
 
 <details>
 <summary><b>📦 Cuerpo de la petición</b></summary>
 <table><tr><td>
 
-`estado` String, requerido. Valores válidos:
-- `PENDIENTE`
-- `EN_REVISION`
-- `RESUELTO`
+`minutosEstimados` Integer, opcional, valor mínimo `1`.
+
+`quitarContador` Boolean, opcional.
+
+`descripcion` String, opcional, máximo 100 caracteres.
 
 ```JSON
 {
-  "estado": "EN_REVISION"
+  "minutosEstimados": 5,
+  "quitarContador": false,
+  "descripcion": "Piso secándose"
 }
 ```
 
 </td></tr></table>
-</details>
+</details> 
 
 <details>
 <summary><b>🔄 Respuesta del servidor</b></summary>
@@ -1390,11 +1535,13 @@ Permite que usuarios con el rol `ADMIN` puedan actualizar el estado de un report
 
 🟢 `200 OK` +
 [JSON respuesta de reporte](#formato-de-respuesta-de-reporte)
-con la información actualizada del reporte.
+con la información del reporte creado.
 
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
-- Si el cuerpo JSON no cumple las restricciones (estado vacío o valor inválido).
+- Si se intenta modificar el tiempo (`minutosEstimados`) y quitar el contador (`quitarContador`) al
+mismo tiempo.
+- Si no se realiza ningún cambio.
 - Si el `id` enviado en el path variable no tiene un formato numérico válido.
 
 🔴 `401 UNAUTHORIZED` +
@@ -1404,16 +1551,238 @@ con la información actualizada del reporte.
 
 🔴 `403 FORBIDDEN` +
 [JSON error](#formato-general-de-errores)
-- Si el usuario logueado no posee el rol `ADMIN`.
+- Si el usuario logueado no posee el rol `OWNER`, `ADMIN` o `PERSONAL`.
+- Si se intenta modificar un reporte que no está en `PENDIENTE` ni `EN_REVISION`.
 - Si la sesión fue revocada en base de datos. Retorna el JSON de error con
-  `"errorCode": "SESSION_INVALIDATED"`.
+`"errorCode": "SESSION_INVALIDATED"`.
 
 🔴 `404 NOT FOUND` +
 [JSON error](#formato-general-de-errores)
-si no existe un reporte registrado con el `id` solicitado.
+si no existe un reporte con el `id` solicitado en el path variable.
+
+</td></tr></table>
+</details> 
+
+## 🟢 Resolver un reporte [solo OWNER, ADMIN o PERSONAL]
+
+`POST /api/reportes/{id}/resolver`
+
+Permite que un usuario logueado como `OWNER`, `ADMIN` o `PERSONAL` pueda marcar un reporte como
+`RESUELTO`.
+
+<details>
+<summary><b>🔑 Encabezados válidos (Header)</b></summary>
+
+- `Authorization`: `Bearer <token_de_owner>`
+- `Authorization`: `Bearer <token_de_admin>`
+- `Authorization`: `Bearer <token_de_personal>`
+
+</details>
+
+<details>
+<summary><b>🔎 Path variable</b></summary>
+
+- `id` Long, requerido.<br>
+  ID del reporte que se quiere resolver.
+
+</details> 
+
+<details>
+<summary><b>🔄 Respuesta del servidor</b></summary>
+<table><tr><td>
+
+🟢 `200 OK` +
+[JSON respuesta de reporte](#formato-de-respuesta-de-reporte)
+con la información del reporte resuelto.
+
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+- Si el reporte ya se encuentra con estado `RESUELTO`.
+- Si el `id` enviado en el path variable no tiene un formato numérico válido.
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
+
+🔴 `403 FORBIDDEN` +
+[JSON error](#formato-general-de-errores)
+- Si el usuario logueado no posee el rol `OWNER`, `ADMIN` o `PERSONAL`.
+- Si la sesión fue revocada en base de datos. Retorna el JSON de error con
+`"errorCode": "SESSION_INVALIDATED"`.
+
+🔴 `404 NOT FOUND` +
+[JSON error](#formato-general-de-errores)
+si no existe un reporte con el `id` solicitado en el path variable.
+
+</td></tr></table>
+</details> 
+
+## 🟢 Obtener un reporte [solo OWNER, ADMIN o PERSONAL]
+
+`GET /api/reportes/{id}`
+
+Permite que un usuario logueado como `OWNER`, `ADMIN` o `PERSONAL` pueda obtener un reporte por su
+`id`.
+
+<details>
+<summary><b>🔑 Encabezados válidos (Header)</b></summary>
+
+- `Authorization`: `Bearer <token_de_owner>`
+- `Authorization`: `Bearer <token_de_admin>`
+- `Authorization`: `Bearer <token_de_personal>`
+
+</details>
+
+<details>
+<summary><b>🔎 Path variable</b></summary>
+
+- `id` Long, requerido.<br>
+  ID del reporte que se quiere obtener.
+
+</details> 
+
+<details>
+<summary><b>🔄 Respuesta del servidor</b></summary>
+<table><tr><td>
+
+🟢 `200 OK` +
+[JSON respuesta de reporte](#formato-de-respuesta-de-reporte)
+con la información del reporte requerido.
+
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+si el `id` enviado en el path variable no tiene un formato numérico válido.
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
+
+🔴 `404 NOT FOUND` +
+[JSON error](#formato-general-de-errores)
+si no existe un reporte con el `id` solicitado en el path variable.
+
+🔴 `403 FORBIDDEN` +
+[JSON error](#formato-general-de-errores)
+- Si el usuario logueado no posee el rol `OWNER`, `ADMIN` o `PERSONAL`.
+- Si la sesión fue revocada en base de datos. Retorna el JSON de error con
+`"errorCode": "SESSION_INVALIDATED"`.
+
+</td></tr></table>
+</details> 
+
+## 🟢 Listar reportes con filtros [solo OWNER, ADMIN o PERSONAL]
+
+`GET /api/reportes`
+
+Permite que un usuario logueado como `OWNER`, `ADMIN` o `PERSONAL` puedan obtener una lista
+filtrable con todos los reportes.
+
+- Podrá filtrarlos por `espacioId`, `estado`, `tipoReporte`, `page`, `size`.
+
+<details>
+<summary><b>🔑 Encabezados válidos (Header)</b></summary>
+
+- `Authorization`: `Bearer <token_de_owner>`
+- `Authorization`: `Bearer <token_de_admin>`
+- `Authorization`: `Bearer <token_de_personal>`
+
+</details>
+
+<details>
+<summary><b>❓ Parámetros de Consulta (Query Parameters)</b></summary>
+
+**Todos los filtros son opcionales**. Se añaden a la URL (ej: `?espacioId=2`)
+
+- `espacioId` int - Filtro exacto (`id` del espacio al que pertenece el reporte).
+- `estado` String - Filtro exacto (estado del reporte que puede ser `PENDIENTE` / `EN_REVISION` / 
+`RESUELTO`)
+- `tipoReporte` String - Filtro exacto (puede ser del tipo `ACCESO_BLOQUEADO` / 
+`PROBLEMA_SENALETICA` / `BARRERA_FISICA` / `DIFICULTAD_ORIENTACION`).
+- `page` int - Número de página, empieza en 0 (Por defecto: 0).
+- `size` int - Cantidad de registros por página (Por defecto: 10).
+
+</details>
+
+<details>
+<summary><b>🔄 Respuesta del servidor</b></summary>
+<table><tr><td>
+
+🟢 `200 OK` + JSON de estructura de página de Spring.
+
+
+Cada reporte tendrá el formato del
+[JSON respuesta de reporte](#formato-de-respuesta-de-reporte)
+
+<details>
+<summary><b>🧾 JSON de estructura de página de Spring</b></summary>
+
+```JSON
+{
+  "content": [
+    {
+      "id": 1,
+      "espacioId": 1,
+      "nombreEspacio": "Laboratorio de Computación 1",
+      "descripcion": "No funciona la luz",
+      "estadoReporte": "RESUELTO",
+      "tipoReporte": "ACCESO_BLOQUEADO",
+      "minutosEstimados": null,
+      "fechaVencimiento": null,
+      "fechaCreacion": "2026-07-06T20:44:30.055448"
+    }
+  ],
+  "empty": false,
+  "first": true,
+  "last": true,
+  "number": 0,
+  "numberOfElements": 1,
+  "pageable": {
+    "offset": 0,
+    "pageNumber": 0,
+    "pageSize": 10,
+    "paged": true,
+    "sort": {
+      "empty": false,
+      "sorted": true,
+      "unsorted": false
+    },
+    "unpaged": false
+  },
+  "size": 10,
+  "sort": {
+    "empty": false,
+    "sorted": true,
+    "unsorted": false
+  },
+  "totalElements": 1,
+  "totalPages": 1
+}
+```
+
+</details>
+
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+si los tipos de datos enviados en los parámetros son incompatibles 
+(ejemplo: ?usuarioId=alfanumerico).
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
+
+🔴 `403 FORBIDDEN` +
+[JSON error](#formato-general-de-errores)
+- Si el usuario logueado no posee el rol `OWNER`, `ADMIN` o `PERSONAL`.
+- Si la sesión fue revocada en base de datos. Retorna el JSON de error con
+`"errorCode": "SESSION_INVALIDATED"`.
 
 </td></tr></table>
 </details>
+
+---
 
 # 🗺️ Recorrido
 

@@ -24,12 +24,20 @@ public class AuditoriaController {
   public ResponseEntity<Page<AuditoriaResponseDTO>> listarHistorial(
       @RequestParam(required = false) Long usuarioId,
       @RequestParam(required = false) String accion,
+      @RequestParam(required = false) Long reporteId,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "20") int size,
       @RequestParam(defaultValue = "desc") String sort
   ) {
 
-    Page<AuditoriaResponseDTO> historial = auditoriaService.listarHistorialPaginado(usuarioId, accion, page, size, sort);
+    Page<AuditoriaResponseDTO> historial = auditoriaService.listarHistorialPaginado(
+        usuarioId,
+        accion,
+        reporteId,
+        page,
+        size,
+        sort
+    );
 
     return ResponseEntity
         .status(HttpStatus.OK)

@@ -12,5 +12,7 @@ public record AuditoriaResponseDTO(
     Long afectadoId,
     String afectadoNombre,
     String afectadoDni,
-    String accion
+    Long reporteId,
+    String accion,
+    Object detalles
 ) {}

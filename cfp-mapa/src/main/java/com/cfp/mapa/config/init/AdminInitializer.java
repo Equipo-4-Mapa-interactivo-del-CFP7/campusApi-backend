@@ -18,18 +18,35 @@ public class AdminInitializer implements CommandLineRunner {
 
   @Override
   public void run(String... args) throws Exception {
+
+    if (!usuarioRepository.existsByDni("SYSTEM01")) {
+      Usuario sistema = Usuario.builder()
+          .dni("SYSTEM01")
+          .nombre("SISTEMA")
+          .apellido("PROCESO")
+          .password("SISTEMA_NO_LOGUEABLE")
+          .rol(Rol.SYSTEM)
+          .activo(true)
+          .eliminado(false)
+          .rolOriginal(null)
+          .build();
+
+      usuarioRepository.save(sistema);
+    }
+
     if (!usuarioRepository.existsByDni("11112222")) {
-      Usuario admin = Usuario.builder()
+      Usuario owner = Usuario.builder()
           .dni("11112222")
           .nombre("Dueño")
           .apellido("Total")
           .password(passwordEncoder.encode("owner123"))
           .rol(Rol.OWNER)
           .activo(true)
+          .eliminado(false)
           .rolOriginal(null)
           .build();
 
-      usuarioRepository.save(admin);
+      usuarioRepository.save(owner);
     }
 
     if (!usuarioRepository.existsByDni("12345678")) {
@@ -40,6 +57,7 @@ public class AdminInitializer implements CommandLineRunner {
           .password(passwordEncoder.encode("administrador"))
           .rol(Rol.ADMIN)
           .activo(true)
+          .eliminado(false)
           .rolOriginal(null)
           .build();
 
@@ -54,6 +72,7 @@ public class AdminInitializer implements CommandLineRunner {
           .password(passwordEncoder.encode("personal"))
           .rol(Rol.PERSONAL)
           .activo(true)
+          .eliminado(false)
           .rolOriginal(null)
           .build();
 

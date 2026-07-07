@@ -15,7 +15,8 @@ import lombok.NoArgsConstructor;
 @Table(name = "auditorias_usuarios", indexes = {
     @Index(name = "idx_auditoria_fecha", columnList = "fechaAccion"),
     @Index(name = "idx_auditoria_operador", columnList = "operadorId"),
-    @Index(name = "idx_auditoria_afectado", columnList = "usuarioAfectadoId")
+    @Index(name = "idx_auditoria_afectado", columnList = "usuarioAfectadoId"),
+    @Index(name = "idx_auditoria_reporte", columnList = "reporteId")
 })
 @Getter
 @NoArgsConstructor
@@ -49,17 +50,32 @@ public class AuditoriaUsuario {
   @Column
   private String usuarioAfectadoDni;
 
+  @Column
+  private Long reporteId;
+
   @Column(nullable = false, updatable = false)
   private String accion;
 
+  @Column
+  private String detalles;
+
   // Constructor optimizado para capturar los datos del momento
-  public AuditoriaUsuario(Usuario operador, Usuario usuarioAfectado, String accion) {
+  public AuditoriaUsuario(
+      Usuario operador,
+      Usuario usuarioAfectado,
+      Long reporteId,
+      String accion,
+      String detales
+  ) {
+
     this.fechaAccion = LocalDateTime.now();
     this.operadorId = operador.getId();
     this.operadorNombreCompleto = operador.getNombre() + " " + operador.getApellido();
     this.operadorDni = operador.getDni();
     this.operadorRol = operador.getRol().name();
+    this.reporteId = reporteId;
     this.accion = accion;
+    this.detalles = detales;
 
     if (usuarioAfectado != null) {
       this.usuarioAfectadoId = usuarioAfectado.getId();
@@ -81,5 +97,9 @@ public class AuditoriaUsuario {
   public void cambiarDatosAfectadoAnonimo(String nuevoNombre, String nuevoDni) {
     this.usuarioAfectadoNombreCompleto = nuevoNombre;
     this.usuarioAfectadoDni = nuevoDni;
+  }
+
+  public void anonimizarDetalles(String detallesAnonimosJson) {
+    this.detalles = detallesAnonimosJson;
   }
 }
