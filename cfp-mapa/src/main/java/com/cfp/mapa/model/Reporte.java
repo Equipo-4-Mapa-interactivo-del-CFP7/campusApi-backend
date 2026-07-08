@@ -16,12 +16,14 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -37,13 +39,14 @@ public class Reporte {
     private Espacio espacio;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "atendido_por_id")
+    @JoinColumn(name = "atendido_por_id", nullable = false)
     private Usuario atendidoPor;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TipoReporte tipo;
 
+    @Column(length = 100)
     private String descripcion;
 
     @Enumerated(EnumType.STRING)
@@ -56,7 +59,11 @@ public class Reporte {
     @Column(name = "minutos_estimados")
     private Integer minutosEstimados;
 
+    @Column(name = "fecha_vencimiento")
+    private LocalDateTime fechaVencimiento;
+
     @CreationTimestamp
     @Column(name = "fecha_creacion", nullable = false,  updatable = false)
     private LocalDateTime fechaCreacion;
+
 }

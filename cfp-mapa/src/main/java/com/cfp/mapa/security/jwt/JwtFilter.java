@@ -29,15 +29,12 @@ public class JwtFilter extends OncePerRequestFilter {
       throws ServletException, IOException {
 
     try {
-
       String token = obtenerTokenDeRequest(request);
 
-      if (StringUtils.hasText(token)) {
-
+      if (StringUtils.hasText(token) && tokenProvider.validarToken(token)) {
         UsuarioAutenticadoDTO usuarioPrincipal = tokenProvider.obtenerUsuarioDesdeToken(token);
 
         if (usuarioPrincipal != null) {
-
           UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
               usuarioPrincipal,
               null,

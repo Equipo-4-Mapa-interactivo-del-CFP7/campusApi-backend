@@ -1,0 +1,53 @@
+# --- carpetas de compilación (NUNCA SUBIR) ---
+target/
+**/target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# --- configuraciones locales de IntelliJ IDEA ---
+.idea/
+**/ .idea/
+*.iws
+*.iml
+*.ipr
+*.xml
+out/
+**/out/
+
+# --- variables de entorno y propiedades locales con secretos ---
+**/src/main/resources/application-local.properties
+
+# --- archivos temporales y de sistema ---
+### Linux ###
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+### macOS ###
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+### Windows ###
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Log.txt
+*.bak
+*.lnk
+*.ini
+
+# --- configuraciones locales de Spring Boot ---
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+
+# --- archivos de logs locales ---
+*.log
+logs/
+**/logs/
