@@ -7,7 +7,6 @@ import com.cfp.mapa.dto.reporte.ReporteUpdateRequestDTO;
 import com.cfp.mapa.exception.AccionInvalidaException;
 import com.cfp.mapa.exception.DniNotFoundException;
 import com.cfp.mapa.exception.EspacioNotFoundException;
-import com.cfp.mapa.exception.OperacionInvalidaException;
 import com.cfp.mapa.exception.ReporteConflictException;
 import com.cfp.mapa.exception.ReporteNotFoundException;
 import com.cfp.mapa.exception.SolicitudIncorrectaException;
@@ -62,7 +61,7 @@ public class ReporteServiceImpl implements ReporteService {
 
         List<EstadoReporte> estadosActivos = List.of(
             EstadoReporte.PENDIENTE, EstadoReporte.EN_REVISION
-            );
+        );
 
         boolean existe = reporteRepository.existsByEspacioAndTipoAndEstadoIn(
             espacio, tipoReporte, estadosActivos
@@ -70,16 +69,6 @@ public class ReporteServiceImpl implements ReporteService {
 
         if (existe) {
             throw new ReporteConflictException(request.tipoReporte(), espacio.getNombre());
-        }
-
-        // Si el tipo de reporte es "OTROS" debe tener una descripcion
-        if (tipoReporte.equals(TipoReporte.OTROS) &&
-            (request.descripcion() == null || request.descripcion().isBlank())
-        ) {
-
-            throw new OperacionInvalidaException(
-                "No se puede crear un reporte del tipo 'OTROS' sin descripción"
-            );
         }
 
         // Si no existe, crea un nuevo reporte
@@ -150,7 +139,8 @@ public class ReporteServiceImpl implements ReporteService {
         }
 
         Usuario usuarioLogueado =  securityUtils.usuarioLogueado();
-        TipoAccionAuditoria tipoAccionAuditoria = null;
+        // TipoAccionAuditoria tipoAccionAuditoria = null;
+        List<TipoAccionAuditoria> tiposAccionesAuditoria = null;
 
         // Variables para el AuditoriaReportesDetallesDTO
         boolean crearDTO = false;
@@ -164,7 +154,8 @@ public class ReporteServiceImpl implements ReporteService {
             reporte.setFechaAtencion(LocalDateTime.now());
             reporte.setAtendidoPor(usuarioLogueado);
 
-            tipoAccionAuditoria = TipoAccionAuditoria.REPORTE_ATENDIDO;
+            tiposAccionesAuditoria.add(TipoAccionAuditoria.REPORTE_ATENDIDO);
+            // tipoAccionAuditoria = TipoAccionAuditoria.REPORTE_ATENDIDO;
         }
 
         // Se modifica el tiempo restante
@@ -179,7 +170,8 @@ public class ReporteServiceImpl implements ReporteService {
             reporte.setFechaVencimiento(fechaVencimientoNueva);
 
             if (!eraPendiente) {
-                tipoAccionAuditoria = TipoAccionAuditoria.REPORTE_MODIFICADO;
+                tiposAccionesAuditoria.add(TipoAccionAuditoria.REPORTE_MODIFICADO);
+                // tipoAccionAuditoria = TipoAccionAuditoria.REPORTE_MODIFICADO;
             }
         }
 
@@ -194,7 +186,8 @@ public class ReporteServiceImpl implements ReporteService {
             reporte.setFechaVencimiento(null);
 
             if (!eraPendiente) {
-                tipoAccionAuditoria = TipoAccionAuditoria.REPORTE_TIEMPO_ELIMINADO;
+                tiposAccionesAuditoria.add(TipoAccionAuditoria.REPORTE_TIEMPO_ELIMINADO);
+                // tipoAccionAuditoria = TipoAccionAuditoria.REPORTE_TIEMPO_ELIMINADO;
             }
         }
 
@@ -210,7 +203,8 @@ public class ReporteServiceImpl implements ReporteService {
             reporte.setDescripcion(descripcionNueva);
 
             if (!eraPendiente) {
-                tipoAccionAuditoria = TipoAccionAuditoria.REPORTE_MODIFICADO;
+                tiposAccionesAuditoria.add(TipoAccionAuditoria.REPORTE_MODIFICADO);
+                // tipoAccionAuditoria = TipoAccionAuditoria.REPORTE_MODIFICADO;
             }
         }
 
@@ -228,13 +222,16 @@ public class ReporteServiceImpl implements ReporteService {
             );
         }
 
-        auditoriaService.registrarAccion(
-            usuarioLogueado,
-            null,
-            reporteGuardado.getId(),
-            tipoAccionAuditoria,
-            detallesDTO
-        );
+        int count = tiposAccionesAuditoria.size();
+        for(TipoAccionAuditoria tipoAccionAuditoria : tiposAccionesAuditoria) {
+            auditoriaService.registrarAccion(
+                usuarioLogueado,
+                null,
+                reporteGuardado.getId(),
+                tipoAccionAuditoria,
+                detallesDTO
+            );
+        }
 
         return reporteMapper.ReporteToResponse(reporteGuardado);
     }
