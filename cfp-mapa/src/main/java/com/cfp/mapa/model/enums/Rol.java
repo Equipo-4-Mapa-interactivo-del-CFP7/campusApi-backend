@@ -1,6 +1,9 @@
 package com.cfp.mapa.model.enums;
 
 public enum Rol {
+    OWNER,
     ADMIN,
-    PERSONAL
+    PERSONAL,
+    CHANGE_PASSWORD,
+    SYSTEM
 }

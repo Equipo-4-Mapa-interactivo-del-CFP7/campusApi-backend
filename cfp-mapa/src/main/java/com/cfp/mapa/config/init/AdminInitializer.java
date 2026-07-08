@@ -18,29 +18,62 @@ public class AdminInitializer implements CommandLineRunner {
 
   @Override
   public void run(String... args) throws Exception {
-    if (!usuarioRepository.existsByDni("123")) {
+
+    if (!usuarioRepository.existsByDni("SYSTEM01")) {
+      Usuario sistema = Usuario.builder()
+          .dni("SYSTEM01")
+          .nombre("SISTEMA")
+          .apellido("PROCESO")
+          .password("SISTEMA_NO_LOGUEABLE")
+          .rol(Rol.SYSTEM)
+          .activo(true)
+          .eliminado(false)
+          .rolOriginal(null)
+          .build();
+
+      usuarioRepository.save(sistema);
+    }
+
+    if (!usuarioRepository.existsByDni("11112222")) {
+      Usuario owner = Usuario.builder()
+          .dni("11112222")
+          .nombre("Dueño")
+          .apellido("Total")
+          .password(passwordEncoder.encode("owner123"))
+          .rol(Rol.OWNER)
+          .activo(true)
+          .eliminado(false)
+          .rolOriginal(null)
+          .build();
+
+      usuarioRepository.save(owner);
+    }
+
+    if (!usuarioRepository.existsByDni("12345678")) {
       Usuario admin = Usuario.builder()
-          .dni("123")
+          .dni("12345678")
           .nombre("Administrador")
           .apellido("Del Sistema")
-          .password(passwordEncoder.encode("admin123"))
+          .password(passwordEncoder.encode("administrador"))
           .rol(Rol.ADMIN)
           .activo(true)
-          .cambiarPassword(false)
+          .eliminado(false)
+          .rolOriginal(null)
           .build();
 
       usuarioRepository.save(admin);
     }
 
-    if (!usuarioRepository.existsByDni("456")) {
+    if (!usuarioRepository.existsByDni("23456789")) {
       Usuario personal = Usuario.builder()
-          .dni("456")
+          .dni("23456789")
           .nombre("Personal")
           .apellido("Institucional")
-          .password(passwordEncoder.encode("personal456"))
+          .password(passwordEncoder.encode("personal"))
           .rol(Rol.PERSONAL)
           .activo(true)
-          .cambiarPassword(false)
+          .eliminado(false)
+          .rolOriginal(null)
           .build();
 
       usuarioRepository.save(personal);

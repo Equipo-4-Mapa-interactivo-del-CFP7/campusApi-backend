@@ -4,7 +4,6 @@ public enum TipoTransito {
   PASILLO,
   RAMPA,
   ESCALERA,
-  ASCENSOR,
   RIPIO,
   EXTERIOR
 }

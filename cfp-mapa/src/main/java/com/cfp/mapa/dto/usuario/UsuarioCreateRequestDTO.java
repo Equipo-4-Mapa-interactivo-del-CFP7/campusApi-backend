@@ -1,21 +1,28 @@
 package com.cfp.mapa.dto.usuario;
 
+import com.cfp.mapa.validation.ValidApellido;
+import com.cfp.mapa.validation.ValidDni;
+import com.cfp.mapa.validation.ValidNombre;
+import com.cfp.mapa.validation.ValidRol;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 public record UsuarioCreateRequestDTO(
 
-    @Size(max = 15)
-    @NotBlank
+    @NotBlank(message = "El DNI es obligatorio")
+    @ValidDni
     String dni,
 
-    @Size(max = 100)
-    @NotBlank
+    @NotBlank(message = "El nombre es obligatorio")
+    @ValidNombre
     String nombre,
 
-    @Size(max = 100)
-    @NotBlank
-    String apellido
+    @NotBlank(message = "El apellido es obligatorio")
+    @ValidApellido
+    String apellido,
+
+    @NotBlank(message = "El rol es obligatorio")
+    @ValidRol
+    String rol
 ) {
 
 }

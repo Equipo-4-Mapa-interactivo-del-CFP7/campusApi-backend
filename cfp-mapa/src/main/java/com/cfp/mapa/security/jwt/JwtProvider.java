@@ -51,8 +51,7 @@ public class JwtProvider {
     Date fechaExpiracion = new Date(fechaActual.getTime() + jwtExpirationMs);
 
     return Jwts.builder()
-        .subject(usuarioPrincipal.getUsername())
-        .claim("id", usuarioPrincipal.getId())
+        .subject(String.valueOf(usuarioPrincipal.getId()))
         .claim("roles", roles)
         .issuedAt(fechaActual)
         .expiration(fechaExpiracion)
@@ -76,7 +75,7 @@ public class JwtProvider {
     return false;
   }
 
-  // Extraer ID + DNI + Roles
+  // Extraer ID + Roles
   public UsuarioAutenticadoDTO obtenerUsuarioDesdeToken(String token) {
 
     try {
@@ -88,10 +87,7 @@ public class JwtProvider {
           .getPayload();
 
       // Extraer ID
-      Long idUsuario = claims.get("id", Long.class);
-
-      // Extraer DNI
-      String dniUsuario = claims.getSubject();
+      Long idUsuario = Long.parseLong(claims.getSubject());
 
       // Extraer roles
       List<?> rolesRaw = claims.get("roles", List.class);
@@ -103,7 +99,7 @@ public class JwtProvider {
             .collect(Collectors.toList());
       }
 
-      return new UsuarioAutenticadoDTO(idUsuario, dniUsuario, authorities);
+      return new UsuarioAutenticadoDTO(idUsuario, authorities);
     } catch (Exception e) {
       logJwtError(e);
       return null;

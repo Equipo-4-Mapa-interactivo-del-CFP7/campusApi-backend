@@ -30,7 +30,7 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 15)
+    @Column(nullable = false, unique = true, length = 9)
     private String dni;
 
     @Column(nullable = false, length = 60)
@@ -40,17 +40,20 @@ public class Usuario {
     @Column(nullable = false)
     private Rol rol;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 50)
     private String nombre;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 50)
     private String apellido;
 
     @Column(nullable = false)
     boolean activo;
 
     @Column(nullable = false)
-    boolean cambiarPassword;
+    boolean eliminado;
+
+    @Enumerated(EnumType.STRING)
+    private Rol rolOriginal;
 
     @CreationTimestamp
     @Column(name = "fecha_creacion", nullable = false,  updatable = false)
