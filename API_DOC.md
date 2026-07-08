@@ -1428,6 +1428,7 @@ cierre, en cuyo caso su estado será `EN_REVISION`.
 - `PROBLEMA_SENALETICA`
 - `BARRERA_FISICA`
 - `DIFICULTAD_ORIENTACION`
+- `OTROS`
 
 `descripcion` String, opcional, máximo 100 caracteres.
 
@@ -1457,7 +1458,8 @@ con la información del reporte creado.
 
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
-si el cuerpo JSON no cumple las restricciones estructurales (descripción vacía, tipoReporte inválido, etc.).
+- Si el cuerpo JSON no cumple las restricciones estructurales (descripción vacía, tipoReporte inválido, etc.).
+- Si el `tipoReporte` es `OTROS` y no tiene una `descripcion`.
 
 🔴 `401 UNAUTHORIZED` +
 [JSON error](#formato-general-de-errores)
