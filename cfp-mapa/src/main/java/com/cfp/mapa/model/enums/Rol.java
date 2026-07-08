@@ -4,5 +4,6 @@ public enum Rol {
     OWNER,
     ADMIN,
     PERSONAL,
-    CHANGE_PASSWORD
+    CHANGE_PASSWORD,
+    SYSTEM
 }

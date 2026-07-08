@@ -8,13 +8,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Documented
-@Constraint(validatedBy = ValidDniValidator.class)
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ValidDni {
+@Documented
+@Constraint(validatedBy = ValidTipoReporteValidator.class)
+public @interface ValidTipoReporte {
 
-  String message() default "El DNI debe ser numérico y tener entre 7 y 9 caracteres";
+  String message() default "El tipo de reporte proporcionado no es válido";
 
   Class<?>[] groups() default {};
 

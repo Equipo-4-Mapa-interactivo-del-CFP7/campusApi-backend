@@ -11,8 +11,12 @@ public enum TipoAccionAuditoria {
   OWNER_TRANSFERIDO("transfirió su rol de OWNER a un usuario"),
   DNI_EDITADO("actualizó el número de DNI"),
   NOMBRE_APELLIDO_EDITADO("actualizó los datos de nombre y apellido"),
-  REPORTE_ATENDIDO("atendió un reporte del sistema"),
-  REPORTE_CREADO("creó un reporte en el sistema");
+  REPORTE_CREADO("creó un reporte en el sistema"),
+  REPORTE_ATENDIDO("comenzó a atender un reporte"),
+  REPORTE_MODIFICADO("modificó los datos del reporte"),
+  REPORTE_TIEMPO_ELIMINADO("eliminó el límite de tiempo del reporte"),
+  REPORTE_CERRADO("cerró un reporte en el sistema"),
+  REPORTE_CERRADO_AUTOMATICO("el sistema cerró automáticamente el reporte por expiración de tiempo");
 
   private final String descripcion;
 

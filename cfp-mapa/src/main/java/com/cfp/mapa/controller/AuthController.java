@@ -3,6 +3,7 @@ package com.cfp.mapa.controller;
 import com.cfp.mapa.dto.jwt.JwtAuthResponseDTO;
 import com.cfp.mapa.dto.usuario.UsuarioLoginDTO;
 import com.cfp.mapa.security.jwt.JwtProvider;
+import com.cfp.mapa.util.StringUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,12 +30,21 @@ public class AuthController {
       @Valid @RequestBody UsuarioLoginDTO loginDTO
   ) {
 
-    String dniMarcado = "-" + loginDTO.dni();
+    String dni = StringUtils.normalizarDni(loginDTO.dni());
+    String password = loginDTO.password();
+
+    String dniSinCero = dni.startsWith("0") ? dni.substring(1) : dni;
+
+    if (password.equals("cfp" + dniSinCero) || password.equals("cfp" + dni)) {
+      password = "cfp" + dni;
+    }
+
+    String dniMarcado = "-" + dni;
 
     Authentication authentication = authenticationManager.authenticate(
         new UsernamePasswordAuthenticationToken(
             dniMarcado,
-            loginDTO.password()
+            password
         )
     );
 

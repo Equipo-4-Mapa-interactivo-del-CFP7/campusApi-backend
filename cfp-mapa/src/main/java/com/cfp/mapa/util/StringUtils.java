@@ -27,4 +27,19 @@ public final class StringUtils {
 
     return resultado.toString().trim();
   }
+
+  public static String normalizarDni(String dni){
+
+    if (dni == null || dni.isBlank()) {
+      return dni;
+    }
+
+    dni = dni.trim();
+
+    if (dni.length() == 7) {
+      dni = "0"  + dni;
+    }
+
+    return dni;
+  }
 }

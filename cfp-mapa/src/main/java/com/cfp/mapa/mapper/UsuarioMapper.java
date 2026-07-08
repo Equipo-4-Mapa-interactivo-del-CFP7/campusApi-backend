@@ -11,16 +11,15 @@ import org.springframework.stereotype.Component;
 public class UsuarioMapper {
 
   // UsuarioCreateRequestDTO -> Usuario
-  public Usuario createToUsuario(UsuarioCreateRequestDTO request, String encodedPassword) {
+  public Usuario createToUsuario(UsuarioCreateRequestDTO request, String dniNormalizado, String encodedPassword) {
 
     String nombreNormalizado = StringUtils.normalizarNombre(request.nombre());
     String apellidoNormalizado = StringUtils.normalizarNombre(request.apellido());
 
-
     Rol rol = Rol.valueOf(request.rol().toUpperCase());
 
     return Usuario.builder()
-        .dni(request.dni())
+        .dni(dniNormalizado)
         .password(encodedPassword)
         .rol(Rol.CHANGE_PASSWORD)
         .nombre(nombreNormalizado)

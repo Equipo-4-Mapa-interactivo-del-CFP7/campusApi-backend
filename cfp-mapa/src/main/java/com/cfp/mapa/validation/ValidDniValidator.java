@@ -5,7 +5,7 @@ import jakarta.validation.ConstraintValidatorContext;
 
 public class ValidDniValidator implements ConstraintValidator<ValidDni, String> {
 
-  private static final String DNI_REGEX = "^[a-zA-Z0-9]{7,20}$";
+  private static final String DNI_REGEX = "^[0-9]{7,9}$";
 
   @Override
   public boolean isValid(String value, ConstraintValidatorContext context) {
@@ -14,6 +14,6 @@ public class ValidDniValidator implements ConstraintValidator<ValidDni, String> 
       return true;
     }
 
-    return value.matches(DNI_REGEX);
+    return value.trim().matches(DNI_REGEX);
   }
 }

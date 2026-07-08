@@ -34,17 +34,19 @@ public class Reporte {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "espacio_id", nullable = false)
-    private Long espacioId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "espacio_id", nullable = false)
+    private Espacio espacio;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "atendido_por_id")
+    @JoinColumn(name = "atendido_por_id", nullable = false)
     private Usuario atendidoPor;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TipoReporte tipo;
 
+    @Column(length = 100)
     private String descripcion;
 
     @Enumerated(EnumType.STRING)
@@ -57,11 +59,11 @@ public class Reporte {
     @Column(name = "minutos_estimados")
     private Integer minutosEstimados;
 
+    @Column(name = "fecha_vencimiento")
+    private LocalDateTime fechaVencimiento;
+
     @CreationTimestamp
     @Column(name = "fecha_creacion", nullable = false,  updatable = false)
     private LocalDateTime fechaCreacion;
-
-    @Column(name = "url_imagen")
-    private String urlImagen;
 
 }

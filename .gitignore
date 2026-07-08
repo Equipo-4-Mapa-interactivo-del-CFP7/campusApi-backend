@@ -12,6 +12,9 @@ target/
 out/
 **/out/
 
+# --- variables de entorno y propiedades locales con secretos ---
+**/src/main/resources/application-local.properties
+
 # --- archivos temporales y de sistema ---
 ### Linux ###
 *~
