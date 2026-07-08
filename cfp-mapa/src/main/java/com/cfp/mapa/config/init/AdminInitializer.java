@@ -5,10 +5,12 @@ import com.cfp.mapa.model.enums.Rol;
 import com.cfp.mapa.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 // TODO: Eliminar antes de subirlo a produccion
+@Profile("local")
 @Component
 @RequiredArgsConstructor
 public class AdminInitializer implements CommandLineRunner {
@@ -18,6 +20,8 @@ public class AdminInitializer implements CommandLineRunner {
 
   @Override
   public void run(String... args) throws Exception {
+
+    System.out.println("SE CREAN LOS USUARIOS DE PRUEBA LOCAL");
 
     if (!usuarioRepository.existsByDni("SYSTEM01")) {
       Usuario sistema = Usuario.builder()

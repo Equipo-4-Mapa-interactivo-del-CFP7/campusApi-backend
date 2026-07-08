@@ -7,6 +7,7 @@ import com.cfp.mapa.dto.reporte.ReporteUpdateRequestDTO;
 import com.cfp.mapa.exception.AccionInvalidaException;
 import com.cfp.mapa.exception.DniNotFoundException;
 import com.cfp.mapa.exception.EspacioNotFoundException;
+import com.cfp.mapa.exception.OperacionInvalidaException;
 import com.cfp.mapa.exception.ReporteConflictException;
 import com.cfp.mapa.exception.ReporteNotFoundException;
 import com.cfp.mapa.exception.SolicitudIncorrectaException;
@@ -69,6 +70,16 @@ public class ReporteServiceImpl implements ReporteService {
 
         if (existe) {
             throw new ReporteConflictException(request.tipoReporte(), espacio.getNombre());
+        }
+
+        // Si el tipo de reporte es "OTROS" debe tener una descripcion
+        if (tipoReporte.equals(TipoReporte.OTROS) &&
+            (request.descripcion() == null || request.descripcion().isBlank())
+        ) {
+
+            throw new OperacionInvalidaException(
+                "No se puede crear un reporte del tipo 'OTROS' sin descripción"
+            );
         }
 
         // Si no existe, crea un nuevo reporte
