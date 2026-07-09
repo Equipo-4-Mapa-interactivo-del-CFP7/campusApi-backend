@@ -1,5 +1,6 @@
 package com.cfp.mapa.service.impl;
 
+import com.cfp.mapa.dto.auditoria.AuditoriaReporteCreadoDTO;
 import com.cfp.mapa.dto.auditoria.AuditoriaReportesDetallesDTO;
 import com.cfp.mapa.dto.reporte.ReporteCreateRequestDTO;
 import com.cfp.mapa.dto.reporte.ReporteResponseDTO;
@@ -97,11 +98,12 @@ public class ReporteServiceImpl implements ReporteService {
 
         Reporte reporteGuardado = reporteRepository.save(reporte);
 
-        String mensajeAuditoria = null;
+        AuditoriaReporteCreadoDTO detallesDto = null;
 
         if (request.minutosEstimados() != null) {
-            mensajeAuditoria = String.format("Vence en %d minutos",
-                request.minutosEstimados()
+            detallesDto = new AuditoriaReporteCreadoDTO(
+                request.minutosEstimados(),
+                LocalDateTime.now().minusMinutes(request.minutosEstimados())
             );
         }
 
@@ -110,7 +112,7 @@ public class ReporteServiceImpl implements ReporteService {
             null,
             reporteGuardado.getId(),
             TipoAccionAuditoria.REPORTE_CREADO,
-            mensajeAuditoria
+            detallesDto
         );
 
         return reporteMapper.ReporteToResponse(reporteGuardado);
@@ -137,6 +139,13 @@ public class ReporteServiceImpl implements ReporteService {
             throw new AccionInvalidaException("Solo se pueden modificar reportes pendientes o en revisión");
         }
 
+        if (reporte.getFechaVencimiento() == null &&
+            request.quitarContador()
+        ) {
+
+            throw new OperacionInvalidaException("No puedes quitarle el contador a un reporte sin contador");
+        }
+
         boolean eraPendiente = reporte.getEstado().equals(EstadoReporte.PENDIENTE);
 
         // Si no cambia nada
@@ -154,6 +163,7 @@ public class ReporteServiceImpl implements ReporteService {
 
         // Variables para el AuditoriaReportesDetallesDTO
         boolean crearDTO = false;
+        Integer minutosEstimados = null;
         String descripcionAnterior = null;
         String descripcionNueva = null;
         LocalDateTime fechaVencimientoAnterior = null;
@@ -170,6 +180,7 @@ public class ReporteServiceImpl implements ReporteService {
         // Se modifica el tiempo restante
         if (request.minutosEstimados() != null) {
 
+            minutosEstimados = request.minutosEstimados();
             fechaVencimientoAnterior = reporte.getFechaVencimiento();
             fechaVencimientoNueva = LocalDateTime.now().plusMinutes(request.minutosEstimados());
             crearDTO = true;
@@ -221,6 +232,7 @@ public class ReporteServiceImpl implements ReporteService {
 
         if (crearDTO) {
             detallesDTO = new AuditoriaReportesDetallesDTO(
+                minutosEstimados,
                 descripcionAnterior,
                 descripcionNueva,
                 fechaVencimientoAnterior,

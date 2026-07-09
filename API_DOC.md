@@ -443,6 +443,21 @@ ID del usuario al que se le va a cambiar el estado `activo` de la cuenta.
 [JSON respuesta de usuario](#formato-de-respuesta-de-usuarios)
 del usuario al que se le cambió el flag `activo`.
 
+<details>
+<summary><b>🧾 JSON de detalles de auditoría</b></summary>
+
+[JSON respuesta de auditoria](#formato-respuesta-de-auditoria)
+
+```JSON
+{
+  "usuarioAfectadoId": Long,
+  "activoAnterior": Boolean,
+  "activoNuevo": Boolean
+}
+```
+
+</details>
+
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
 - Si el `id` en el path variable no cumple con las restricciones.
@@ -583,6 +598,21 @@ ID del usuario al que se le va a cambiar el `rol`.
 🟢 `200 OK` +
 [JSON respuesta de usuario](#formato-de-respuesta-de-usuarios)
 del usuario al que se le cambió el rol.
+
+<details>
+<summary><b>🧾 JSON de detalles de auditoría</b></summary>
+
+[JSON respuesta de auditoria](#formato-respuesta-de-auditoria)
+
+```JSON
+{
+  "usuarioAfectadoId": Long,
+  "rolAnterior": String,
+  "rolNuevo": String,
+}
+```
+
+</details>
 
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
@@ -877,6 +907,21 @@ ID del usuario que se le quiere asignar el rol `OWNER`.
 
 🟢 `200 OK` (sin body).
 
+<details>
+<summary><b>🧾 JSON de detalles de auditoría</b></summary>
+
+[JSON respuesta de auditoria](#formato-respuesta-de-auditoria)
+
+```JSON
+{
+  "usuarioAfectadoId": Long,
+  "rolAnterior": String,
+  "rolNuevo": String,
+}
+```
+
+</details>
+
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
 - Si el cuerpo de la petición no cumple las restricciones.
@@ -964,6 +1009,21 @@ ID del usuario que se le quiere cambiar el `dni`.
 🟢 `200 OK` +
 [JSON respuesta de usuario](#formato-de-respuesta-de-usuarios)
 del usuario al que se le cambió el `dni`.
+
+<details>
+<summary><b>🧾 JSON de detalles de auditoría</b></summary>
+
+[JSON respuesta de auditoria](#formato-respuesta-de-auditoria)
+
+```JSON
+{
+  "usuarioAfectadoId": Long,
+  "dniAnterior": String,
+  "dniNuevo": String,
+}
+```
+
+</details>
 
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
@@ -1057,6 +1117,25 @@ ID del usuario que se le quiere cambiar el `nombre` y `apellido`.
 [JSON respuesta de usuario](#formato-de-respuesta-de-usuarios)
 del usuario al que se le cambió el `nombre` y `apellido`.
 
+<details>
+<summary><b>🧾 JSON de detalles de auditoría</b></summary>
+
+[JSON respuesta de auditoria](#formato-respuesta-de-auditoria)
+
+Solo aparecerán los datos cambiados, ya sea solo nombre, solo apellido o ambos.
+
+```JSON
+{
+  "usuarioAfectadoId": Long,
+  "nombreAnterior": String,
+  "nombreNuevo": String,
+  "apellidoAnterior": String,
+  "apellidoNuevo": String,
+}
+```
+
+</details>
+
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
 - Si el cuerpo de la petición no cumple las restricciones.
@@ -1110,7 +1189,7 @@ Los JSON de respuesta de auditoría están estandarizados con este formato:
   "afectadoDni": String,
   "reporteId": Long,
   "accion": String,
-  "detalles": Object (String o JSON dinámico)
+  "detalles": Object (JSON dinámico)
 }
 ```
 `operadorNombre` y  `afectadoNombre` están compuestos por `nombre + apellido` de los usuarios.
@@ -1141,31 +1220,6 @@ Los JSON de respuesta de auditoría están estandarizados con este formato:
     "apellidoAnterior": "Institucional",
     "apellidoNuevo": "Ortega"
   }
-}
-```
-</details>
-
-<details>
-<summary><b>Ejemplo cuando no afecta a otro usuario - con detalles 'String'</b></summary>
-
-- En este ejemplo el `OWNER` crea un reporte con temporizador de cierre automático.
-- Cuando un usuario realiza una acción que no afecta a otro, los parámetros `afectadoId`,
-`afectadoNombre` y `afectadoDni` pasan a tener valores default.
-
-```JSON
-{
-  "id": 2,
-  "fechaAccion": "2026-07-06T20:44:30.05745",
-  "operadorId": 2,
-  "operadorNombre": "Dueño Total",
-  "operadorDni": "11112222",
-  "operadorRol": "OWNER",
-  "afectadoId": null,
-  "afectadoNombre": "N/A (Auto-acción)",
-  "afectadoDni": "N/A",
-  "reporteId": 1,
-  "accion": "REPORTE_CREADO",
-  "detalles": "Vence en 1 minutos"
 }
 ```
 </details>
@@ -1262,7 +1316,7 @@ Cada acción tendrá el formato del
 {
   "content": [
     {
-      "id": 3,
+      "id": 2,
       "fechaAccion": "2026-07-06T20:46:15.948642",
       "operadorId": 1,
       "operadorNombre": "SISTEMA PROCESO",
@@ -1274,20 +1328,6 @@ Cada acción tendrá el formato del
       "reporteId": 1,
       "accion": "REPORTE_CERRADO_AUTOMATICO",
       "detalles": null
-    },
-    {
-      "id": 2,
-      "fechaAccion": "2026-07-06T20:44:30.05745",
-      "operadorId": 2,
-      "operadorNombre": "Dueño Total",
-      "operadorDni": "11112222",
-      "operadorRol": "OWNER",
-      "afectadoId": null,
-      "afectadoNombre": "N/A (Auto-acción)",
-      "afectadoDni": "N/A",
-      "reporteId": 1,
-      "accion": "REPORTE_CREADO",
-      "detalles": "Vence en 1 minutos"
     },
     {
       "id": 1,
@@ -1402,6 +1442,8 @@ El JSON de respuesta de reporte sigue este patrón:
 
 `POST /api/reportes`
 
+📋 [Genera Auditoria](#formato-respuesta-de-auditoria) | `accion`: `REPORTE_CREADO`
+
 Permite que un usuario logueado como `OWNER`, `ADMIN` o `PERSONAL` pueda crear un reporte de
 incidencia sobre un espacio.
 
@@ -1456,6 +1498,21 @@ cierre, en cuyo caso su estado será `EN_REVISION`.
 [JSON respuesta de reporte](#formato-de-respuesta-de-reporte)
 con la información del reporte creado.
 
+<details>
+<summary><b>🧾 Posible JSON de detalles de auditoría</b></summary>
+
+[JSON respuesta de auditoria](#formato-respuesta-de-auditoria)
+
+
+```JSON
+{
+  "minutosEstimados":  Integer,
+  "fechaVencimientoNueva": String (LocalDateTime)
+}
+```
+
+</details>
+
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
 - Si el cuerpo JSON no cumple las restricciones estructurales (descripción vacía, tipoReporte inválido, etc.).
@@ -1486,6 +1543,11 @@ si ya existe un reporte activo del mismo tipo para el espacio indicado.
 ## 🟢 Atender un reporte [solo OWNER, ADMIN o PERSONAL]
 
 `POST /api/reportes/{id}/atender`
+
+📋 [Genera Auditoria](#formato-respuesta-de-auditoria) | `accion` posibles: 
+- `REPORTE_ATENDIDO`
+- `REPORTE_MODIFICADO`
+- `REPORTE_TIEMPO_ELIMINADO`
 
 Permite que un usuario logueado como `OWNER`, `ADMIN` o `PERSONAL` pueda atender un reporte. Al
 atender un reporte se puede:
@@ -1539,10 +1601,29 @@ atender un reporte se puede:
 [JSON respuesta de reporte](#formato-de-respuesta-de-reporte)
 con la información del reporte creado.
 
+<details>
+<summary><b>🧾 Posible JSON de detalles de auditoría</b></summary>
+
+[JSON respuesta de auditoria](#formato-respuesta-de-auditoria)
+
+```JSON
+{
+  "minutosEstimados":  Integer,
+  "descripcionAnterior":  String,
+  "descripcionNueva": String,
+  "fechaVencimientoAnterior": String (LocalDateTime),
+  "fechaVencimientoNueva": String (LocalDateTime)
+}
+```
+
+</details>
+
+
 🔴 `400 BAD REQUEST` +
 [JSON error](#formato-general-de-errores)
 - Si se intenta modificar el tiempo (`minutosEstimados`) y quitar el contador (`quitarContador`) al
 mismo tiempo.
+- Si se intenta quitar el contador (`quitarContador`) a un reporte que no tenía contador.
 - Si no se realiza ningún cambio.
 - Si el `id` enviado en el path variable no tiene un formato numérico válido.
 
@@ -1568,6 +1649,8 @@ si no existe un reporte con el `id` solicitado en el path variable.
 ## 🟢 Resolver un reporte [solo OWNER, ADMIN o PERSONAL]
 
 `POST /api/reportes/{id}/resolver`
+
+📋 [Genera Auditoria](#formato-respuesta-de-auditoria) | `accion`: `REPORTE_CERRADO`
 
 Permite que un usuario logueado como `OWNER`, `ADMIN` o `PERSONAL` pueda marcar un reporte como
 `RESUELTO`.
