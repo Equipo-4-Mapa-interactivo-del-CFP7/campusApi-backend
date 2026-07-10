@@ -46,11 +46,11 @@ public class AuditoriaServiceImpl implements AuditoriaService {
     securityValidator.validarUsuarioActivoYRoles(Rol.OWNER);
 
     // Validar si la acción enviada corresponde a una descripción del Enum
-    String accionDescripcion = null;
+    String accionEnumName = null;
 
     if (accion != null && !accion.isBlank()) {
       try {
-        accionDescripcion = TipoAccionAuditoria.valueOf(accion.toUpperCase().trim()).getDescripcion();
+        accionEnumName = TipoAccionAuditoria.valueOf(accion.toUpperCase().trim()).name();
       } catch (IllegalArgumentException e) {
         throw new ParametroAccionInvalidoException("La acción de auditoría proporcionada no es válida");
       }
@@ -64,7 +64,7 @@ public class AuditoriaServiceImpl implements AuditoriaService {
 
     Page<AuditoriaUsuario> auditorias = auditoriaRepository.buscarConFiltrosDinamicos(
         usuarioId,
-        accionDescripcion,
+        accionEnumName,
         reporteId,
         pageable);
 

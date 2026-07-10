@@ -54,6 +54,9 @@ public class SecurityConfig {
 
             .requestMatchers("/api/usuarios/recuperar-owner").permitAll()
 
+            // ACTUATOR
+            .requestMatchers("/actuator/**").permitAll()
+
             // TODO: agregar las autorizaciones para las URL
 
             // TODO: eliminar swagger en produccion

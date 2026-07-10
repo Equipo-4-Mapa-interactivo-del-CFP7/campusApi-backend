@@ -87,6 +87,12 @@
             <scope>compile</scope>
         </dependency>
 
+        <!-- ACTUATOR (rendimiento) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- SWAGGER TODO: eliminar en produccion -->
         <dependency>
             <groupId>org.springdoc</groupId>
