@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 
 public record ReporteResponseDTO(
         Long id,
+        Long atendidoPorId,
+        String atendidoPorNombre,
         Long espacioId,
         String nombreEspacio,
         String descripcion,

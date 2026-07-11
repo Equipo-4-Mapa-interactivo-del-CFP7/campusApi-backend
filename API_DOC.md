@@ -1257,7 +1257,7 @@ Permite que únicamente usuarios con el rol `OWNER` puedan ver el historial de a
 usuarios.
 
 - Podrá ordenarlos por `fechaAccion` con el parámetro `sort` (`desc` / `asc`).
-- Podrá filtrarlos por `usuarioId`, `accion`, `reporteId`.
+- Podrá filtrarlos por `usuarioId`, `accion` (se puede seleccionar más de una), `reporteId`.
 
 
 - Valores de `accion` válidos:
@@ -1408,14 +1408,16 @@ El JSON de respuesta de reporte sigue este patrón:
 
 ```JSON
 {
-  "id":  Long,
-  "espacioId":  Long,
-  "nombreEspacio":  String,
-  "descripcion":  String,
-  "estadoReporte":  String,
+  "id": Long,
+  "atendidoPorId": Long,
+  "atendidoPorNombre": String,
+  "espacioId": Long,
+  "nombreEspacio": String,
+  "descripcion": String,
+  "estadoReporte": String,
   "tipoReporte": String,
-  "minutosEstimados":  Integer,
-  "fechaVencimiento":  String ("2026-06-10T15:46:08.0424397"),
+  "minutosEstimados": Integer,
+  "fechaVencimiento": String ("2026-06-10T15:46:08.0424397"),
   "fechaCreacion": String ("2026-06-10T15:46:08.0424397")
 }
 ```

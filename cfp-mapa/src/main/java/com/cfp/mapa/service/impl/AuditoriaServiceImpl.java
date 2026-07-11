@@ -3,7 +3,6 @@ package com.cfp.mapa.service.impl;
 import com.cfp.mapa.dto.auditoria.AuditoriaResponseDTO;
 import com.cfp.mapa.dto.auditoria.AuditoriaUsuariosDetallesDTO;
 import com.cfp.mapa.exception.AuditoriaAnonimizacionException;
-import com.cfp.mapa.exception.ParametroAccionInvalidoException;
 import com.cfp.mapa.mapper.AuditoriaMapper;
 import com.cfp.mapa.model.AuditoriaUsuario;
 import com.cfp.mapa.model.Usuario;
@@ -30,13 +29,13 @@ public class AuditoriaServiceImpl implements AuditoriaService {
   private final AuditoriaRepository auditoriaRepository;
   private final AuditoriaMapper auditoriaMapper;
   private final SecurityValidator securityValidator;
-  private final ObjectMapper  objectMapper;
+  private final ObjectMapper objectMapper;
 
   @Transactional(readOnly = true)
   @Override
   public Page<AuditoriaResponseDTO> listarHistorialPaginado(
       Long usuarioId,
-      String accion,
+      List<TipoAccionAuditoria> accion,
       Long reporteId,
       int page,
       int size,
@@ -44,17 +43,6 @@ public class AuditoriaServiceImpl implements AuditoriaService {
   ) {
 
     securityValidator.validarUsuarioActivoYRoles(Rol.OWNER);
-
-    // Validar si la acción enviada corresponde a una descripción del Enum
-    String accionEnumName = null;
-
-    if (accion != null && !accion.isBlank()) {
-      try {
-        accionEnumName = TipoAccionAuditoria.valueOf(accion.toUpperCase().trim()).name();
-      } catch (IllegalArgumentException e) {
-        throw new ParametroAccionInvalidoException("La acción de auditoría proporcionada no es válida");
-      }
-    }
 
     Sort orden = order.equalsIgnoreCase("asc")
         ? Sort.by("fechaAccion").ascending()
@@ -64,7 +52,7 @@ public class AuditoriaServiceImpl implements AuditoriaService {
 
     Page<AuditoriaUsuario> auditorias = auditoriaRepository.buscarConFiltrosDinamicos(
         usuarioId,
-        accionEnumName,
+        accion,
         reporteId,
         pageable);
 
@@ -83,7 +71,7 @@ public class AuditoriaServiceImpl implements AuditoriaService {
         operador,
         afectado,
         null,
-        accion.name(),
+        accion,
         null
     );
     auditoriaRepository.save(nuevaAuditoria);
@@ -117,7 +105,7 @@ public class AuditoriaServiceImpl implements AuditoriaService {
         operador,
         afectado,
         reporteId,
-        accion.name(),
+        accion,
         detallesJson
     );
 

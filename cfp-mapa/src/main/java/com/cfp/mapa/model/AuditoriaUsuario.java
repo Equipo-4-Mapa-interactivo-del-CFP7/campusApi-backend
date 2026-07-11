@@ -1,7 +1,10 @@
 package com.cfp.mapa.model;
 
+import com.cfp.mapa.model.enums.TipoAccionAuditoria;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -53,8 +56,9 @@ public class AuditoriaUsuario {
   @Column
   private Long reporteId;
 
+  @Enumerated(EnumType.STRING)
   @Column(nullable = false, updatable = false)
-  private String accion;
+  private TipoAccionAuditoria accion;
 
   @Column
   private String detalles;
@@ -64,7 +68,7 @@ public class AuditoriaUsuario {
       Usuario operador,
       Usuario usuarioAfectado,
       Long reporteId,
-      String accion,
+      TipoAccionAuditoria accion,
       String detales
   ) {
 

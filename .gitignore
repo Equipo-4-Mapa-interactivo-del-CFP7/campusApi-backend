@@ -51,3 +51,4 @@ Log.txt
 *.log
 logs/
 **/logs/
+cfp-mapa/.env

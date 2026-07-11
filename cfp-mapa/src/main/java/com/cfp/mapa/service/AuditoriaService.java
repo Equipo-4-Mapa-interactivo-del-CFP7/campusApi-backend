@@ -3,13 +3,14 @@ package com.cfp.mapa.service;
 import com.cfp.mapa.dto.auditoria.AuditoriaResponseDTO;
 import com.cfp.mapa.model.Usuario;
 import com.cfp.mapa.model.enums.TipoAccionAuditoria;
+import java.util.List;
 import org.springframework.data.domain.Page;
 
 public interface AuditoriaService {
 
   Page<AuditoriaResponseDTO> listarHistorialPaginado(
       Long usuarioId,
-      String accionStr,
+      List<TipoAccionAuditoria> accion,
       Long reporteId,
       int page,
       int size,

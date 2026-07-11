@@ -2,9 +2,12 @@ package com.cfp.mapa.exception;
 
 import com.cfp.mapa.dto.error.ErrorResponse;
 import jakarta.validation.ConstraintViolationException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.core.convert.ConversionFailedException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -362,15 +365,35 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(
         MethodArgumentTypeMismatchException ex
     ) {
+        Class<?> requiredType = ex.getRequiredType();
+        assert requiredType != null;
 
-      assert ex.getRequiredType() != null;
-      log.warn("[TYPE-MISMATCH] Error de tipo de datos en parámetro de URL. Causa: {} | Propiedad: '{}' esperaba tipo '{}'",
-            ex.getClass().getSimpleName(), ex.getName(), ex.getRequiredType().getSimpleName());
+        log.warn("[TYPE-MISMATCH] Error de tipo en parámetro de URL. Propiedad: '{}' | Causa: {}",
+            ex.getName(), ex.getMessage());
+
+        String mensajeUsuario;
+
+        // Caso 1: El error ocurrió al parsear un Enum (ya sea suelto o dentro de una lista)
+        if (requiredType.isEnum() || (
+            ex.getCause() instanceof ConversionFailedException cfe && cfe.getTargetType().getType().isEnum())
+        ) {
+
+            mensajeUsuario = String.format(
+                "El valor proporcionado para el parámetro '%s' no es válido o no corresponde a las opciones permitidas",
+                ex.getName()
+            );
+        }
+        // Caso 2: Error comun de conversión (ej: mandar "letras" en un ID Long)
+        else {
+            mensajeUsuario = String.format(
+                "El parámetro '%s' debe ser de tipo '%s'",
+                ex.getName(), requiredType.getSimpleName()
+            );
+        }
 
         return buildErrorResponse(
             HttpStatus.BAD_REQUEST,
-            String.format("El parámetro '%s' debe ser de tipo '%s'",
-                ex.getName(), ex.getRequiredType().getSimpleName())
+            mensajeUsuario
         );
     }
 
@@ -405,6 +428,39 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(
             HttpStatus.BAD_REQUEST,
             "Los parámetros de la petición no son válidos: " + detallesErrores
+        );
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+
+        String mensajeDetallado;
+
+        if (ex.getCause() instanceof org.hibernate.exception.ConstraintViolationException hibernateEx) {
+            String detalleSql = hibernateEx.getSQLException() != null ? hibernateEx.getSQLException().getMessage() : "";
+
+            mensajeDetallado = "No se pudo guardar el registro debido a una restricción en la base de datos. Detalles: " + detalleSql;
+        } else {
+            mensajeDetallado = "Violación de integridad: " + ex.getMostSpecificCause().getMessage();
+        }
+
+        log.error("[DATA-INTEGRITY-ERROR] Violación de integridad de datos. Causa raíz: {}", ex.getMostSpecificCause().getMessage());
+
+        return buildErrorResponse(
+            HttpStatus.CONFLICT,
+            "La operación no se pudo completar: " + mensajeDetallado
+        );
+    }
+
+    @ExceptionHandler(SQLIntegrityConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleSQLIntegrityConstraintViolationException(SQLIntegrityConstraintViolationException ex) {
+
+        log.error("[DATABASE-SQL-ERROR] Error directo de restricción SQL. Código de error: {}, Estado SQL: {}, Detalle: {}",
+            ex.getErrorCode(), ex.getSQLState(), ex.getMessage());
+
+        return buildErrorResponse(
+            HttpStatus.CONFLICT,
+            "Error interno de consistencia en la base de datos. Verifique que los identificadores y campos obligatorios sean correctos."
         );
     }
 

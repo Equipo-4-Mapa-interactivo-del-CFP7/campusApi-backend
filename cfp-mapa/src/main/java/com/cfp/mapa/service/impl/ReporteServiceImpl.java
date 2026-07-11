@@ -90,11 +90,11 @@ public class ReporteServiceImpl implements ReporteService {
         Usuario usuarioLogueado = securityUtils.usuarioLogueado();
 
         if (request.minutosEstimados() != null) {
-
             reporte.setEstado(EstadoReporte.EN_REVISION);
-            reporte.setAtendidoPor(usuarioLogueado);
             reporte.setFechaAtencion(LocalDateTime.now());
         }
+
+        reporte.setAtendidoPor(usuarioLogueado);
 
         Reporte reporteGuardado = reporteRepository.save(reporte);
 

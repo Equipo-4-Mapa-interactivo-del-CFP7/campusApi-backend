@@ -15,8 +15,16 @@ public class ReporteMapper {
     // Reporte -> ReporteResponseDTO
     public ReporteResponseDTO ReporteToResponse(Reporte reporte) {
 
+        String nombreCompleto = String.format(
+            "%s %s",
+            reporte.getAtendidoPor().getNombre(),
+            reporte.getAtendidoPor().getApellido()
+        );
+
            return new ReporteResponseDTO(
                reporte.getId(),
+               reporte.getAtendidoPor().getId(),
+               nombreCompleto,
                reporte.getEspacio().getId(),
                reporte.getEspacio().getNombre(),
                reporte.getDescripcion(),
@@ -47,10 +55,6 @@ public class ReporteMapper {
             .minutosEstimados(minutosEstimados)
             .fechaVencimiento(fechaVencimiento)
             .build();
-    }
-
-    public EstadoReporte strToEstadoReporte(String estado) {
-        return EstadoReporte.valueOf(estado.toUpperCase());
     }
 
     public TipoReporte strToTipoReporte(String tipo) {
