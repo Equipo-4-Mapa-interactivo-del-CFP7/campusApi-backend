@@ -1,6 +1,7 @@
 package com.cfp.mapa.dto.auditoria;
 
 import com.cfp.mapa.model.enums.TipoAccionAuditoria;
+import com.cfp.mapa.model.enums.TipoReporte;
 import java.time.LocalDateTime;
 
 public record AuditoriaResponseDTO(
@@ -14,6 +15,8 @@ public record AuditoriaResponseDTO(
     String afectadoNombre,
     String afectadoDni,
     Long reporteId,
+    Long reporteEspacioId,
+    TipoReporte reporteTipo,
     TipoAccionAuditoria accion,
     Object detalles
 ) {}

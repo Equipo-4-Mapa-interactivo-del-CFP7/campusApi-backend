@@ -209,7 +209,6 @@ public class UsuarioServiceImpl implements UsuarioService {
     auditoriaService.registrarAccion(
         usuarioLogueado,
         usuarioAfectado,
-        null,
         TipoAccionAuditoria.ESTADO_ACTIVO_MODIFICADO,
         detallesDTO
     );
@@ -327,7 +326,6 @@ public class UsuarioServiceImpl implements UsuarioService {
     auditoriaService.registrarAccion(
         securityUtils.usuarioLogueado(),
         usuarioGuardado,
-        null,
         TipoAccionAuditoria.ROL_MODIFICADO,
         detallesDTO
     );
@@ -516,7 +514,6 @@ public class UsuarioServiceImpl implements UsuarioService {
     auditoriaService.registrarAccion(
         antiguoOwner,
         nuevoOwner,
-        null,
         TipoAccionAuditoria.OWNER_TRANSFERIDO,
         detallesDTO
     );
@@ -578,7 +575,6 @@ public class UsuarioServiceImpl implements UsuarioService {
     auditoriaService.registrarAccion(
         usuarioLogueado,
         usuarioAfectado,
-        null,
         TipoAccionAuditoria.DNI_EDITADO,
         detallesDTO
     );
@@ -658,7 +654,6 @@ public class UsuarioServiceImpl implements UsuarioService {
     auditoriaService.registrarAccion(
         usuarioLogueado,
         usuarioAfectado,
-        null,
         TipoAccionAuditoria.NOMBRE_APELLIDO_EDITADO,
         detallesDTO
     );

@@ -2,6 +2,7 @@ package com.cfp.mapa.service.impl;
 
 import com.cfp.mapa.dto.auditoria.AuditoriaReporteCreadoDTO;
 import com.cfp.mapa.dto.auditoria.AuditoriaReportesDetallesDTO;
+import com.cfp.mapa.dto.reporte.ReporteConteoDTO;
 import com.cfp.mapa.dto.reporte.ReporteCreateRequestDTO;
 import com.cfp.mapa.dto.reporte.ReporteResponseDTO;
 import com.cfp.mapa.dto.reporte.ReporteUpdateRequestDTO;
@@ -23,6 +24,7 @@ import com.cfp.mapa.mapper.ReporteMapper;
 import com.cfp.mapa.repository.EspacioRepository;
 import com.cfp.mapa.repository.ReporteRepository;
 import com.cfp.mapa.repository.UsuarioRepository;
+import com.cfp.mapa.repository.projection.ReporteConteoProjection;
 import com.cfp.mapa.service.AuditoriaService;
 import com.cfp.mapa.service.ReporteService;
 import com.cfp.mapa.util.SecurityUtils;
@@ -103,7 +105,7 @@ public class ReporteServiceImpl implements ReporteService {
         if (request.minutosEstimados() != null) {
             detallesDto = new AuditoriaReporteCreadoDTO(
                 request.minutosEstimados(),
-                LocalDateTime.now().minusMinutes(request.minutosEstimados())
+                reporteGuardado.getFechaVencimiento()
             );
         }
 
@@ -111,6 +113,8 @@ public class ReporteServiceImpl implements ReporteService {
             usuarioLogueado,
             null,
             reporteGuardado.getId(),
+            espacio.getId(),
+            reporteGuardado.getTipo(),
             TipoAccionAuditoria.REPORTE_CREADO,
             detallesDto
         );
@@ -244,6 +248,8 @@ public class ReporteServiceImpl implements ReporteService {
             usuarioLogueado,
             null,
             reporteGuardado.getId(),
+            reporteGuardado.getEspacio().getId(),
+            reporteGuardado.getTipo(),
             tipoAccionAuditoria,
             detallesDTO
         );
@@ -282,6 +288,8 @@ public class ReporteServiceImpl implements ReporteService {
             usuarioLogueado,
             null,
             reporteGuardado.getId(),
+            reporteGuardado.getEspacio().getId(),
+            reporteGuardado.getTipo(),
             TipoAccionAuditoria.REPORTE_CERRADO,
             null
         );
@@ -293,21 +301,15 @@ public class ReporteServiceImpl implements ReporteService {
     @Override
     public Page<ReporteResponseDTO> listarReporteConFiltro(
         Long espacioId,
-        String estado,
-        String tipoReporte,
+        List<EstadoReporte> estado,
+        List<TipoReporte> tipoReporte,
         Pageable pageable
     ) {
 
         securityValidator.validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN, Rol.PERSONAL);
 
-        EstadoReporte estadoParam = (estado != null && !estado.isBlank()) ?
-            EstadoReporte.valueOf(estado.toUpperCase().trim()) : null;
-
-        TipoReporte tipoParam = (tipoReporte != null && !tipoReporte.isBlank()) ?
-            TipoReporte.valueOf(tipoReporte.toUpperCase().trim()) : null;
-
         Page<Reporte> reportesPage = reporteRepository.buscarReportesDinamico(
-            espacioId, estadoParam, tipoParam, pageable
+            espacioId, estado, tipoReporte, pageable
         );
 
         return reportesPage.map(reporteMapper::ReporteToResponse);
@@ -357,6 +359,8 @@ public class ReporteServiceImpl implements ReporteService {
                     system,
                     null,
                     reporte.getId(),
+                    reporte.getEspacio().getId(),
+                    reporte.getTipo(),
                     TipoAccionAuditoria.REPORTE_CERRADO_AUTOMATICO,
                     null
                 );
@@ -367,4 +371,14 @@ public class ReporteServiceImpl implements ReporteService {
         }
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public ReporteConteoDTO obtenerConteoReportes() {
+
+        securityValidator.validarUsuarioActivoYRoles(Rol.OWNER, Rol.ADMIN, Rol.PERSONAL);
+
+        List<ReporteConteoProjection> reportesContados = reporteRepository.contarReportesActivosPorTipo();
+
+        return reporteMapper.conteoProjectionToConteoDTO(reportesContados);
+    }
 }

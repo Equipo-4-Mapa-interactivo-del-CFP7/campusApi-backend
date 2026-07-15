@@ -1,7 +1,11 @@
 package com.cfp.mapa.controller;
 
+import com.cfp.mapa.dto.reporte.ReporteConteoDTO;
 import com.cfp.mapa.dto.reporte.ReporteUpdateRequestDTO;
+import com.cfp.mapa.model.enums.EstadoReporte;
+import com.cfp.mapa.model.enums.TipoReporte;
 import com.cfp.mapa.service.ReporteService;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -72,8 +76,8 @@ public class ReporteController {
     @GetMapping
     public ResponseEntity<Page<ReporteResponseDTO>> listarReportes(
         @RequestParam(required = false) Long espacioId,
-        @RequestParam(required = false) String estado,
-        @RequestParam(required = false) String tipo,
+        @RequestParam(required = false) List<EstadoReporte> estado,
+        @RequestParam(required = false) List<TipoReporte> tipo,
         @PageableDefault(size = 10, sort = "fechaCreacion", direction = Sort.Direction.DESC) Pageable pageable
     ) {
 
@@ -91,6 +95,17 @@ public class ReporteController {
     ) {
 
         ReporteResponseDTO response = reporteService.obtenerReporte(id);
+
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(response);
+    }
+
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN', 'PERSONAL')")
+    @GetMapping("/conteo")
+    public ResponseEntity<ReporteConteoDTO> obtenerConteoReportes() {
+
+        ReporteConteoDTO response = reporteService.obtenerConteoReportes();
 
         return ResponseEntity
             .status(HttpStatus.OK)

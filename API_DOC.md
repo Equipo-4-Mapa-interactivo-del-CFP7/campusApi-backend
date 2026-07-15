@@ -1188,6 +1188,8 @@ Los JSON de respuesta de auditoría están estandarizados con este formato:
   "afectadoNombre": String,
   "afectadoDni": String,
   "reporteId": Long,
+  "reporteEspacioId": Long,
+  "reporteTipo": String,
   "accion": String,
   "detalles": Object (JSON dinámico)
 }
@@ -1212,6 +1214,8 @@ Los JSON de respuesta de auditoría están estandarizados con este formato:
   "afectadoNombre": "Pepe Ortega",
   "afectadoDni": "23456789",
   "reporteId": null,
+  "reporteEspacioId": null,
+  "reporteTipo": null,
   "accion": "NOMBRE_APELLIDO_EDITADO",
   "detalles": {
     "usuarioAfectadoId": 4,
@@ -1232,8 +1236,8 @@ Los JSON de respuesta de auditoría están estandarizados con este formato:
 
 ```JSON
 {
-  "id": 3,
-  "fechaAccion": "2026-07-06T20:46:15.948642",
+  "id": 2,
+  "fechaAccion": "2026-07-15T09:18:43.059593",
   "operadorId": 1,
   "operadorNombre": "SISTEMA PROCESO",
   "operadorDni": "SYSTEM01",
@@ -1242,6 +1246,8 @@ Los JSON de respuesta de auditoría están estandarizados con este formato:
   "afectadoNombre": "N/A (Auto-acción)",
   "afectadoDni": "N/A",
   "reporteId": 1,
+  "reporteEspacioId": 1,
+  "reporteTipo": "ACCESO_BLOQUEADO",
   "accion": "REPORTE_CERRADO_AUTOMATICO",
   "detalles": null
 }
@@ -1317,7 +1323,7 @@ Cada acción tendrá el formato del
   "content": [
     {
       "id": 2,
-      "fechaAccion": "2026-07-06T20:46:15.948642",
+      "fechaAccion": "2026-07-15T09:18:43.059593",
       "operadorId": 1,
       "operadorNombre": "SISTEMA PROCESO",
       "operadorDni": "SYSTEM01",
@@ -1326,6 +1332,8 @@ Cada acción tendrá el formato del
       "afectadoNombre": "N/A (Auto-acción)",
       "afectadoDni": "N/A",
       "reporteId": 1,
+      "reporteEspacioId": 1,
+      "reporteTipo": "ACCESO_BLOQUEADO",
       "accion": "REPORTE_CERRADO_AUTOMATICO",
       "detalles": null
     },
@@ -1340,6 +1348,8 @@ Cada acción tendrá el formato del
       "afectadoNombre": "Pepe Ortega",
       "afectadoDni": "23456789",
       "reporteId": null,
+      "reporteEspacioId": null,
+      "reporteTipo": null,
       "accion": "NOMBRE_APELLIDO_EDITADO",
       "detalles": {
         "usuarioAfectadoId": 4,
@@ -1397,6 +1407,232 @@ si los tipos de datos enviados en los parámetros son incompatibles (ejemplo: `?
 
 </td></tr></table>
 </details>
+
+## 🟢 Obtener reporte analítico entre dos fechas [Solo OWNER]
+
+`GET /api/auditorias/analitica`
+
+Permite que únicamente usuarios con el rol `OWNER` puedan ver un resumen general de las auditorías
+ocurridads en un período de tiempo que elija.
+
+El `JSON` devuelto se divide en las siguientes categorías:
+- `cuentas` muestra el número total de cada auditoría relacionadda a alguna acción con las cuentas
+(Ejemplo: crear, eliminar, cambiar rol, etc.).
+- `datos` representa el número de modificaciones de datos personales de la cuenta que un usuario
+puede realizar sobre otro o sobre sí mismo, esto incluye cambiar nombre/apellido y cambiar dni.
+Separa las casos que se haya hecho sobre uno mismo o sobre un tercero.
+- `reportes` muestra el total de reportes que se hayan creado/atendido/modificado/cerrado manual o
+automáticamente. Además incluye dos parámetros que son listas:
+  - `rendimientoPorTipo` muestra el total de tipos de reportes diferentes que se encuentren en la
+  lista, y muestra un `promedioMinutos` que representa el tiempo promedio entre que los reportes de
+  ese tipo son creados y cerrados.
+  - `espaciosCriticosPorTipo` muestra un top de reportes de cada tipo, el cual consiste en mostrar
+  las zonas que más reportes han recibido de todos los tipos que se encuentren. La cantidad de
+  reportes se define en el parámetro `topZonasCriticas`, el cual si no
+  se agrega un valor entonces será `5` por defecto.
+
+<details>
+<summary><b>🔑 Encabezado (Header)</b></summary>
+
+* `Authorization`: `Bearer <token_de_owner>`
+
+</details>
+
+<details>
+<summary><b>❓ Parámetros de Consulta (Query Parameters)</b></summary>
+
+**Todos los filtros son opcionales**.
+Se añaden a la URL (ej. `?desde=2026-07-02&hasta=2026-07-03&topZonasCriticas=5`).
+* `desde` String, requerido - Filtro exacto (formato `"AAAA-MM-DD"`, ejemplo: `"2026-07-01"`).
+* `hasta` String, requerido - Filtro exacto (formato `"AAAA-MM-DD"`).
+* `topZonasCriticas` Long, opcional, mínimo `1`. Define la cantidad del top de zonas con mayor
+cantidad de reportes, si no se agrega, por default es `5`.
+
+</details>
+
+<details>
+<summary><b>🔄 Respuesta del servidor</b></summary>
+<table><tr><td>
+
+🟢 `200 OK` + **JSON respuesta analítica**
+
+```JSON
+{
+  "fechaDesde": String (LocalDate "AAAA-MM-DD"),
+  "fechaHasta": String (LocalDate "AAAA-MM-DD") ,
+  "cuentas":
+  {
+    "creados": long,
+    "eliminados": long,
+    "passwordRestablecidas": long,
+    "passwordCambiadas": long,
+    "estadosModificados": long,
+    "rolesModificados": long,
+    "ownerRecuperaciones": long,
+    "ownerTransferencias": long
+  },
+  "datos":
+  {
+    "cambiosDni":
+    {
+      "total": long,
+      "siMismo": long,
+      "otros": long
+    },
+    "cambiosNombreApellido": 
+    {
+      "total": long,
+      "siMismo": long,
+      "otros": long
+    }
+  },
+  "reportes":
+  {
+    "creados": long,
+    "atentidos": long,
+    "modificados": long,
+    "cerradosManual": long,
+    "cerradosAutomatico": long,
+    "rendimientoPorTipo": 
+     [
+       {
+          "tipo": String,
+          "creados": long,
+          "cerrados": long,
+          "promedioMinutos": double
+       }
+     ],
+    "espaciosCriticosPorTipo":
+    [
+      {
+        "tipo": String,
+        "zonas":
+        [
+          {
+            "espacioId": Long,
+            "nombre": String,
+            "cantidad": long
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+<details>
+<summary><b>Ejemplo</b></summary>
+
+```JSON
+{
+  "fechaDesde": "2026-07-02",
+  "fechaHasta": "2026-07-03",
+  "cuentas": {
+    "creados": 0,
+    "eliminados": 0,
+    "passwordRestablecidas": 0,
+    "passwordCambiadas": 0,
+    "estadosModificados": 0,
+    "rolesModificados": 0,
+    "ownerRecuperaciones": 0,
+    "ownerTransferencias": 0
+  },
+  "datos": {
+    "cambiosDni": {
+      "total": 0,
+      "siMismo": 0,
+      "otros": 0
+    },
+    "cambiosNombreApellido": {
+      "total": 0,
+      "siMismo": 0,
+      "otros": 0
+    }
+  },
+  "reportes": {
+    "creados": 0,
+    "atentidos": 0,
+    "modificados": 0,
+    "cerradosManual": 0,
+    "cerradosAutomatico": 0,
+    "rendimientoPorTipo": [
+      {
+        "tipo": "ACCESO_BLOQUEADO",
+        "creados": 0,
+        "cerrados": 0,
+        "promedioMinutos": 0
+      },
+      {
+        "tipo": "PROBLEMA_SENALETICA",
+        "creados": 0,
+        "cerrados": 0,
+        "promedioMinutos": 0
+      },
+      {
+        "tipo": "BARRERA_FISICA",
+        "creados": 0,
+        "cerrados": 0,
+        "promedioMinutos": 0
+      },
+      {
+        "tipo": "DIFICULTAD_ORIENTACION",
+        "creados": 0,
+        "cerrados": 0,
+        "promedioMinutos": 0
+      },
+      {
+        "tipo": "OTROS",
+        "creados": 0,
+        "cerrados": 0,
+        "promedioMinutos": 0
+      }
+    ],
+    "espaciosCriticosPorTipo": [
+      {
+        "tipo": "ACCESO_BLOQUEADO",
+        "zonas": []
+      },
+      {
+        "tipo": "PROBLEMA_SENALETICA",
+        "zonas": []
+      },
+      {
+        "tipo": "BARRERA_FISICA",
+        "zonas": []
+      },
+      {
+        "tipo": "DIFICULTAD_ORIENTACION",
+        "zonas": []
+      },
+      {
+        "tipo": "OTROS",
+        "zonas": []
+      }
+    ]
+  }
+}
+```
+
+</details>
+
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+si los tipos de datos enviados en los parámetros son incompatibles
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
+
+🔴 `403 FORBIDDEN` +
+[JSON error](#formato-general-de-errores)
+- Si el usuario logueado no posee el rol `OWNER`.
+- Si la sesión fue revocada en base de datos. Retorna el JSON de error con
+`"errorCode": "SESSION_INVALIDATED"`.
+
+</td></tr></table>
+</details>
+
 
 ---
 
@@ -1767,6 +2003,7 @@ Permite que un usuario logueado como `OWNER`, `ADMIN` o `PERSONAL` puedan obtene
 filtrable con todos los reportes.
 
 - Podrá filtrarlos por `espacioId`, `estado`, `tipoReporte`, `page`, `size`.
+- Se pueden seleccionar múltiples `estado` y `tipoReporte`.
 
 <details>
 <summary><b>🔑 Encabezados válidos (Header)</b></summary>
@@ -1786,7 +2023,7 @@ filtrable con todos los reportes.
 - `estado` String - Filtro exacto (estado del reporte que puede ser `PENDIENTE` / `EN_REVISION` / 
 `RESUELTO`)
 - `tipoReporte` String - Filtro exacto (puede ser del tipo `ACCESO_BLOQUEADO` / 
-`PROBLEMA_SENALETICA` / `BARRERA_FISICA` / `DIFICULTAD_ORIENTACION`).
+`PROBLEMA_SENALETICA` / `BARRERA_FISICA` / `DIFICULTAD_ORIENTACION` / `OTROS`).
 - `page` int - Número de página, empieza en 0 (Por defecto: 0).
 - `size` int - Cantidad de registros por página (Por defecto: 10).
 
@@ -1868,6 +2105,69 @@ si los tipos de datos enviados en los parámetros son incompatibles
 
 </td></tr></table>
 </details>
+
+## 🟢 Obtener conteo de reportes activos [solo OWNER, ADMIN o PERSONAL]
+
+`GET /api/reportes/conteo`
+
+Permite que un usuario logueado como `OWNER`, `ADMIN` o `PERSONAL` pueda ver el total de cada tipo
+de reporte activo.
+
+<details>
+<summary><b>🔑 Encabezados válidos (Header)</b></summary>
+
+- `Authorization`: `Bearer <token_de_owner>`
+- `Authorization`: `Bearer <token_de_admin>`
+- `Authorization`: `Bearer <token_de_personal>`
+
+</details>
+
+<details>
+<summary><b>🔄 Respuesta del servidor</b></summary>
+<table><tr><td>
+
+🟢 `200 OK` + **JSON de conteo**
+
+En caso de no haber ninguno, el valor será `0`.
+
+```JSON
+{
+  "accesoBloqueado": int,
+  "problemaSenaletica": int,
+  "barreraFisica": int,
+  "dificultadOrientacion": int,
+  "otros": int
+}
+```
+
+<details>
+<summary><b>Ejemplo</b></summary>
+
+```JSON
+{
+  "accesoBloqueado": 3,
+  "problemaSenaletica": 1,
+  "barreraFisica": 0,
+  "dificultadOrientacion": 0,
+  "otros": 1
+}
+```
+
+</details>
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
+
+🔴 `403 FORBIDDEN` +
+[JSON error](#formato-general-de-errores)
+- Si el usuario logueado no posee el rol `OWNER`, `ADMIN` o `PERSONAL`.
+- Si la sesión fue revocada en base de datos. Retorna el JSON de error con
+  `"errorCode": "SESSION_INVALIDATED"`.
+
+</td></tr></table>
+</details> 
 
 ---
 

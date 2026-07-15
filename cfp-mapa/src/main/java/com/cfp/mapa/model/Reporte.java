@@ -10,6 +10,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -27,7 +28,12 @@ import org.hibernate.annotations.CreationTimestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "reportes")
+@Table(
+    name = "reportes",
+    indexes = {
+        @Index(name = "idx_reporte_estado_tipo", columnList = "estado, tipo")
+    }
+)
 public class Reporte {
 
     @Id
@@ -35,11 +41,11 @@ public class Reporte {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "espacio_id", nullable = false)
+    @JoinColumn(nullable = false)
     private Espacio espacio;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "atendido_por_id", nullable = false)
+    @JoinColumn(name = "atendido_por", nullable = false)
     private Usuario atendidoPor;
 
     @Enumerated(EnumType.STRING)

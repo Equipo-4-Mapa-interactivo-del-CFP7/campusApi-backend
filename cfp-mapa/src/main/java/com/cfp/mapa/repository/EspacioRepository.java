@@ -2,6 +2,8 @@ package com.cfp.mapa.repository;
 
 import com.cfp.mapa.model.Espacio;
 import com.cfp.mapa.model.enums.TipoEspacio;
+import com.cfp.mapa.repository.projection.EspacioNombreProjection;
+import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -35,4 +37,6 @@ public interface EspacioRepository extends JpaRepository<Espacio, Long> {
 
     List<Espacio> findByNombreContainingIgnoreCaseAndActivoTrue(String nombre);
 
+    @Query("SELECT e.id as id, e.nombre as nombre FROM Espacio e WHERE e.id IN :ids")
+    List<EspacioNombreProjection> findNombresByIds(@Param("ids") Set<Long> ids);
 }

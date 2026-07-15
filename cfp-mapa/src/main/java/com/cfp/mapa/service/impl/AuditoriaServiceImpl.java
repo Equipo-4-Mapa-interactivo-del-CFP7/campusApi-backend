@@ -2,15 +2,21 @@ package com.cfp.mapa.service.impl;
 
 import com.cfp.mapa.dto.auditoria.AuditoriaResponseDTO;
 import com.cfp.mapa.dto.auditoria.AuditoriaUsuariosDetallesDTO;
+import com.cfp.mapa.dto.metricas.AuditoriaAnaliticaResponseDTO;
 import com.cfp.mapa.exception.AuditoriaAnonimizacionException;
+import com.cfp.mapa.exception.OperacionInvalidaException;
 import com.cfp.mapa.mapper.AuditoriaMapper;
 import com.cfp.mapa.model.AuditoriaUsuario;
 import com.cfp.mapa.model.Usuario;
 import com.cfp.mapa.model.enums.Rol;
 import com.cfp.mapa.model.enums.TipoAccionAuditoria;
+import com.cfp.mapa.model.enums.TipoReporte;
 import com.cfp.mapa.repository.AuditoriaRepository;
 import com.cfp.mapa.service.AuditoriaService;
 import com.cfp.mapa.util.SecurityValidator;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -59,6 +65,33 @@ public class AuditoriaServiceImpl implements AuditoriaService {
     return auditorias.map(auditoriaMapper::toDTO);
   }
 
+  @Transactional(readOnly = true)
+  @Override
+  public AuditoriaAnaliticaResponseDTO obtenerAnaliticaEntreFechas(
+      LocalDate desde,
+      LocalDate hasta,
+      Long topEspaciosCriticos
+  ) {
+
+    if (desde.isAfter(hasta)) {
+      throw new OperacionInvalidaException("La fecha de inicio no puede ser posterior a la fecha de fin");
+    }
+
+    // LocalDate -> LocalDateTime
+    LocalDateTime desdeDateTime = desde.atStartOfDay();
+    LocalDateTime hastaDateTime = hasta.atTime(LocalTime.MAX);
+
+    // Consulta masiva optimizada por el indice idx_auditoria_fecha
+    List<AuditoriaUsuario> auditorias = auditoriaRepository.buscarPorRangoFechas(desdeDateTime, hastaDateTime);
+
+    return auditoriaMapper.toAnaliticaResponseDTO(desde, hasta, auditorias, topEspaciosCriticos);
+
+  }
+
+  // ======================================
+  // FUNCIONES USADAS POR OTROS SERVICE
+  // ======================================
+
   @Transactional
   @Override
   public void registrarAccion(
@@ -71,6 +104,8 @@ public class AuditoriaServiceImpl implements AuditoriaService {
         operador,
         afectado,
         null,
+        null,
+        null,
         accion,
         null
     );
@@ -82,7 +117,6 @@ public class AuditoriaServiceImpl implements AuditoriaService {
   public void registrarAccion(
       Usuario operador,
       Usuario afectado,
-      Long reporteId,
       TipoAccionAuditoria accion,
       Object detalles
   ) {
@@ -90,14 +124,45 @@ public class AuditoriaServiceImpl implements AuditoriaService {
     String detallesJson = null;
 
     if (detalles != null) {
-      // Si es texto plano
-      if (detalles instanceof String stringDetalle) {
-        detallesJson = stringDetalle;
-      } else { // Convertir DTO en String
-        try {
-          detallesJson = objectMapper.writeValueAsString(detalles);
-        } catch (Exception _) {
-        }
+      // Convertir DTO en String
+      try {
+        detallesJson = objectMapper.writeValueAsString(detalles);
+      } catch (Exception _) {
+      }
+    }
+
+    AuditoriaUsuario nuevaAuditoria = new AuditoriaUsuario(
+        operador,
+        afectado,
+        null,
+        null,
+        null,
+        accion,
+        detallesJson
+    );
+
+    auditoriaRepository.save(nuevaAuditoria);
+  }
+
+  @Transactional
+  @Override
+  public void registrarAccion(
+      Usuario operador,
+      Usuario afectado,
+      Long reporteId,
+      Long reporteEspacioId,
+      TipoReporte reporteTipo,
+      TipoAccionAuditoria accion,
+      Object detalles
+  ) {
+
+    String detallesJson = null;
+
+    if (detalles != null) {
+      // Convertir DTO en String
+      try {
+        detallesJson = objectMapper.writeValueAsString(detalles);
+      } catch (Exception _) {
       }
     }
 
@@ -105,6 +170,8 @@ public class AuditoriaServiceImpl implements AuditoriaService {
         operador,
         afectado,
         reporteId,
+        reporteEspacioId,
+        reporteTipo,
         accion,
         detallesJson
     );

@@ -53,6 +53,7 @@ public class Usuario {
     boolean eliminado;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "rol_original")
     private Rol rolOriginal;
 
     @CreationTimestamp

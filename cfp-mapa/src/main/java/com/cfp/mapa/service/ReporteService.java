@@ -1,8 +1,12 @@
 package com.cfp.mapa.service;
 
+import com.cfp.mapa.dto.reporte.ReporteConteoDTO;
 import com.cfp.mapa.dto.reporte.ReporteCreateRequestDTO;
 import com.cfp.mapa.dto.reporte.ReporteResponseDTO;
 import com.cfp.mapa.dto.reporte.ReporteUpdateRequestDTO;
+import com.cfp.mapa.model.enums.EstadoReporte;
+import com.cfp.mapa.model.enums.TipoReporte;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -12,8 +16,8 @@ public interface ReporteService {
 
     Page<ReporteResponseDTO> listarReporteConFiltro(
         Long espacioId,
-        String estado,
-        String tipoReporte,
+        List<EstadoReporte> estado,
+        List<TipoReporte> tipoReporte,
         Pageable pageable
     );
 
@@ -24,5 +28,7 @@ public interface ReporteService {
     void cerrarReportesAutomaticamente();
 
     ReporteResponseDTO obtenerReporte(Long id);
+
+    ReporteConteoDTO obtenerConteoReportes();
 
 }

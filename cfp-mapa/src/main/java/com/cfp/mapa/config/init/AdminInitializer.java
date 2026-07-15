@@ -41,8 +41,8 @@ public class AdminInitializer implements CommandLineRunner {
     if (!usuarioRepository.existsByDni("11112222")) {
       Usuario owner = Usuario.builder()
           .dni("11112222")
-          .nombre("Dueño")
-          .apellido("Total")
+          .nombre("Martín")
+          .apellido("Fernández")
           .password(passwordEncoder.encode("owner123"))
           .rol(Rol.OWNER)
           .activo(true)
@@ -56,8 +56,8 @@ public class AdminInitializer implements CommandLineRunner {
     if (!usuarioRepository.existsByDni("12345678")) {
       Usuario admin = Usuario.builder()
           .dni("12345678")
-          .nombre("Administrador")
-          .apellido("Del Sistema")
+          .nombre("Sofía")
+          .apellido("Rodríguez")
           .password(passwordEncoder.encode("administrador"))
           .rol(Rol.ADMIN)
           .activo(true)
@@ -71,8 +71,8 @@ public class AdminInitializer implements CommandLineRunner {
     if (!usuarioRepository.existsByDni("23456789")) {
       Usuario personal = Usuario.builder()
           .dni("23456789")
-          .nombre("Personal")
-          .apellido("Institucional")
+          .nombre("Diego Alejandro")
+          .apellido("Gómez")
           .password(passwordEncoder.encode("personal"))
           .rol(Rol.PERSONAL)
           .activo(true)
