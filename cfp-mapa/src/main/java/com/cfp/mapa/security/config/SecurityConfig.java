@@ -62,7 +62,7 @@ public class SecurityConfig {
                 "/swagger-ui/**",
                 "/swagger-ui.html"
             ).permitAll()
-
+                .requestMatchers("/api/recorridos/**").permitAll()
             .anyRequest().authenticated()
         )
 

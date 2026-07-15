@@ -1,7 +1,9 @@
 package com.cfp.mapa.service;
 
+import com.cfp.mapa.dto.conexion.ConexionMapaDTO;
 import com.cfp.mapa.dto.conexion.ConexionResponseDTO;
 import com.cfp.mapa.dto.conexion.ConexionUpdateDTO;
+import com.cfp.mapa.model.enums.EstadoConexion;
 
 import java.util.List;
 
@@ -13,8 +15,7 @@ public interface ConexionService {
     ConexionResponseDTO obtenerConexionPorId(Long id);
     ConexionResponseDTO actualizarConexion(Long id, ConexionUpdateDTO dto);
 
-    void desactivarConexion(Long id);
+    void cambiarEstado(Long id, EstadoConexion estado);
 
-    void activarConexion(Long id);
-
+    List<ConexionMapaDTO> obtenerMapa();
 }

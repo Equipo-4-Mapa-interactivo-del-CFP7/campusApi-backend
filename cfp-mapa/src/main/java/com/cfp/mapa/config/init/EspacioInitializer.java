@@ -1,6 +1,8 @@
+/*
 package com.cfp.mapa.config.init;
 
 import com.cfp.mapa.model.Espacio;
+import com.cfp.mapa.model.enums.Sector;
 import com.cfp.mapa.model.enums.TipoEspacio;
 import com.cfp.mapa.repository.EspacioRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -25,7 +27,8 @@ public class EspacioInitializer implements CommandLineRunner {
           null,
           "Laboratorio de Computación 1",
           "Laboratorio equipado con 20 PCs de desarrollo",
-          TipoEspacio.TALLER,
+          TipoEspacio.LABORATORIO,
+          Sector.SECTOR_3,
           -34.6037,
           -58.3816,
           true,
@@ -40,6 +43,7 @@ public class EspacioInitializer implements CommandLineRunner {
           "Aula Magna",
           "Pabellón Central - Planta Baja",
           TipoEspacio.AULA,
+          Sector.SECTOR_4,
           -34.6040,
           -58.3820,
           true,
@@ -55,3 +59,4 @@ public class EspacioInitializer implements CommandLineRunner {
     }
   }
 }
+*/

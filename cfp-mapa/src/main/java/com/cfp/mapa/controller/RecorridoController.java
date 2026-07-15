@@ -11,13 +11,12 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/recorridos")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://127.0.0.1:5500/")
 public class RecorridoController {
 
     private final RecorridoService recorridoService;
 
     @PostMapping("/calcular")
-    @PreAuthorize("hasAnyRole('ADMIN','PERSONAL')")
     public ResponseEntity<RutaResponseDTO> calcularRuta(@RequestBody RutaRequestDTO dto){
 
         RutaResponseDTO ruta =
