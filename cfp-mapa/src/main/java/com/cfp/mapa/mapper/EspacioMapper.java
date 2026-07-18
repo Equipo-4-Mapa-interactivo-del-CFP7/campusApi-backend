@@ -13,8 +13,9 @@ public class EspacioMapper {
                 espacio.getNombre(),
                 espacio.getDescripcion(),
                 espacio.getTipo(),
+                espacio.getSector(),
                 espacio.getAccesible(),
-                espacio.getActivo()
+                espacio.getEstado()
         );
     }
 
@@ -24,9 +25,11 @@ public class EspacioMapper {
                 espacio.getId(),
                 espacio.getNombre(),
                 espacio.getTipo(),
+                espacio.getSector(),
                 espacio.getCoordenadaX(),
                 espacio.getCoordenadaY(),
-                espacio.getAccesible()
+                espacio.getAccesible(),
+                espacio.getEstado()
         );
     }
 
@@ -40,7 +43,8 @@ public class EspacioMapper {
                 espacio.getCoordenadaX(),
                 espacio.getCoordenadaY(),
                 espacio.getAccesible(),
-                null
+                espacio.getEstado(),
+                null // imágenes
         );
     }
 

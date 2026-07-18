@@ -1,7 +1,9 @@
 package com.cfp.mapa.controller;
 
+import com.cfp.mapa.dto.conexion.ConexionMapaDTO;
 import com.cfp.mapa.dto.conexion.ConexionResponseDTO;
 import com.cfp.mapa.dto.conexion.ConexionUpdateDTO;
+import com.cfp.mapa.model.enums.EstadoConexion;
 import com.cfp.mapa.service.ConexionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/conexiones")
-@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class ConexionController {
 
@@ -23,13 +24,12 @@ public class ConexionController {
     // =========================
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','PERSONAL')")
     public ResponseEntity<List<ConexionResponseDTO>> listarConexiones(){
         return ResponseEntity.ok(conexionService.listarConexiones());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','PERSONAL')")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN','PERSONAL')")
     public ResponseEntity<ConexionResponseDTO> obtenerPorId(@PathVariable Long id){
         return ResponseEntity.ok(conexionService.obtenerConexionPorId(id));
     }
@@ -39,22 +39,25 @@ public class ConexionController {
     // =========================
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     public ResponseEntity<ConexionResponseDTO> actualizarConexion(@PathVariable Long id, @RequestBody ConexionUpdateDTO dto){
         return ResponseEntity.ok(conexionService.actualizarConexion(id, dto));
     }
 
-    @PatchMapping("/{id}/activar")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> activarConexion(@PathVariable Long id){
-        conexionService.activarConexion(id);
-        return ResponseEntity.ok("Conexion activada correctamente");
+    @PatchMapping("/{id}/estado")
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    public ResponseEntity<Void> cambiarEstado(@PathVariable Long id, @RequestParam EstadoConexion estado) {
+        conexionService.cambiarEstado(id, estado);
+        return ResponseEntity.ok().build();
     }
 
-    @PatchMapping("/{id}/desactivar")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> desactivarConexion(@PathVariable Long id){
-        conexionService.desactivarConexion(id);
-        return ResponseEntity.ok("Conexion desactivada correctamente");
+    // =========================
+    // MAPA
+    // =========================
+
+    @GetMapping("/mapa")
+    public ResponseEntity<List<ConexionMapaDTO>> obtenerMapa() {
+
+        return ResponseEntity.ok(conexionService.obtenerMapa());
     }
 }

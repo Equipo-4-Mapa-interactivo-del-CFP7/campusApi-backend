@@ -1,5 +1,6 @@
 package com.cfp.mapa.dto.conexion;
 
+import com.cfp.mapa.model.enums.EstadoConexion;
 import com.cfp.mapa.model.enums.TipoTransito;
 
 public record ConexionResponseDTO(
@@ -14,5 +15,5 @@ public record ConexionResponseDTO(
         Double ancho,
         Boolean cumpleLey962,
         Boolean accesible,
-        Boolean activa
-) { }
+        EstadoConexion estado
+) {}

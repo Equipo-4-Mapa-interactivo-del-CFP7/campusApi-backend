@@ -1,6 +1,7 @@
 package com.cfp.mapa.repository;
 
 import com.cfp.mapa.model.Espacio;
+import com.cfp.mapa.model.enums.EstadoEspacio;
 import com.cfp.mapa.model.enums.TipoEspacio;
 import com.cfp.mapa.repository.projection.EspacioNombreProjection;
 import java.util.Set;
@@ -15,27 +16,28 @@ import java.util.List;
 @Repository
 public interface EspacioRepository extends JpaRepository<Espacio, Long> {
 
-    @Query("SELECT e FROM Espacio e WHERE " +
-            "(:nombre IS NULL OR LOWER(e.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
-            "(:descripcion IS NULL OR LOWER(e.descripcion) LIKE LOWER(CONCAT('%', :descripcion, '%'))) AND " +
-            "(:tipo IS NULL OR e.tipo = :tipo) AND " +
-            "(:accesible IS NULL OR e.accesible = :accesible) AND " +
-            "(:activo IS NULL OR e.activo = :activo)")
-
+    @Query(""" 
+        SELECT e FROM Espacio e
+        WHERE (:nombre IS NULL OR LOWER(e.nombre) LIKE LOWER(CONCAT('%', :nombre, '%')))
+        AND (:descripcion IS NULL OR LOWER(e.descripcion) LIKE LOWER(CONCAT('%', :descripcion, '%')))
+        AND (:tipo IS NULL OR e.tipo = :tipo)
+        AND (:accesible IS NULL OR e.accesible = :accesible)
+        AND (:estado IS NULL OR e.estado = :estado)
+        """)
     Page<Espacio> buscarEspacios(
-            @Param("nombre") String nombre,
-            @Param("descripcion") String descripcion,
-            @Param("tipo") TipoEspacio tipo,
-            @Param("accesible") Boolean accesible,
-            @Param("activo") Boolean activo,
+            String nombre,
+            String descripcion,
+            TipoEspacio tipo,
+            Boolean accesible,
+            EstadoEspacio estado,
             Pageable pageable
     );
 
-    List<Espacio> findByActivoTrue();
+    List<Espacio> findByEstado(EstadoEspacio estado);
 
-    List<Espacio> findByActivoTrueAndTipo(TipoEspacio tipo);
+    List<Espacio> findByEstadoAndTipo(EstadoEspacio estado, TipoEspacio tipo);
 
-    List<Espacio> findByNombreContainingIgnoreCaseAndActivoTrue(String nombre);
+    List<Espacio> findByNombreContainingIgnoreCaseAndEstado(String nombre, EstadoEspacio estado);
 
     @Query("SELECT e.id as id, e.nombre as nombre FROM Espacio e WHERE e.id IN :ids")
     List<EspacioNombreProjection> findNombresByIds(@Param("ids") Set<Long> ids);

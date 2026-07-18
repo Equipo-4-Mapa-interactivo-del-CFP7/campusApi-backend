@@ -10,7 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 // TODO: Eliminar antes de subirlo a produccion
-@Profile("local")
+@Profile("cargarbd")
 @Component
 @RequiredArgsConstructor
 public class AdminInitializer implements CommandLineRunner {

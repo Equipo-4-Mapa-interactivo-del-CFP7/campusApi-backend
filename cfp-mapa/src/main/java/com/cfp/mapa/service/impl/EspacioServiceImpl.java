@@ -4,6 +4,7 @@ import com.cfp.mapa.dto.espacio.*;
 import com.cfp.mapa.exception.EspacioNotFoundException;
 import com.cfp.mapa.mapper.EspacioMapper;
 import com.cfp.mapa.model.Espacio;
+import com.cfp.mapa.model.enums.EstadoEspacio;
 import com.cfp.mapa.model.enums.TipoEspacio;
 import com.cfp.mapa.repository.EspacioRepository;
 import com.cfp.mapa.service.EspacioService;
@@ -29,10 +30,10 @@ public class EspacioServiceImpl implements EspacioService {
             String descripcion,
             TipoEspacio tipo,
             Boolean accesible,
-            Boolean activo,
+            EstadoEspacio estado,
             Pageable pageable
     ) {
-        Page<Espacio> espaciosPage = espacioRepository.buscarEspacios(nombre, descripcion, tipo, accesible, activo, pageable);
+        Page<Espacio> espaciosPage = espacioRepository.buscarEspacios(nombre, descripcion, tipo, accesible, estado, pageable);
         return espaciosPage.map(espacioMapper::espacioToResponse);
     }
 
@@ -45,9 +46,12 @@ public class EspacioServiceImpl implements EspacioService {
 
     @Transactional
     @Override
-    public void desactivarEspacio(Long id) {
-        Espacio espacio = espacioRepository.findById(id).orElseThrow(() -> new EspacioNotFoundException(id));
-        espacio.setActivo(false);
+    public void cambiarEstado(Long id, EstadoEspacio estado) {
+
+        Espacio espacio = espacioRepository.findById(id).orElseThrow(() ->
+                new EspacioNotFoundException(id));
+
+        espacio.setEstado(estado);
         espacioRepository.save(espacio);
     }
 
@@ -57,9 +61,9 @@ public class EspacioServiceImpl implements EspacioService {
         List<Espacio> espacios;
 
         if (tipo != null) {
-            espacios = espacioRepository.findByActivoTrueAndTipo(tipo);
+            espacios = espacioRepository.findByEstadoAndTipo(EstadoEspacio.ACTIVO, tipo);
         } else {
-            espacios = espacioRepository.findByActivoTrue();
+            espacios = espacioRepository.findByEstado(EstadoEspacio.ACTIVO);
         }
 
         return espacios.stream()
@@ -77,18 +81,12 @@ public class EspacioServiceImpl implements EspacioService {
         return espacioMapper.espacioToResponse(espacioActualizado);
     }
 
-    @Transactional
-    @Override
-    public void activarEspacio(Long id) {
-        Espacio espacio = espacioRepository.findById(id).orElseThrow(() -> new EspacioNotFoundException(id));
-        espacio.setActivo(true);
-        espacioRepository.save(espacio);
-    }
-
     @Transactional(readOnly = true)
     @Override
     public List<EspacioMapaDTO> buscarEspacios(String nombre) {
-        List<Espacio> espacios = espacioRepository.findByNombreContainingIgnoreCaseAndActivoTrue(nombre);
+        List<Espacio> espacios =
+                espacioRepository.findByNombreContainingIgnoreCaseAndEstado(nombre, EstadoEspacio.ACTIVO);
+
         return espacios.stream()
                 .map(espacioMapper::espacioToMapaDTO)
                 .toList();

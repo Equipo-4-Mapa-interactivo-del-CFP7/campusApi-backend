@@ -1,5 +1,6 @@
 package com.cfp.mapa.model;
 
+import com.cfp.mapa.model.enums.EstadoConexion;
 import com.cfp.mapa.model.enums.TipoTransito;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -53,6 +54,7 @@ public class Conexion {
   @Column(nullable = false)
   private Boolean accesible;
 
+  @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private Boolean activa = true;
+  private EstadoConexion estado = EstadoConexion.ACTIVA;
 }
