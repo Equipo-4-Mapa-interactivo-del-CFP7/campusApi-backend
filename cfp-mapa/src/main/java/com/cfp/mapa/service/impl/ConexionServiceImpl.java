@@ -1,11 +1,13 @@
 package com.cfp.mapa.service.impl;
 
 
+import com.cfp.mapa.dto.conexion.ConexionMapaDTO;
 import com.cfp.mapa.dto.conexion.ConexionResponseDTO;
 import com.cfp.mapa.dto.conexion.ConexionUpdateDTO;
 import com.cfp.mapa.exception.ConexionNotFoundException;
 import com.cfp.mapa.mapper.ConexionMapper;
 import com.cfp.mapa.model.Conexion;
+import com.cfp.mapa.model.enums.EstadoConexion;
 import com.cfp.mapa.repository.ConexionRepository;
 import com.cfp.mapa.service.ConexionService;
 import lombok.RequiredArgsConstructor;
@@ -53,35 +55,30 @@ public class ConexionServiceImpl implements ConexionService {
     @Transactional(readOnly = true)
     public ConexionResponseDTO obtenerConexionPorId(Long id) {
 
-        Conexion conexion = conexionRepository.findById(id)
-                .orElseThrow(() -> new ConexionNotFoundException(id));
+        Conexion conexion = conexionRepository.findById(id).orElseThrow(() ->
+                new ConexionNotFoundException(id));
 
         return conexionMapper.conexionToResponse(conexion);
     }
 
-
     @Override
-    @Transactional
-    public void desactivarConexion(Long id) {
+    @Transactional(readOnly = true)
+    public List<ConexionMapaDTO> obtenerMapa() {
 
-        Conexion conexion = conexionRepository.findById(id)
-                .orElseThrow(() -> new ConexionNotFoundException(id));
-
-        conexion.setActiva(false);
-
-        conexionRepository.save(conexion);
+        return conexionRepository.findByEstadoAndAccesibleTrueOrderByIdAsc(EstadoConexion.ACTIVA)
+                .stream()
+                .map(conexionMapper::conexionToMapaDTO)
+                .toList();
     }
 
-
     @Override
     @Transactional
-    public void activarConexion(Long id) {
+    public void cambiarEstado(Long id, EstadoConexion estado) {
 
-        Conexion conexion = conexionRepository.findById(id)
-                .orElseThrow(() -> new ConexionNotFoundException(id));
+        Conexion conexion = conexionRepository.findById(id).orElseThrow(() ->
+                new ConexionNotFoundException(id));
 
-        conexion.setActiva(true);
-
+        conexion.setEstado(estado);
         conexionRepository.save(conexion);
     }
 }

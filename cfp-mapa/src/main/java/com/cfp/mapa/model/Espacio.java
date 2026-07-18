@@ -1,5 +1,7 @@
 package com.cfp.mapa.model;
 
+import com.cfp.mapa.model.enums.EstadoEspacio;
+import com.cfp.mapa.model.enums.Sector;
 import com.cfp.mapa.model.enums.TipoEspacio;
 import jakarta.persistence.*;
 
@@ -31,6 +33,10 @@ public class Espacio {
     @Column(nullable = false, length = 30)
     private TipoEspacio tipo;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Sector sector;
+
     @Column//(nullable = false)
     private Double coordenadaX;
 
@@ -40,8 +46,8 @@ public class Espacio {
     @Column(nullable = false)
     private Boolean accesible;
 
-    @Column(nullable = false)
-    private Boolean activo;
+    @Enumerated(EnumType.STRING)
+    private EstadoEspacio estado;
 
     @OneToMany(mappedBy = "espacio", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Imagen> imagenes;

@@ -32,4 +32,12 @@ public class Imagen {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "espacio_id", nullable = false)
   private Espacio espacio;
+/*
+  @ManyToOne
+  private Espacio espacio;
+
+  @ManyToOne
+  private Reporte reporte;
+
+ */
 }

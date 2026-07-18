@@ -8,5 +8,4 @@ public record ConexionMapaDTO(
         Long destinoId,
         TipoTransito tipoTransito,
         Boolean accesible
-
 ){}

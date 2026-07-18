@@ -1,6 +1,8 @@
 package com.cfp.mapa.service;
 
 import com.cfp.mapa.dto.espacio.*;
+import com.cfp.mapa.model.Espacio;
+import com.cfp.mapa.model.enums.EstadoEspacio;
 import com.cfp.mapa.model.enums.TipoEspacio;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,15 +20,13 @@ public interface EspacioService {
             String descripcion,
             TipoEspacio tipo,
             Boolean accesible,
-            Boolean activo,
+            EstadoEspacio estado,
             Pageable pageable
     );
 
     EspacioResponseDTO actualizarEspacio(Long id, EspacioUpdateDTO dto);
 
-    void activarEspacio(Long id);
-
-    void desactivarEspacio(Long id);
+    void cambiarEstado(Long id, EstadoEspacio estado);
 
     // =========================
     // PERSONAL
