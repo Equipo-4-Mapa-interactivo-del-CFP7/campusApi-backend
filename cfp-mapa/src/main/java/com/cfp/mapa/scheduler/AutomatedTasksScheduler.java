@@ -13,7 +13,7 @@ public class AutomatedTasksScheduler {
 
   @Scheduled(
       initialDelayString = "${app.scheduler.initial-delay}",
-      fixedRateString = "${app.shceduler.fixed-rate}"
+      fixedRateString = "${app.scheduler.fixed-rate}"
   )
     public void ejecutarTareasCadaMinuto() {
 

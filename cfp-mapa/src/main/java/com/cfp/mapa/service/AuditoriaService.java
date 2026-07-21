@@ -1,11 +1,9 @@
 package com.cfp.mapa.service;
 
 import com.cfp.mapa.dto.auditoria.AuditoriaResponseDTO;
-import com.cfp.mapa.dto.metricas.AuditoriaAnaliticaResponseDTO;
 import com.cfp.mapa.model.Usuario;
 import com.cfp.mapa.model.enums.TipoAccionAuditoria;
 import com.cfp.mapa.model.enums.TipoReporte;
-import java.time.LocalDate;
 import java.util.List;
 import org.springframework.data.domain.Page;
 
@@ -45,9 +43,4 @@ public interface AuditoriaService {
 
   void anonimizarUsuario(Long usuarioId, String textoAnonimo, String dniAnonimo);
 
-  AuditoriaAnaliticaResponseDTO obtenerAnaliticaEntreFechas(
-      LocalDate desde,
-      LocalDate hasta,
-      Long topEspaciosCriticos
-  );
 }

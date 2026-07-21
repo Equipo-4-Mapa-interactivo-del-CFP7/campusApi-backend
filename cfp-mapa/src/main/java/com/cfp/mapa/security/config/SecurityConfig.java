@@ -52,20 +52,28 @@ public class SecurityConfig {
 
             .requestMatchers("/api/auth/**").permitAll()
 
-            .requestMatchers("/api/usuarios/recuperar-owner").permitAll()
+            // USUARIOS
+            .requestMatchers(HttpMethod.POST, "/api/usuarios/recuperar-owner").permitAll()
+
+            // METRICAS
+            .requestMatchers(HttpMethod.GET, "/api/metricas").permitAll()
+
+            // BUSQUEDA
+            .requestMatchers(HttpMethod.POST, "/api/busqueda/registrar").permitAll()
 
             // ACTUATOR
             .requestMatchers("/actuator/**").permitAll()
 
-            // TODO: agregar las autorizaciones para las URL
-
             // TODO: eliminar swagger en produccion
+            // SWAGGER
             .requestMatchers(
                 "/v3/api-docs/**",
                 "/swagger-ui/**",
                 "/swagger-ui.html"
             ).permitAll()
                 .requestMatchers("/api/recorridos/**").permitAll()
+
+            .requestMatchers(HttpMethod.GET, "/api/conexiones/mapa").permitAll()
             .anyRequest().authenticated()
         )
 

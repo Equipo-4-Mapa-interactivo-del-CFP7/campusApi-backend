@@ -2,9 +2,7 @@ package com.cfp.mapa.service.impl;
 
 import com.cfp.mapa.dto.auditoria.AuditoriaResponseDTO;
 import com.cfp.mapa.dto.auditoria.AuditoriaUsuariosDetallesDTO;
-import com.cfp.mapa.dto.metricas.AuditoriaAnaliticaResponseDTO;
 import com.cfp.mapa.exception.AuditoriaAnonimizacionException;
-import com.cfp.mapa.exception.OperacionInvalidaException;
 import com.cfp.mapa.mapper.AuditoriaMapper;
 import com.cfp.mapa.model.AuditoriaUsuario;
 import com.cfp.mapa.model.Usuario;
@@ -14,9 +12,6 @@ import com.cfp.mapa.model.enums.TipoReporte;
 import com.cfp.mapa.repository.AuditoriaRepository;
 import com.cfp.mapa.service.AuditoriaService;
 import com.cfp.mapa.util.SecurityValidator;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -33,8 +28,8 @@ import tools.jackson.databind.ObjectMapper;
 public class AuditoriaServiceImpl implements AuditoriaService {
 
   private final AuditoriaRepository auditoriaRepository;
-  private final AuditoriaMapper auditoriaMapper;
   private final SecurityValidator securityValidator;
+  private final AuditoriaMapper auditoriaMapper;
   private final ObjectMapper objectMapper;
 
   @Transactional(readOnly = true)
@@ -63,29 +58,6 @@ public class AuditoriaServiceImpl implements AuditoriaService {
         pageable);
 
     return auditorias.map(auditoriaMapper::toDTO);
-  }
-
-  @Transactional(readOnly = true)
-  @Override
-  public AuditoriaAnaliticaResponseDTO obtenerAnaliticaEntreFechas(
-      LocalDate desde,
-      LocalDate hasta,
-      Long topEspaciosCriticos
-  ) {
-
-    if (desde.isAfter(hasta)) {
-      throw new OperacionInvalidaException("La fecha de inicio no puede ser posterior a la fecha de fin");
-    }
-
-    // LocalDate -> LocalDateTime
-    LocalDateTime desdeDateTime = desde.atStartOfDay();
-    LocalDateTime hastaDateTime = hasta.atTime(LocalTime.MAX);
-
-    // Consulta masiva optimizada por el indice idx_auditoria_fecha
-    List<AuditoriaUsuario> auditorias = auditoriaRepository.buscarPorRangoFechas(desdeDateTime, hastaDateTime);
-
-    return auditoriaMapper.toAnaliticaResponseDTO(desde, hasta, auditorias, topEspaciosCriticos);
-
   }
 
   // ======================================
