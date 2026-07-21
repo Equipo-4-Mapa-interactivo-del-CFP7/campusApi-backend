@@ -2,7 +2,9 @@ package com.cfp.mapa.repository;
 
 import com.cfp.mapa.model.Usuario;
 import com.cfp.mapa.model.enums.Rol;
+import com.cfp.mapa.repository.projection.UsuarioNombreProjection;
 import java.util.Collection;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -36,4 +38,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
   boolean existsByIdAndActivoTrueAndEliminadoFalseAndRolIn(Long id, Collection<Rol> roles);
 
+  @Query("SELECT u.id AS id, CONCAT(COALESCE(u.nombre, ''), ' ', COALESCE(u.apellido, '')) AS nombre FROM Usuario u WHERE u.id IN :ids")
+  List<UsuarioNombreProjection> findNombresByIds(@Param("ids") Collection<Long> ids);
 }

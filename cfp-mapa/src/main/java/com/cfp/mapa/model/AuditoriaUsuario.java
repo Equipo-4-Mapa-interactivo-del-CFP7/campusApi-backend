@@ -21,10 +21,14 @@ import lombok.NoArgsConstructor;
 @Table(
     name = "auditorias_usuarios",
     indexes = {
-        @Index(name = "idx_auditoria_fecha", columnList = "fechaAccion"),
-        @Index(name = "idx_auditoria_operador", columnList = "operadorId"),
-        @Index(name = "idx_auditoria_afectado", columnList = "usuarioAfectadoId"),
-        @Index(name = "idx_auditoria_reporte", columnList = "reporteId")
+        @Index(name = "idx_auditoria_fecha", columnList = "fecha_accion"),
+        @Index(name = "idx_auditoria_fecha_accion", columnList = "fecha_accion, accion"),
+        @Index(name = "idx_auditoria_fecha_espacio", columnList = "fecha_accion, reporte_espacio_id"),
+        @Index(name = "idx_auditoria_operador", columnList = "operador_id"),
+        @Index(name = "idx_auditoria_afectado", columnList = "usuario_afectado_id"),
+        @Index(name = "idx_auditoria_reporte", columnList = "reporte_id"),
+        @Index(name = "idx_auditoria_reporte_accion_viejo", columnList = "reporte_id, accion"),
+        @Index(name = "idx_auditoria_reporte_accion_fecha", columnList = "reporte_id, accion, fecha_accion")
     }
 )
 public class AuditoriaUsuario {

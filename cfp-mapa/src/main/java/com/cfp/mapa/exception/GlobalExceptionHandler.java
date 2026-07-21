@@ -3,12 +3,15 @@ package com.cfp.mapa.exception;
 import com.cfp.mapa.dto.error.ErrorResponse;
 import jakarta.validation.ConstraintViolationException;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.SQLSyntaxErrorException;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.exception.SQLGrammarException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
@@ -310,6 +313,42 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(
             HttpStatus.BAD_REQUEST,
             ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(InvalidDataAccessResourceUsageException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidDataAccessResourceUsageException(InvalidDataAccessResourceUsageException ex) {
+
+        log.error("[PERSISTENCE-ERROR] Error de sintaxis o recurso de base de datos no encontrado. Causa: {} | Detalles: {}",
+            ex.getClass().getSimpleName(), ex.getMessage());
+
+        return buildErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "Ocurrió un error interno al procesar la consulta en la base de datos"
+        );
+    }
+
+    @ExceptionHandler(SQLGrammarException.class)
+    public ResponseEntity<ErrorResponse> handleSQLGrammarException(SQLGrammarException ex) {
+
+        log.error("[PERSISTENCE-ERROR] Error en la gramática SQL generada o ejecutada. Causa: {} | Detalles: {}",
+            ex.getClass().getSimpleName(), ex.getMessage());
+
+        return buildErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "Ocurrió un error de sintaxis en la consulta de persistencia"
+        );
+    }
+
+    @ExceptionHandler(SQLSyntaxErrorException.class)
+    public ResponseEntity<ErrorResponse> handleSQLSyntaxErrorException(SQLSyntaxErrorException ex) {
+
+        log.error("[DATABASE-ERROR] Sintaxis SQL inválida recibida por el motor de BD. Causa: {} | Detalles: {}",
+            ex.getClass().getSimpleName(), ex.getMessage());
+
+        return buildErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "Error de ejecución en el motor de base de datos"
         );
     }
 

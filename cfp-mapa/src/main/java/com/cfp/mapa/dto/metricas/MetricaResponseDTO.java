@@ -2,14 +2,14 @@ package com.cfp.mapa.dto.metricas;
 
 import java.time.LocalDate;
 
-public record AuditoriaAnaliticaResponseDTO(
-
+public record MetricaResponseDTO(
     LocalDate fechaDesde,
     LocalDate fechaHasta,
     CuentasDTO cuentas,
     DatosDTO datos,
-    ReportesDTO reportes
-
+    ReportesDTO reportes,
+    UsuariosReportesDTO usuariosReportes,
+    BusquedasMapaDTO busquedasMapa
 ) {
 
 }
