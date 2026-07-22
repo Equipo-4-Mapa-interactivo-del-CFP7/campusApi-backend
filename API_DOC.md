@@ -2018,9 +2018,13 @@ En caso de no haber ninguno, el valor será `0`.
     ],
     "topRoles": [
       {
-        "rol": String,
         "tipoAccion": String,
-        "cantidad": Long
+        "topRoles": [
+          {
+            "rol": String,
+            "cantidad": long
+          }
+        ]
       }
     ]
   },
@@ -2069,8 +2073,8 @@ Los siguientes tops se pueden desactivar mandando los valores `null` o `0`:
 
 ```json
 {
-  "fechaDesde": "2026-07-14",
-  "fechaHasta": "2026-07-21",
+  "fechaDesde": "2026-07-15",
+  "fechaHasta": "2026-07-22",
   "cuentas": {
     "creados": 0,
     "eliminados": 0,
@@ -2202,12 +2206,17 @@ Los siguientes tops se pueden desactivar mandando los valores `null` o `0`:
   "usuariosReportes": {
     "topUsuarios": [
       {
-        "tipoAccion": "REPORTE_ATENDIDO",
+        "tipoAccion": "REPORTE_CREADO",
         "topUsuarios": [
+          {
+            "id": 4,
+            "nombre": "Diego Alejandro Gómez",
+            "cantidad": 6
+          },
           {
             "id": 2,
             "nombre": "Martín Fernández",
-            "cantidad": 1
+            "cantidad": 2
           }
         ]
       },
@@ -2227,46 +2236,51 @@ Los siguientes tops se pueden desactivar mandando los valores `null` o `0`:
         ]
       },
       {
-        "tipoAccion": "REPORTE_CREADO",
+        "tipoAccion": "REPORTE_ATENDIDO",
         "topUsuarios": [
-          {
-            "id": 4,
-            "nombre": "Diego Alejandro Gómez",
-            "cantidad": 6
-          },
           {
             "id": 2,
             "nombre": "Martín Fernández",
-            "cantidad": 2
+            "cantidad": 1
           }
         ]
       }
     ],
     "topRoles": [
       {
-        "rol": "OWNER",
+        "tipoAccion": "REPORTE_CREADO",
+        "topRoles": [
+          {
+            "rol": "PERSONAL",
+            "cantidad": 6
+          },
+          {
+            "rol": "OWNER",
+            "cantidad": 2
+          }
+        ]
+      },
+      {
+        "tipoAccion": "REPORTE_CERRADO",
+        "topRoles": [
+          {
+            "rol": "OWNER",
+            "cantidad": 3
+          },
+          {
+            "rol": "PERSONAL",
+            "cantidad": 2
+          }
+        ]
+      },
+      {
         "tipoAccion": "REPORTE_ATENDIDO",
-        "cantidad": 1
-      },
-      {
-        "rol": "OWNER",
-        "tipoAccion": "REPORTE_CERRADO",
-        "cantidad": 3
-      },
-      {
-        "rol": "PERSONAL",
-        "tipoAccion": "REPORTE_CERRADO",
-        "cantidad": 2
-      },
-      {
-        "rol": "PERSONAL",
-        "tipoAccion": "REPORTE_CREADO",
-        "cantidad": 6
-      },
-      {
-        "rol": "OWNER",
-        "tipoAccion": "REPORTE_CREADO",
-        "cantidad": 2
+        "topRoles": [
+          {
+            "rol": "OWNER",
+            "cantidad": 1
+          }
+        ]
       }
     ]
   },
@@ -2323,8 +2337,8 @@ Los siguientes tops se pueden desactivar mandando los valores `null` o `0`:
 
 ```json
 {
-  "fechaDesde": "2026-07-14",
-  "fechaHasta": "2026-07-21",
+  "fechaDesde": "2026-07-15",
+  "fechaHasta": "2026-07-22",
   "cuentas": {
     "creados": 0,
     "eliminados": 0,

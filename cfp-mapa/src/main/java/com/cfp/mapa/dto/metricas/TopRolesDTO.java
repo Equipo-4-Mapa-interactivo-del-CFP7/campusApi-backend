@@ -1,13 +1,12 @@
 package com.cfp.mapa.dto.metricas;
 
-import com.cfp.mapa.model.enums.Rol;
 import com.cfp.mapa.model.enums.TipoAccionAuditoria;
+import java.util.List;
 
 public record TopRolesDTO(
 
-    Rol rol,
     TipoAccionAuditoria tipoAccion,
-    Long cantidad
+    List<RolDTO> topRoles
 ) {
 
 }

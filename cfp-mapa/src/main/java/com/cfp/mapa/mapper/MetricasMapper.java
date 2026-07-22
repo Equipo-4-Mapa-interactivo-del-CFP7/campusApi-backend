@@ -8,6 +8,7 @@ import com.cfp.mapa.dto.metricas.EspacioBusquedaDTO;
 import com.cfp.mapa.dto.metricas.EspacioDTO;
 import com.cfp.mapa.dto.metricas.RendimientoDTO;
 import com.cfp.mapa.dto.metricas.ReportesDTO;
+import com.cfp.mapa.dto.metricas.RolDTO;
 import com.cfp.mapa.dto.metricas.RutaBusquedaDTO;
 import com.cfp.mapa.dto.metricas.TopEspaciosDTO;
 import com.cfp.mapa.dto.metricas.TopRolesDTO;
@@ -30,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
@@ -166,7 +168,7 @@ public class MetricasMapper {
     List<TopUsuariosDTO> listTopUsuariosDTO = null;
     List<TopRolesDTO> listTopRolesDTO = null;
 
-    // Construcción del DTO de Usuarios
+    // DTO de Usuarios
     if (topUsuarios != null && topUsuarios > 0) {
       listTopUsuariosDTO = new ArrayList<>();
       for (Map.Entry<TipoAccionAuditoria, List<TopUsuarioProjection>> entry : usuariosPorAccion.entrySet()) {
@@ -182,17 +184,25 @@ public class MetricasMapper {
       }
     }
 
-    // Construcción del DTO de Roles
+    // DTO de Roles
     if (topRoles != null && topRoles > 0) {
       listTopRolesDTO = new ArrayList<>();
       for (Map.Entry<TipoAccionAuditoria, List<TopRolProjection>> entry : rolesPorAccion.entrySet()) {
-        for (TopRolProjection p : entry.getValue()) {
-          try {
-            Rol rolEnum = Rol.valueOf(p.getRol());
-            listTopRolesDTO.add(new TopRolesDTO(rolEnum, entry.getKey(), p.getCantidad()));
-          } catch (Exception _) {
-          }
-        }
+
+        List<RolDTO> rolesDTO = entry.getValue().stream()
+            .map(p -> {
+              try {
+                Rol rolEnum = Rol.valueOf(p.getRol());
+                long cantidad = p.getCantidad() != null ? p.getCantidad() : 0L;
+                return new RolDTO(rolEnum, cantidad);
+              } catch (Exception e) {
+                return null; // Si falla el valueOf, se descarta
+              }
+            })
+            .filter(Objects::nonNull)
+            .toList();
+
+        listTopRolesDTO.add(new TopRolesDTO(entry.getKey(), rolesDTO));
       }
     }
 
