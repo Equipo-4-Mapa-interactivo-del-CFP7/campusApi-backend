@@ -7,7 +7,7 @@ public record RendimientoDTO(
     TipoReporte tipo,
     long creados,
     long cerrados,
-    double promedioMinutos,
+    long promedioMinutos,
     long maximoMinutos
 
 ) {

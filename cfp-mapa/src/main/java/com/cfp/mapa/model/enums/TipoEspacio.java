@@ -2,6 +2,7 @@ package com.cfp.mapa.model.enums;
 
 public enum TipoEspacio {
     AULA,
+    BUFFET,
     OFICINA,
     SECRETARIA,
 

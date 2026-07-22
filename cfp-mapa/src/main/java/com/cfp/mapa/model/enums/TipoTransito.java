@@ -4,5 +4,6 @@ public enum TipoTransito {
   PASILLO,
   RAMPA,
   RIPIO,
-  EXTERIOR
+  EXTERIOR,
+  PUERTA
 }
