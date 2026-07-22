@@ -1408,232 +1408,6 @@ si los tipos de datos enviados en los parámetros son incompatibles (ejemplo: `?
 </td></tr></table>
 </details>
 
-## 🟢 Obtener reporte analítico entre dos fechas [Solo OWNER]
-
-`GET /api/auditorias/analitica`
-
-Permite que únicamente usuarios con el rol `OWNER` puedan ver un resumen general de las auditorías
-ocurridads en un período de tiempo que elija.
-
-El `JSON` devuelto se divide en las siguientes categorías:
-- `cuentas` muestra el número total de cada auditoría relacionadda a alguna acción con las cuentas
-(Ejemplo: crear, eliminar, cambiar rol, etc.).
-- `datos` representa el número de modificaciones de datos personales de la cuenta que un usuario
-puede realizar sobre otro o sobre sí mismo, esto incluye cambiar nombre/apellido y cambiar dni.
-Separa las casos que se haya hecho sobre uno mismo o sobre un tercero.
-- `reportes` muestra el total de reportes que se hayan creado/atendido/modificado/cerrado manual o
-automáticamente. Además incluye dos parámetros que son listas:
-  - `rendimientoPorTipo` muestra el total de tipos de reportes diferentes que se encuentren en la
-  lista, y muestra un `promedioMinutos` que representa el tiempo promedio entre que los reportes de
-  ese tipo son creados y cerrados.
-  - `espaciosCriticosPorTipo` muestra un top de reportes de cada tipo, el cual consiste en mostrar
-  las zonas que más reportes han recibido de todos los tipos que se encuentren. La cantidad de
-  reportes se define en el parámetro `topZonasCriticas`, el cual si no
-  se agrega un valor entonces será `5` por defecto.
-
-<details>
-<summary><b>🔑 Encabezado (Header)</b></summary>
-
-* `Authorization`: `Bearer <token_de_owner>`
-
-</details>
-
-<details>
-<summary><b>❓ Parámetros de Consulta (Query Parameters)</b></summary>
-
-**Todos los filtros son opcionales**.
-Se añaden a la URL (ej. `?desde=2026-07-02&hasta=2026-07-03&topZonasCriticas=5`).
-* `desde` String, requerido - Filtro exacto (formato `"AAAA-MM-DD"`, ejemplo: `"2026-07-01"`).
-* `hasta` String, requerido - Filtro exacto (formato `"AAAA-MM-DD"`).
-* `topZonasCriticas` Long, opcional, mínimo `1`. Define la cantidad del top de zonas con mayor
-cantidad de reportes, si no se agrega, por default es `5`.
-
-</details>
-
-<details>
-<summary><b>🔄 Respuesta del servidor</b></summary>
-<table><tr><td>
-
-🟢 `200 OK` + **JSON respuesta analítica**
-
-```JSON
-{
-  "fechaDesde": String (LocalDate "AAAA-MM-DD"),
-  "fechaHasta": String (LocalDate "AAAA-MM-DD") ,
-  "cuentas":
-  {
-    "creados": long,
-    "eliminados": long,
-    "passwordRestablecidas": long,
-    "passwordCambiadas": long,
-    "estadosModificados": long,
-    "rolesModificados": long,
-    "ownerRecuperaciones": long,
-    "ownerTransferencias": long
-  },
-  "datos":
-  {
-    "cambiosDni":
-    {
-      "total": long,
-      "siMismo": long,
-      "otros": long
-    },
-    "cambiosNombreApellido": 
-    {
-      "total": long,
-      "siMismo": long,
-      "otros": long
-    }
-  },
-  "reportes":
-  {
-    "creados": long,
-    "atentidos": long,
-    "modificados": long,
-    "cerradosManual": long,
-    "cerradosAutomatico": long,
-    "rendimientoPorTipo": 
-     [
-       {
-          "tipo": String,
-          "creados": long,
-          "cerrados": long,
-          "promedioMinutos": double
-       }
-     ],
-    "espaciosCriticosPorTipo":
-    [
-      {
-        "tipo": String,
-        "zonas":
-        [
-          {
-            "espacioId": Long,
-            "nombre": String,
-            "cantidad": long
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-<details>
-<summary><b>Ejemplo</b></summary>
-
-```JSON
-{
-  "fechaDesde": "2026-07-02",
-  "fechaHasta": "2026-07-03",
-  "cuentas": {
-    "creados": 0,
-    "eliminados": 0,
-    "passwordRestablecidas": 0,
-    "passwordCambiadas": 0,
-    "estadosModificados": 0,
-    "rolesModificados": 0,
-    "ownerRecuperaciones": 0,
-    "ownerTransferencias": 0
-  },
-  "datos": {
-    "cambiosDni": {
-      "total": 0,
-      "siMismo": 0,
-      "otros": 0
-    },
-    "cambiosNombreApellido": {
-      "total": 0,
-      "siMismo": 0,
-      "otros": 0
-    }
-  },
-  "reportes": {
-    "creados": 0,
-    "atentidos": 0,
-    "modificados": 0,
-    "cerradosManual": 0,
-    "cerradosAutomatico": 0,
-    "rendimientoPorTipo": [
-      {
-        "tipo": "ACCESO_BLOQUEADO",
-        "creados": 0,
-        "cerrados": 0,
-        "promedioMinutos": 0
-      },
-      {
-        "tipo": "PROBLEMA_SENALETICA",
-        "creados": 0,
-        "cerrados": 0,
-        "promedioMinutos": 0
-      },
-      {
-        "tipo": "BARRERA_FISICA",
-        "creados": 0,
-        "cerrados": 0,
-        "promedioMinutos": 0
-      },
-      {
-        "tipo": "DIFICULTAD_ORIENTACION",
-        "creados": 0,
-        "cerrados": 0,
-        "promedioMinutos": 0
-      },
-      {
-        "tipo": "OTROS",
-        "creados": 0,
-        "cerrados": 0,
-        "promedioMinutos": 0
-      }
-    ],
-    "espaciosCriticosPorTipo": [
-      {
-        "tipo": "ACCESO_BLOQUEADO",
-        "zonas": []
-      },
-      {
-        "tipo": "PROBLEMA_SENALETICA",
-        "zonas": []
-      },
-      {
-        "tipo": "BARRERA_FISICA",
-        "zonas": []
-      },
-      {
-        "tipo": "DIFICULTAD_ORIENTACION",
-        "zonas": []
-      },
-      {
-        "tipo": "OTROS",
-        "zonas": []
-      }
-    ]
-  }
-}
-```
-
-</details>
-
-🔴 `400 BAD REQUEST` +
-[JSON error](#formato-general-de-errores)
-si los tipos de datos enviados en los parámetros son incompatibles
-
-🔴 `401 UNAUTHORIZED` +
-[JSON error](#formato-general-de-errores)
-- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
-- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
-
-🔴 `403 FORBIDDEN` +
-[JSON error](#formato-general-de-errores)
-- Si el usuario logueado no posee el rol `OWNER`.
-- Si la sesión fue revocada en base de datos. Retorna el JSON de error con
-`"errorCode": "SESSION_INVALIDATED"`.
-
-</td></tr></table>
-</details>
-
-
 ---
 
 # ⚠️ Reportes
@@ -2165,6 +1939,548 @@ En caso de no haber ninguno, el valor será `0`.
 - Si el usuario logueado no posee el rol `OWNER`, `ADMIN` o `PERSONAL`.
 - Si la sesión fue revocada en base de datos. Retorna el JSON de error con
   `"errorCode": "SESSION_INVALIDATED"`.
+
+</td></tr></table>
+</details> 
+
+---
+
+# 📊 Métricas
+
+### Formato JSON de metricas
+
+```JSON
+{
+  "fechaDesde": String (LocalDate),
+  "fechaHasta": String (LocalDate),
+  "cuentas": {
+    "creados": long,
+    "eliminados": long,
+    "passwordRestablecidas": long,
+    "passwordCambiadas": long,
+    "estadosModificados": long,
+    "rolesModificados": long,
+    "ownerRecuperaciones": long,
+    "ownerTransferencias": long
+  },
+  "datos":  {
+    "cambiosDni":  {
+      "total": long,
+      "siMismo": long,
+      "otros": long
+    },
+    "cambiosNombreApellido": {
+      "total": long,
+      "siMismo": long,
+      "otros": long
+    } 
+  },
+  "reportes": {
+    "creados": long,
+    "atentidos": long,
+    "modificados": long,
+    "cerradosManual": long,
+    "cerradosAutomatico": long,
+    "rendimientoPorTipo": [
+      {
+        "tipo": String,
+        "creados": long,
+        "cerrados": long,
+        "promedioMinutos": long,
+        "maximoMinutos": long
+      }
+    ],
+    "espaciosCriticosPorTipo": [
+      {
+        "tipo": String,
+        "zonas": [
+          {
+            "espacioId": Long,
+            "nombre": String,
+            "cantidad": long
+          }
+        ]
+      }
+    ]
+  },
+  "usuariosReportes": {
+    "topUsuarios": [
+      {
+        "tipoAccion": String,
+        "topUsuarios": [
+          {
+            "id": Long,
+            "nombre": String,
+            "cantidad": long
+          }
+        ]
+      }
+    ],
+    "topRoles": [
+      {
+        "rol": String,
+        "tipoAccion": String,
+        "cantidad": Long
+      }
+    ]
+  },
+  "busquedasMapa": {
+    "totalConsultas": long,
+    "topOrigenes": [
+      {
+        "espacioId": Long,
+        "nombreEspacio": String,
+        "cantidad": long
+      }
+    ],
+    "topDestinos": [
+      {
+        "espacioId": Long,
+        "nombreEspacio": String,
+        "cantidad": long
+      }
+    ],
+    "topRutas": [
+      {
+        "desdeId": Long,
+        "nombreDesde": String,
+        "hastaId": Long,
+        "nombreHasta": String,
+        "cantidad": long
+      }
+    ]
+  }  
+}
+```
+
+Los siguientes tops se pueden desactivar mandando los valores `null` o `0`:
+- En reportes:
+  - espaciosCriticosPorTipo
+- En usuariosReportes:
+  - topUsuarios
+  - topRoles
+- En busquedasMapa
+  - topOrigenes
+  - topDestinos
+  - topRutas
+
+<details>
+<summary><b>EJEMPLO JSON con todos los top 2</b></summary>
+
+```json
+{
+  "fechaDesde": "2026-07-14",
+  "fechaHasta": "2026-07-21",
+  "cuentas": {
+    "creados": 0,
+    "eliminados": 0,
+    "passwordRestablecidas": 0,
+    "passwordCambiadas": 1,
+    "estadosModificados": 0,
+    "rolesModificados": 0,
+    "ownerRecuperaciones": 0,
+    "ownerTransferencias": 0
+  },
+  "datos": {
+    "cambiosDni": {
+      "total": 0,
+      "siMismo": 0,
+      "otros": 0
+    },
+    "cambiosNombreApellido": {
+      "total": 0,
+      "siMismo": 0,
+      "otros": 0
+    }
+  },
+  "reportes": {
+    "creados": 8,
+    "atentidos": 1,
+    "modificados": 0,
+    "cerradosManual": 6,
+    "cerradosAutomatico": 2,
+    "rendimientoPorTipo": [
+      {
+        "tipo": "ACCESO_BLOQUEADO",
+        "creados": 3,
+        "cerrados": 3,
+        "promedioMinutos": 1,
+        "maximoMinutos": 1
+      },
+      {
+        "tipo": "PROBLEMA_SENALETICA",
+        "creados": 1,
+        "cerrados": 1,
+        "promedioMinutos": 1,
+        "maximoMinutos": 1
+      },
+      {
+        "tipo": "BARRERA_FISICA",
+        "creados": 2,
+        "cerrados": 2,
+        "promedioMinutos": 2,
+        "maximoMinutos": 2
+      },
+      {
+        "tipo": "DIFICULTAD_ORIENTACION",
+        "creados": 1,
+        "cerrados": 1,
+        "promedioMinutos": 3,
+        "maximoMinutos": 3
+      },
+      {
+        "tipo": "OTROS",
+        "creados": 1,
+        "cerrados": 1,
+        "promedioMinutos": 4,
+        "maximoMinutos": 4
+      }
+    ],
+    "espaciosCriticosPorTipo": [
+      {
+        "tipo": "ACCESO_BLOQUEADO",
+        "zonas": [
+          {
+            "espacioId": 1,
+            "nombre": "Electricidad",
+            "cantidad": 2
+          },
+          {
+            "espacioId": 2,
+            "nombre": "Herreria",
+            "cantidad": 1
+          }
+        ]
+      },
+      {
+        "tipo": "PROBLEMA_SENALETICA",
+        "zonas": [
+          {
+            "espacioId": 1,
+            "nombre": "Electricidad",
+            "cantidad": 1
+          }
+        ]
+      },
+      {
+        "tipo": "BARRERA_FISICA",
+        "zonas": [
+          {
+            "espacioId": 2,
+            "nombre": "Herreria",
+            "cantidad": 1
+          },
+          {
+            "espacioId": 3,
+            "nombre": "Climatizacion",
+            "cantidad": 1
+          }
+        ]
+      },
+      {
+        "tipo": "DIFICULTAD_ORIENTACION",
+        "zonas": [
+          {
+            "espacioId": 1,
+            "nombre": "Electricidad",
+            "cantidad": 1
+          }
+        ]
+      },
+      {
+        "tipo": "OTROS",
+        "zonas": [
+          {
+            "espacioId": 5,
+            "nombre": "Bano Sector 1 (grande)",
+            "cantidad": 1
+          }
+        ]
+      }
+    ]
+  },
+  "usuariosReportes": {
+    "topUsuarios": [
+      {
+        "tipoAccion": "REPORTE_ATENDIDO",
+        "topUsuarios": [
+          {
+            "id": 2,
+            "nombre": "Martín Fernández",
+            "cantidad": 1
+          }
+        ]
+      },
+      {
+        "tipoAccion": "REPORTE_CERRADO",
+        "topUsuarios": [
+          {
+            "id": 2,
+            "nombre": "Martín Fernández",
+            "cantidad": 3
+          },
+          {
+            "id": 4,
+            "nombre": "Diego Alejandro Gómez",
+            "cantidad": 2
+          }
+        ]
+      },
+      {
+        "tipoAccion": "REPORTE_CREADO",
+        "topUsuarios": [
+          {
+            "id": 4,
+            "nombre": "Diego Alejandro Gómez",
+            "cantidad": 6
+          },
+          {
+            "id": 2,
+            "nombre": "Martín Fernández",
+            "cantidad": 2
+          }
+        ]
+      }
+    ],
+    "topRoles": [
+      {
+        "rol": "OWNER",
+        "tipoAccion": "REPORTE_ATENDIDO",
+        "cantidad": 1
+      },
+      {
+        "rol": "OWNER",
+        "tipoAccion": "REPORTE_CERRADO",
+        "cantidad": 3
+      },
+      {
+        "rol": "PERSONAL",
+        "tipoAccion": "REPORTE_CERRADO",
+        "cantidad": 2
+      },
+      {
+        "rol": "PERSONAL",
+        "tipoAccion": "REPORTE_CREADO",
+        "cantidad": 6
+      },
+      {
+        "rol": "OWNER",
+        "tipoAccion": "REPORTE_CREADO",
+        "cantidad": 2
+      }
+    ]
+  },
+  "busquedasMapa": {
+    "totalConsultas": 5,
+    "topOrigenes": [
+      {
+        "espacioId": 3,
+        "nombreEspacio": "Climatizacion",
+        "cantidad": 3
+      },
+      {
+        "espacioId": 1,
+        "nombreEspacio": "Electricidad",
+        "cantidad": 2
+      }
+    ],
+    "topDestinos": [
+      {
+        "espacioId": 1,
+        "nombreEspacio": "Electricidad",
+        "cantidad": 2
+      },
+      {
+        "espacioId": 2,
+        "nombreEspacio": "Herreria",
+        "cantidad": 1
+      }
+    ],
+    "topRutas": [
+      {
+        "desdeId": 3,
+        "nombreDesde": "Climatizacion",
+        "hastaId": 1,
+        "nombreHasta": "Electricidad",
+        "cantidad": 2
+      },
+      {
+        "desdeId": 1,
+        "nombreDesde": "Electricidad",
+        "hastaId": 2,
+        "nombreHasta": "Herreria",
+        "cantidad": 1
+      }
+    ]
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><b>EJEMPLO JSON con todos los top desactivados</b></summary>
+
+```json
+{
+  "fechaDesde": "2026-07-14",
+  "fechaHasta": "2026-07-21",
+  "cuentas": {
+    "creados": 0,
+    "eliminados": 0,
+    "passwordRestablecidas": 0,
+    "passwordCambiadas": 1,
+    "estadosModificados": 0,
+    "rolesModificados": 0,
+    "ownerRecuperaciones": 0,
+    "ownerTransferencias": 0
+  },
+  "datos": {
+    "cambiosDni": {
+      "total": 0,
+      "siMismo": 0,
+      "otros": 0
+    },
+    "cambiosNombreApellido": {
+      "total": 0,
+      "siMismo": 0,
+      "otros": 0
+    }
+  },
+  "reportes": {
+    "creados": 8,
+    "atentidos": 1,
+    "modificados": 0,
+    "cerradosManual": 6,
+    "cerradosAutomatico": 2,
+    "rendimientoPorTipo": [
+      {
+        "tipo": "ACCESO_BLOQUEADO",
+        "creados": 3,
+        "cerrados": 3,
+        "promedioMinutos": 1,
+        "maximoMinutos": 1
+      },
+      {
+        "tipo": "PROBLEMA_SENALETICA",
+        "creados": 1,
+        "cerrados": 1,
+        "promedioMinutos": 1,
+        "maximoMinutos": 1
+      },
+      {
+        "tipo": "BARRERA_FISICA",
+        "creados": 2,
+        "cerrados": 2,
+        "promedioMinutos": 2,
+        "maximoMinutos": 2
+      },
+      {
+        "tipo": "DIFICULTAD_ORIENTACION",
+        "creados": 1,
+        "cerrados": 1,
+        "promedioMinutos": 3,
+        "maximoMinutos": 3
+      },
+      {
+        "tipo": "OTROS",
+        "creados": 1,
+        "cerrados": 1,
+        "promedioMinutos": 4,
+        "maximoMinutos": 4
+      }
+    ],
+    "espaciosCriticosPorTipo": null
+  },
+  "usuariosReportes": {
+    "topUsuarios": null,
+    "topRoles": null
+  },
+  "busquedasMapa": {
+    "totalConsultas": 5,
+    "topOrigenes": null,
+    "topDestinos": null,
+    "topRutas": null
+  }
+}
+```
+
+</details>
+
+## 🟢 Obtener métricas entre fechas [solo OWNER]
+
+`GET /api/metricas`
+
+Permite que únicamente un usuario con el rol `OWNER` pueda obtener un resumen de lo sucedido entre
+dos fechas.
+
+- En el JSON se encuentran varios tops que pueden ser desactivados mandando los valores `0` o `null`.
+
+El resumen está compuesto por distintas secciones:
+- **cuentas**: muestra un conteo de todas las acciones referidas a cuentas de usuarios (menos cambio
+de `dni` y cambio de `nombre`/`apellido`).
+- **datos**: muestra la cantidad total de cambios de `dni`, `nombre`/`apellido` que se hicieron, y también
+cuántos fueron realizados a otros usuarios y cuántos a uno mismo.
+- **reportes**: 
+  - Muestra un conteo de todas las acciones referidas al menos de reportes. 
+  - También incluye por cada tipo de reporte: cuántos fueron creados/cerrados, el promedio de tiempo en cerrarse
+  y cuánto fue que se tardó el reporte que más se tardó en cerrarse.
+  - Incluye un top de zonas en las que se crearon más reportes de cada tipo.
+- **usuariosReportes**: devuelve dos top de usuarios:
+  - topUsuarios: muestra un top de usuarios en 3 categorías: más reportes creados/atendidos/cerrados.
+  - topRoles: muestra un top de roles que crearon/atendieron/cerraron más reportes.
+- **busquedasMapa**: muestra el total de veces que se consultó el mapa. También contiene 3 tops:
+  - top de desde dónde se hicieron las consultas.
+  - top de hacia dónde se hicieron las consultas.
+  - top de rutas más buscadas, incluye desde dónde hacia dónde.
+
+<details>
+<summary><b>🔑 Encabezado (Header)</b></summary>
+
+* `Authorization`: `Bearer <token_de_owner>`
+
+</details>
+
+<details>
+<summary><b>❓ Parámetros de Consulta (Query Parameters)</b></summary>
+
+- Ejemplo con omisión: `?desde=2026-07-14&hasta=2026-07-21`
+- Ejemplo completo: `?desde=2026-07-14&hasta=2026-07-21&topEspaciosCriticos=0&topUsuarios=1&topRoles=1&topBusquedas=1`
+
+
+- `desde` String (localDate), requerido. (ejemplo: `2026-07-14`).
+- `hasta` String (localDate), requerido.
+- `topEspaciosCriticos` long, opcional. (`omitir` o valores `0`/`null` para desactivar).
+- `topUsuarios` long, opcional. (`omitir` o valores `0`/`null` para desactivar).
+- `topRoles` long, opcional. (`omitir` o valores `0`/`null` para desactivar).
+- `topBusquedas` long, opcional. (`omitir` o valores `0`/`null` para desactivar).
+
+</details>
+
+<details>
+<summary><b>🔄 Respuesta del servidor</b></summary>
+<table><tr><td>
+
+🟢 `200 OK` +
+[JSON de metricas](#formato-json-de-metricas)
+
+🔴 `400 BAD REQUEST` +
+[JSON error](#formato-general-de-errores)
+- Si los tipos de datos enviados en los parámetros son incompatibles.
+- Si la fecha de inicio es superior a la de finalización.
+- Si la fecha de finalización es superior a la fecha actual.
+- (raro) Si se intenta ejecutar el endpoint mientras ya se estaba ejecutando.
+
+🔴 `401 UNAUTHORIZED` +
+[JSON error](#formato-general-de-errores)
+- Si se intenta utilizar el endpoint sin estar logueado (falta el token).
+- Si el token proporcionado está expirado, está mal formado o fue revocado por el sistema de seguridad.
+
+🔴 `403 FORBIDDEN` +
+[JSON error](#formato-general-de-errores)
+- Si el usuario logueado no posee el rol `OWNER`
+- Si la sesión fue revocada en base de datos. Retorna el JSON de error con
+`"errorCode": "SESSION_INVALIDATED"`.
 
 </td></tr></table>
 </details> 

@@ -90,7 +90,7 @@ public class MetricasMapper {
           RendimientoReporteProjection p = mapa.get(tipo);
           long creados = (p != null && p.getCreados() != null) ? p.getCreados() : 0L;
           long cerrados = (p != null && p.getCerrados() != null) ? p.getCerrados() : 0L;
-          double promedio = (p != null && p.getPromedioMinutos() != null) ? p.getPromedioMinutos() : 0.0;
+          long promedio = (p != null && p.getPromedioMinutos() != null) ? (long) Math.ceil(p.getPromedioMinutos()) : 0L;
           long maximoMinutos = (p != null && p.getMaxMinutos() != null) ? p.getMaxMinutos() : 0L;
 
           return new RendimientoDTO(tipo, creados, cerrados, promedio, maximoMinutos);
@@ -173,7 +173,8 @@ public class MetricasMapper {
         List<UsuarioDTO> usuariosDTO = entry.getValue().stream()
             .map(p -> new UsuarioDTO(
                 p.getUsuarioId(),
-                mapaNombresUsuarios.getOrDefault(p.getUsuarioId(), "Usuario no encontrado")
+                mapaNombresUsuarios.getOrDefault(p.getUsuarioId(), "Usuario no encontrado"),
+                p.getCantidad() != null ? p.getCantidad() : 0L
             ))
             .toList();
 

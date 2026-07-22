@@ -48,11 +48,11 @@ public class RecorridoServiceImpl implements RecorridoService {
             conexiones = conexionRepository.findByEstadoOrderByIdAsc(EstadoConexion.ACTIVA);
         }
 
-        Map<Espacio, List<Conexion>> grafo = construirGrafo(conexiones);
+        Map<Long, List<Conexion>> grafo = construirGrafo(conexiones);
 
         boolean accesible = Boolean.TRUE.equals(soloAccesible);
 
-        List<Espacio> recorrido = buscarCamino(origen, destino, grafo, accesible);
+        List<Long> recorrido = buscarCamino(origen.getId(), destino.getId(), grafo, accesible);
 
         List<Conexion> conexionesRuta = obtenerConexionesRuta(recorrido, conexiones);
 
@@ -60,6 +60,8 @@ public class RecorridoServiceImpl implements RecorridoService {
 
         List<EspacioMapaDTO> espaciosDTO =
                 recorrido.stream()
+                        .map(id -> espacioRepository.findById(id)
+                                .orElseThrow(() -> new EspacioNotFoundException(id)))
                         .map(espacioMapper::espacioToMapaDTO)
                         .toList();
 
@@ -71,7 +73,9 @@ public class RecorridoServiceImpl implements RecorridoService {
         return new RutaResponseDTO(espaciosDTO, conexionesDTO, distancia);
     }
 
-    private Map<Espacio, List<Conexion>> construirGrafo(List<Conexion> conexiones) {Map<Espacio, List<Conexion>> grafo = new HashMap<>();
+    private Map<Long, List<Conexion>> construirGrafo(List<Conexion> conexiones) {
+
+        Map<Long, List<Conexion>> grafo = new HashMap<>();
 
         for (Conexion conexion : conexiones) {
 
@@ -80,8 +84,8 @@ public class RecorridoServiceImpl implements RecorridoService {
                 continue;
             }
 
-            grafo.computeIfAbsent(conexion.getOrigen(), _ ->
-                    new ArrayList<>()).add(conexion);
+            grafo.computeIfAbsent(conexion.getOrigen().getId(), k ->
+                            new ArrayList<>()).add(conexion);
 
             // Conexión inversa
             Conexion inversa = new Conexion();
@@ -95,33 +99,36 @@ public class RecorridoServiceImpl implements RecorridoService {
             inversa.setAccesible(conexion.getAccesible());
             inversa.setEstado(conexion.getEstado());
 
-            grafo.computeIfAbsent(inversa.getOrigen(), _ ->
-                    new ArrayList<>()).add(inversa);
+            grafo.computeIfAbsent(inversa.getOrigen().getId(), k ->
+                            new ArrayList<>()).add(inversa);
         }
         return grafo;
     }
 
-    private List<Espacio> buscarCamino(Espacio origen, Espacio destino, Map<Espacio, List<Conexion>> grafo, boolean soloAccesible) {
+    private List<Long> buscarCamino(Long origenId, Long destinoId, Map<Long, List<Conexion>> grafo, boolean soloAccesible) {
 
-        Map<Espacio, Double> distancia = new HashMap<>();
-        Map<Espacio, Espacio> anterior = new HashMap<>();
+        Map<Long, Double> distancia = new HashMap<>();
+        Map<Long, Long> anterior = new HashMap<>();
 
-        PriorityQueue<Espacio> cola = new PriorityQueue<>(Comparator.comparingDouble(distancia::get));
+        PriorityQueue<Long> cola = new PriorityQueue<>(Comparator.comparingDouble(distancia::get));
 
-        for (Espacio espacio : grafo.keySet()) {
-            distancia.put(espacio, Double.MAX_VALUE);
+        for (Long id : grafo.keySet()) {
+            distancia.put(id, Double.MAX_VALUE);
         }
-        distancia.put(origen, 0.0);
-        cola.add(origen);
+
+        distancia.put(origenId, 0.0);
+        cola.add(origenId);
 
         while (!cola.isEmpty()) {
 
-            Espacio actual = cola.poll();
-            if (actual.equals(destino))
+            Long actual = cola.poll();
+
+            if (actual.equals(destinoId))
                 break;
+
             for (Conexion conexion : grafo.getOrDefault(actual, List.of())) {
 
-                Espacio vecino = conexion.getDestino();
+                Long vecino = conexion.getDestino().getId();
                 double nuevaDistancia = distancia.get(actual) + calcularCosto(conexion, soloAccesible);
 
                 if (nuevaDistancia < distancia.getOrDefault(vecino, Double.MAX_VALUE)) {
@@ -134,17 +141,19 @@ public class RecorridoServiceImpl implements RecorridoService {
             }
         }
 
-        if (!origen.equals(destino) && !anterior.containsKey(destino)) {
-            throw new RutaNoEncontradaException(origen.getId(), destino.getId());
+        if (!origenId.equals(destinoId) && !anterior.containsKey(destinoId)) {
+
+            throw new RutaNoEncontradaException(origenId, destinoId);
         }
-        return reconstruirCamino(destino, anterior);
+
+        return reconstruirCamino(destinoId, anterior);
     }
 
-    private List<Espacio> reconstruirCamino(Espacio destino, Map<Espacio, Espacio> anterior) {
+    private List<Long> reconstruirCamino(Long destinoId, Map<Long, Long> anterior) {
 
-        List<Espacio> camino = new ArrayList<>();
+        List<Long> camino = new ArrayList<>();
 
-        Espacio actual = destino;
+        Long actual = destinoId;
 
         while (actual != null) {
             camino.add(actual);
@@ -155,19 +164,18 @@ public class RecorridoServiceImpl implements RecorridoService {
         return camino;
     }
 
-    private List<Conexion> obtenerConexionesRuta(List<Espacio> recorrido, List<Conexion> conexiones) {
+    private List<Conexion> obtenerConexionesRuta(List<Long> recorrido, List<Conexion> conexiones) {
 
         List<Conexion> resultado = new ArrayList<>();
 
         for (int i = 0; i < recorrido.size() - 1; i++) {
 
-            Espacio actual = recorrido.get(i);
-            Espacio siguiente = recorrido.get(i + 1);
+            Long actual = recorrido.get(i);
+            Long siguiente = recorrido.get(i + 1);
 
-            conexiones.stream().filter(c ->
-                            (c.getOrigen().equals(actual) && c.getDestino().equals(siguiente)) ||
-                                    (c.getOrigen().equals(siguiente) && c.getDestino().equals(actual))).findFirst().ifPresent(resultado::add);
+            conexiones.stream().filter(c -> (c.getOrigen().getId().equals(actual) && c.getDestino().getId().equals(siguiente)) || (c.getOrigen().getId().equals(siguiente) && c.getDestino().getId().equals(actual))).findFirst().ifPresent(resultado::add);
         }
+
         return resultado;
     }
 

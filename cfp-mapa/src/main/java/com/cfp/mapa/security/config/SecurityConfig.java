@@ -64,6 +64,18 @@ public class SecurityConfig {
             // ACTUATOR
             .requestMatchers("/actuator/**").permitAll()
 
+            // ESPACIO
+            .requestMatchers(HttpMethod.GET, "/api/espacios/mapa").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/espacios/buscar").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/espacios/{id}").permitAll()
+
+            // CONEXION
+            .requestMatchers(HttpMethod.GET, "/api/conexiones").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/conexiones/mapa").permitAll()
+
+            // RECORRIDO
+            .requestMatchers(HttpMethod.POST, "/api/recorridos/**").permitAll()
+
             // TODO: eliminar swagger en produccion
             // SWAGGER
             .requestMatchers(
@@ -71,9 +83,7 @@ public class SecurityConfig {
                 "/swagger-ui/**",
                 "/swagger-ui.html"
             ).permitAll()
-                .requestMatchers("/api/recorridos/**").permitAll()
 
-            .requestMatchers(HttpMethod.GET, "/api/conexiones/mapa").permitAll()
             .anyRequest().authenticated()
         )
 
