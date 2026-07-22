@@ -2487,6 +2487,46 @@ cuántos fueron realizados a otros usuarios y cuántos a uno mismo.
 
 ---
 
+# 🚦 Espacios más buscados
+
+## 🟢 Registrar búsqueda [acceso público]
+
+`POST /api/busqueda/registrar`
+
+Permite registrar los recorridos de forma asíncrona para métricas futuras. Diseñado para no lanzar
+erroes y devolver de forma automática un código `202` así no retrasa al mapa.
+
+<details>
+<summary><b>📦 Cuerpo de la petición</b></summary>
+<table><tr><td>
+
+Ambas variables deberían ser obligatorias, pero se mantienen como String opcionales para evitar que
+se lance algún tipo de error y mantener este endpoint lo más ágil posible.
+
+- `desdeId` String, opcional.
+- `hastaId` String, opcional.
+
+```json
+{
+  "desdeId": "1",
+  "hastaId": "2"
+}
+```
+
+</td></tr></table>
+</details> 
+
+<details>
+<summary><b>🔄 Respuesta del servidor</b></summary>
+<table><tr><td>
+
+🟢 `202 ACCEPTED`
+
+</td></tr></table>
+</details> 
+
+---
+
 # 🗺️ Recorrido
 
 - En desarrollo.
