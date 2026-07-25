@@ -9,6 +9,5 @@ import java.util.List;
 public record RutaResponseDTO (
 
         List<EspacioMapaDTO> espacios,
-        List<ConexionMapaDTO> conexiones,
         Double distanciaTotal
 ){}

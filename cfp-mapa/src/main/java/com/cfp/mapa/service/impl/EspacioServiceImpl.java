@@ -55,20 +55,19 @@ public class EspacioServiceImpl implements EspacioService {
         espacioRepository.save(espacio);
     }
 
-    @Transactional(readOnly = true)
     @Override
+    @Transactional(readOnly = true)
     public List<EspacioMapaDTO> obtenerMapa(TipoEspacio tipo) {
+
         List<Espacio> espacios;
 
         if (tipo != null) {
             espacios = espacioRepository.findByEstadoAndTipo(EstadoEspacio.ACTIVO, tipo);
         } else {
-            espacios = espacioRepository.findByEstado(EstadoEspacio.ACTIVO);
+            espacios = espacioRepository.findByEstadoAndTipoNot(EstadoEspacio.ACTIVO, TipoEspacio.PUNTO_DE_PASO);
         }
 
-        return espacios.stream()
-                .map(espacioMapper::espacioToMapaDTO)
-                .toList();
+        return espacios.stream().map(espacioMapper::espacioToMapaDTO).toList();
     }
 
     @Transactional

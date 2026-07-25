@@ -36,4 +36,6 @@ public interface EspacioRepository extends JpaRepository<Espacio, Long> {
 
     List<Espacio> findByNombreContainingIgnoreCaseAndEstado(String nombre, EstadoEspacio estado);
 
+    List<Espacio> findByEstadoAndTipoNot(EstadoEspacio estado, TipoEspacio tipo);
+
 }

@@ -70,7 +70,7 @@ public class RecorridoServiceImpl implements RecorridoService {
                         .map(conexionMapper::conexionToMapaDTO)
                         .toList();
 
-        return new RutaResponseDTO(espaciosDTO, conexionesDTO, distancia);
+        return new RutaResponseDTO(espaciosDTO, distancia);
     }
 
     private Map<Long, List<Conexion>> construirGrafo(List<Conexion> conexiones) {

@@ -27,7 +27,7 @@ public class EspacioController {
     // ADMIN
     // =========================
 
-    @GetMapping
+    @GetMapping("/espacios")
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     public ResponseEntity<Page<EspacioResponseDTO>> listarEspacios(
             @RequestParam(required = false) String nombre,
@@ -69,16 +69,15 @@ public class EspacioController {
     public ResponseEntity<List<EspacioMapaDTO>> obtenerMapa(@RequestParam(required = false) TipoEspacio tipo) {
         List<EspacioMapaDTO> espacios = espacioService.obtenerMapa(tipo);
         return ResponseEntity.ok(espacios);
-
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/detalle/{id}")
     public ResponseEntity<EspacioDetalleDTO> obtenerPorId(@PathVariable Long id) {
         EspacioDetalleDTO espacio = espacioService.obtenerEspacioPorId(id);
         return ResponseEntity.ok(espacio);
     }
 
-    @GetMapping("/buscar")
+    @GetMapping("/busqueda/nombre")
     public ResponseEntity<List<EspacioMapaDTO>> buscarEspacios(@RequestParam String nombre) {
         List<EspacioMapaDTO> espacios = espacioService.buscarEspacios(nombre);
         return ResponseEntity.ok(espacios);
